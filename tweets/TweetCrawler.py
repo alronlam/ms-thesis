@@ -1,12 +1,14 @@
 # import tweepy
 
-from TweetHelper import TweetHelper
-from tweepy import *
+import datetime
 import json
-import tweepy
 import sys
 import time
-import datetime
+
+import tweepy
+from tweepy import *
+
+from tweets.TweetHelper import TweetHelper
 
 consumer_key = 'fwbtkGf8N97yyUZyH5YzLw'
 consumer_secret = 'oQA5DunUy89Co5Hr7p4O2WmdzqiGTzssn2kMphKc8g'

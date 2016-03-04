@@ -1,10 +1,10 @@
-from pathlib import Path
-from tweepy import *
-from Node import Node
-import json
-import tweepy
 import sys
 import time
+
+import tweepy
+from tweepy import *
+
+from tweets.Node import Node
 
 
 class TweetHelper:
