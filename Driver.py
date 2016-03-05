@@ -1,9 +1,11 @@
-from FolderIO import FolderIO
-from JSONParser import JSONParser
-from TweetHelper import TweetHelper
-from Node import Node
 import datetime
 
+from data_structures.Node import Node
+from foldersio.FolderIO import FolderIO
+from jsonparser.JSONParser import JSONParser
+from tweets.TweetUtils import TweetUtils
+from operator import itemgetter
+import itertools
 
 def count_nodes(node):
     count = 0
@@ -16,7 +18,7 @@ def count_nodes(node):
 
 def main():
     folderIO = FolderIO()
-    files = folderIO.get_files("D:/DLSU/Masters/MS Thesis/data-2016/02/", False, ".json")
+    files = folderIO.get_files("D:/DLSU/Masters/MS Thesis/data-2016/for_processing/", False, ".jsonparser")
 
     print("Found {} files.".format(len(files)))
 
@@ -42,7 +44,7 @@ def main():
 
         thread_length_freq = {}
         processed_tweet_ids = set()
-        tweet_helper = TweetHelper()
+        tweet_helper = TweetUtils()
         api = tweet_helper.api
         lines_processed = 0
         tweets_processed = 0
@@ -101,8 +103,58 @@ def main():
             file_frequency.write('{} - {}\n'.format(count, frequency))
         file_frequency.flush()
 
-main()
 
+def desired_main():
+
+    # Variables
+    dir_location = "D:/DLSU/Masters/MS Thesis/data-2016/for_processing"
+    start_index_dataset = 0
+    end_index_dataset = 100
+    results_file_name = 'results_{}.txt'.format(datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+    min_reply_length = 3
+    step = 100
+
+    # Load Datasets
+    files = FolderIO().get_files(dir_location, False, ".json")
+    print("Loaded {} files".format(files.__len__()))
+
+    file_results = open(results_file_name, 'a')
+    file_results.write("These are the results for:\n{}\n\n".format(str(files)))
+
+    for index in range(0, 2600, step):
+        # Count replies
+        tweet_dataset = JSONParser().parse_files_into_json_generator(files)
+        tweet_dataset = itertools.islice(tweet_dataset, start_index_dataset, end_index_dataset)
+        reply_length_results = TweetUtils().count_replies_list(tweet_dataset)
+
+        print("Counted for {} tweets".format(reply_length_results.__len__()))
+
+        # max reply length
+        max_reply_length_result = TweetUtils().reduce_max_reply_length(reply_length_results)
+
+        # frequency count of reply length
+        freq_count_reply_lengths = sorted(TweetUtils().frequency_count_reply_lengths(reply_length_results).items())
+
+        tweet_ids_filtered = sorted(list(TweetUtils().filter_reply_lengths_gte(reply_length_results, min_reply_length)), key = itemgetter('reply_length'), reverse = True)
+        # full_reply_threads = construct_reply_threads(tweet_ids_with_reply_lengths_filtered)
+
+        # File Writing
+        file_results = open(results_file_name, 'a')
+        file_results.write('\n\n*****Results from index {} to {} of dataset*****\n'.format(index, index+step))
+        file_results.write('\nMax Reply Length:\n{}-{}\n\n'.format(max_reply_length_result['tweet_id'], max_reply_length_result['reply_length']))
+        file_results.write('Frequency Count of Reply Lengths:\n')
+        for count, frequency in freq_count_reply_lengths:
+            file_results.write('{}-{}\n'.format(count, frequency))
+        file_results.write('\nTweets with {} thread length:\n'.format(min_reply_length))
+        for entry in tweet_ids_filtered:
+            tweet_id = entry['tweet_id']
+            reply_length = entry['reply_length']
+            file_results.write('{}-{}\n'.format(tweet_id, reply_length))
+
+        # file.write(full_reply_threads)
+        file_results.flush()
+
+desired_main()
 
 def test_node_printing():
     node1 = Node("1")
