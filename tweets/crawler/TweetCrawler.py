@@ -1,12 +1,14 @@
 # import tweepy
 
-from TweetHelper import TweetHelper
-from tweepy import *
+import datetime
 import json
-import tweepy
 import sys
 import time
-import datetime
+
+import tweepy
+from tweepy import *
+
+from tweets.TweetUtils import TweetUtils
 
 consumer_key = 'fwbtkGf8N97yyUZyH5YzLw'
 consumer_secret = 'oQA5DunUy89Co5Hr7p4O2WmdzqiGTzssn2kMphKc8g'
@@ -18,6 +20,7 @@ auth.set_access_token(access_token, access_secret)
 
 from tweepy import Stream
 from tweepy.streaming import StreamListener
+
 
 class MyListener(StreamListener):
 
@@ -47,7 +50,7 @@ def stream_tweets(file_name):
 collected_ids = set()
 
 def search_tweets(file_name):
-    tweet_helper = TweetHelper()
+    tweet_helper = TweetUtils()
     search_results = tweet_helper.api.search("q='#PHVoteBinay OR #PHVoteDuterte OR #PHVotePoe OR #PHVoteRoxas OR #PHVoteSantiago OR #PiliPinasDebates2016'")
 
     file_tweets = open(file_name, 'a')
@@ -66,7 +69,7 @@ def search_tweets(file_name):
     file_tweets.close()
 
 
-file_name = 'collected_data/tweets-{}.json'.format(datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
+file_name = 'collected_data/tweets-{}.jsonparser'.format(datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
 while True:
 
     try:
