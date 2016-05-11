@@ -72,8 +72,10 @@ class TweetUtils:
 
     def reduce_max_reply_length(self, reply_lengths):
         # This only returns one max even if there are multiple max values
-        return reduce(lambda x, y: x if x['reply_length'] > y['reply_length'] else y, reply_lengths)
-
+        try:
+            return reduce(lambda x, y: x if x['reply_length'] > y['reply_length'] else y, reply_lengths)
+        except:
+            return reply_lengths
 
     def frequency_count_reply_lengths(self, reply_lengths):
         frequency_count = {}

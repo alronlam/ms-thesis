@@ -108,8 +108,8 @@ def desired_main():
 
     # Variables
     dir_location = "D:/DLSU/Masters/MS Thesis/data-2016/for_processing"
-    start_index_dataset = 0
-    end_index_dataset = 100
+    start_index_dataset = 1100
+    end_index_dataset = 2600
     results_file_name = 'results_{}.txt'.format(datetime.datetime.now().strftime("%Y-%m-%d %H-%M-%S"))
     min_reply_length = 3
     step = 100
@@ -121,12 +121,11 @@ def desired_main():
     file_results = open(results_file_name, 'a')
     file_results.write("These are the results for:\n{}\n\n".format(str(files)))
 
-    for index in range(0, 2600, step):
+    for index in range(start_index_dataset, end_index_dataset, step):
         # Count replies
         tweet_dataset = JSONParser().parse_files_into_json_generator(files)
-        tweet_dataset = itertools.islice(tweet_dataset, start_index_dataset, end_index_dataset)
+        tweet_dataset = itertools.islice(tweet_dataset, index, index+step)
         reply_length_results = TweetUtils().count_replies_list(tweet_dataset)
-
         print("Counted for {} tweets".format(reply_length_results.__len__()))
 
         # max reply length
