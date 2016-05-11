@@ -5,7 +5,7 @@ class FolderIO:
     def get_files(self, dir_path, is_recursive, extension):
         p = Path(dir_path)
 
-        print("Recursed: {}, {}, {}".format(dir_path, is_recursive, extension))
+        # print("Recursed: {}, {}, {}".format(dir_path, is_recursive, extension))
 
         # All files in the folder
         files = [file for file in list(p.iterdir())
@@ -20,7 +20,7 @@ class FolderIO:
                     if not dir.is_file())
 
             for dir in dirs:
-                print (dir.name)
+                # print (dir.name)
                 files = files + self.get_files(dir, is_recursive, extension)
 
             return files
