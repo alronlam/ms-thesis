@@ -90,19 +90,38 @@ class TweetUtils:
 
     # Methods for constructing the graph
     def construct_follow_graph(self, graph, user_id, vertices_limit, is_directed):
+
         if graph is None:
             graph = Graph()
-
+            graph = self.add_vertex(graph, user_id) # Add user_id as initial vertex
         if graph.vcount() >= vertices_limit:
             return graph
 
+        # Get info regarding following/followers
         following_ids = TweepyHelper.retrieve_following_ids(user_id)
         followers_ids = TweepyHelper.retrieve_followers_ids(user_id)
         intersection_ids = [id for id in followers_ids if id in following_ids]
 
-        # add code for directed graphs
-        for intersection_id in intersection_ids:
-            graph.add_edge(user_id, intersection_id)
+        # Add appropriate vertices and edges
 
-        for intersection_id in intersection_ids:
-            return self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed)
+        if is_directed:
+            pass # stub
+        else:
+
+            user_vertex_id = graph.vs.select(name=user_id)[0].index
+
+            for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
+                graph = self.add_vertex(graph, intersection_id)
+                intersection_vertex_id = graph.vs.select(name=intersection_id)[0].index
+                graph.add_edge(user_vertex_id, intersection_vertex_id)
+
+            for intersection_id in intersection_ids:
+                graph = self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed)
+
+        return graph
+
+
+    def add_vertex(self, graph, user_id):
+        if graph.vcount() == 0 or graph.vs.select(name = user_id).__len__() == 0:
+            graph.add_vertex(name=user_id)
+        return graph

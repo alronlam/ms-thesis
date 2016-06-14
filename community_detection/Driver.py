@@ -1,12 +1,19 @@
 from igraph import *
 
-g = Graph([(0,1), (0,2), (2,3), (3,4), (4,2), (2,5), (5,0), (6,3), (5,6)])
-g.vs["name"] = ["Alice", "Bob", "Claire", "Dennis", "Esther", "Frank", "George"]
-g.vs["age"] = [25, 31, 18, 47, 22, 23, 50]
-g.vs["gender"] = ["f", "m", "f", "m", "f", "m", "m"]
-g.es["is_formal"] = [False, False, True, True, True, False, True, False, False]
-plot(g)
+from tweets import TweepyHelper
+from tweets import TweetUtils
 
+# g = Graph([(0,1), (0,2), (2,3), (3,4), (4,2), (2,5), (5,0), (6,3), (5,6)])
+# g.vs["name"] = ["Alice", "Bob", "Claire", "Dennis", "Esther", "Frank", "George"]
+# g.vs["age"] = [25, 31, 18, 47, 22, 23, 50]
+# g.vs["gender"] = ["f", "m", "f", "m", "f", "m", "m"]
+# g.es["is_formal"] = [False, False, True, True, True, False, True, False, False]
+# plot(g)
+
+# print(TweepyHelper.api.followers_ids(TweepyHelper.api.me()))
+
+g = TweetUtils.TweetUtils().construct_follow_graph(None, TweepyHelper.api.me().id, 100, False)
+plot(g)
 
 # import igraph
 # import csv
