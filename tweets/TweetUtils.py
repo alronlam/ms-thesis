@@ -1,7 +1,7 @@
 from tweets import TweepyHelper
 from data_structures.Node import Node
 from functools import reduce
-
+from igraph import *
 
 class TweetUtils:
 
@@ -86,3 +86,23 @@ class TweetUtils:
 
     def filter_reply_lengths_gte(self, reply_lengths, min_length):
         return (reply_length for reply_length in reply_lengths if reply_length['reply_length']  >= min_length)
+
+
+    # Methods for constructing the graph
+    def construct_follow_graph(self, graph, user_id, vertices_limit, is_directed):
+        if graph is None:
+            graph = Graph()
+
+        if graph.vcount() >= vertices_limit:
+            return graph
+
+        following_ids = TweepyHelper.retrieve_following_ids(user_id)
+        followers_ids = TweepyHelper.retrieve_followers_ids(user_id)
+        intersection_ids = [id for id in followers_ids if id in following_ids]
+
+        # add code for directed graphs
+        for intersection_id in intersection_ids:
+            graph.add_edge(user_id, intersection_id)
+
+        for intersection_id in intersection_ids:
+            return self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed)
