@@ -108,12 +108,9 @@ class TweetUtils:
             pass # stub
         else:
 
-            user_vertex_id = graph.vs.select(name=user_id)[0].index
-
             for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
                 graph = self.add_vertex(graph, intersection_id)
-                intersection_vertex_id = graph.vs.select(name=intersection_id)[0].index
-                graph.add_edge(user_vertex_id, intersection_vertex_id)
+                graph.add_edge(str(user_id), str(intersection_id))
 
             for intersection_id in intersection_ids:
                 graph = self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed)
@@ -122,6 +119,6 @@ class TweetUtils:
 
 
     def add_vertex(self, graph, user_id):
-        if graph.vcount() == 0 or graph.vs.select(name = user_id).__len__() == 0:
-            graph.add_vertex(name=user_id)
+        if graph.vcount() == 0 or graph.vs.select(name = str(user_id)).__len__() == 0:
+            graph.add_vertex(str(user_id))
         return graph
