@@ -93,32 +93,41 @@ class TweetUtils:
 
         if graph is None:
             graph = Graph()
-            graph = self.add_vertex(graph, user_id) # Add user_id as initial vertex
+
         if graph.vcount() >= vertices_limit:
             return graph
+
+        graph = self.add_vertex(graph, user_id) # Add user_id as initial vertex
 
         # Get info regarding following/followers
         following_ids = TweepyHelper.retrieve_following_ids(user_id)
         followers_ids = TweepyHelper.retrieve_followers_ids(user_id)
-        intersection_ids = [id for id in followers_ids if id in following_ids]
 
-        # Add appropriate vertices and edges
+        if following_ids is not None and followers_ids is not None:
 
-        if is_directed:
-            pass # stub
-        else:
+            intersection_ids = [id for id in followers_ids if id in following_ids]
 
-            for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
-                graph = self.add_vertex(graph, intersection_id)
-                graph.add_edge(str(user_id), str(intersection_id))
+            # Add appropriate vertices and edges
 
-            for intersection_id in intersection_ids:
-                graph = self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed)
+            if is_directed:
+                pass # stub
+            else:
+
+                for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
+                    graph = self.add_vertex(graph, intersection_id)
+                    graph.add_edge(str(user_id), str(intersection_id))
+
+                for intersection_id in intersection_ids:
+                    graph = self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed)
 
         return graph
 
 
     def add_vertex(self, graph, user_id):
         if graph.vcount() == 0 or graph.vs.select(name = str(user_id)).__len__() == 0:
-            graph.add_vertex(str(user_id))
+            new_vertex = graph.add_vertex(str(user_id))
+            new_user = TweepyHelper.retrieve_user(user_id)
+            if new_user is not None:
+                graph.vs[graph.vcount()-1]["screen_name"] = new_user.screen_name
+
         return graph

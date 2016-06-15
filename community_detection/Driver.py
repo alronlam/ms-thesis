@@ -4,22 +4,24 @@ tls.set_credentials_file(username='darkaeon10', api_key='qmdqrxf4mc')
 from igraph import *
 import plotly.plotly as py
 from plotly.graph_objs import *
+from datetime import datetime
 
 from tweets import TweepyHelper
 from tweets import TweetUtils
 
-# g = Graph([(0,1), (0,2), (2,3), (3,4), (4,2), (2,5), (5,0), (6,3), (5,6)])
-# g.vs["name"] = ["Alice", "Bob", "Claire", "Dennis", "Esther", "Frank", "George"]
-# g.vs["age"] = [25, 31, 18, 47, 22, 23, 50]
-# g.vs["gender"] = ["f", "m", "f", "m", "f", "m", "m"]
-# g.es["is_formal"] = [False, False, True, True, True, False, True, False, False]
-# plot(g)
+G = TweetUtils.TweetUtils().construct_follow_graph(None, 461053984, 100, False) # me
+print("Finished me\n")
+G = TweetUtils.TweetUtils().construct_follow_graph(G, 67328299, 200, False) # earvin
+print("Finished Earvin\n")
+G = TweetUtils.TweetUtils().construct_follow_graph(G, 161196705, 300, False) # clark
+print("Finished Clark\n")
+G = TweetUtils.TweetUtils().construct_follow_graph(G, 36858652, 400, False) # neill
+print("Finished Neill\n")
 
-# print(TweepyHelper.api.followers_ids(TweepyHelper.api.me()))
 
-G = TweetUtils.TweetUtils().construct_follow_graph(None, TweepyHelper.api.me().id, 50, False)
 
-labels = list(G.vs['name'])
+
+labels = list(G.vs['screen_name'])
 N = len(labels)
 E= [e.tuple for e in G.es]
 
@@ -87,7 +89,7 @@ axis=dict(showline=False, # hide axis line, grid, ticklabels and  title
 width = 800
 height = 800
 
-layout = Layout(title= "GitHub Network",
+layout = Layout(title= "Follow Network",
     font=Font(size=12),
     showlegend=False,
     autosize=False,
@@ -121,7 +123,7 @@ layout = Layout(title= "GitHub Network",
 
 data = Data(plot_data)
 fig = Figure(data=data, layout=layout)
-py.plot(fig, filename='github-network-community-igraph')
+py.plot(fig, filename='github-network-community-igraph-{}'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S')))
 
 
 # import igraph

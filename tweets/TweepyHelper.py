@@ -18,11 +18,8 @@ def retrieve_tweet(tweet_id):
     return tweepy_function(func, tweet_id)
 
 def retrieve_user(user_id):
-    func = get_user
+    func = lambda user_id: api.get_user(user_id=user_id) if user_id is not None else None
     return tweepy_function(func, user_id)
-
-def get_user(user_id):
-    return api.get_user(user_id=user_id) if user_id is not None else None
 
 def retrieve_followers_ids(user_id):
     user = retrieve_user(user_id)
@@ -42,6 +39,7 @@ def tweepy_function(func, *args):
     except tweepy.RateLimitError:
         print("Hit the Twitter API rate limit. Sleeping for 5 minutes.")
         time.sleep(60*5)
+        print("Finished sleeping. Resuming execution.")
         tweepy_function(func, args)
     except TweepError as err:
         print("Tweep Error: {}".format(err))
