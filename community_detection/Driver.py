@@ -11,6 +11,10 @@ from tweets import TweetUtils
 
 from database import DBManager
 
+# DBManager.delete_followers_ids(461053984)
+# DBManager.delete_following_ids(461053984)
+# print(DBManager.get_or_add_following_ids(461053984))
+# print(DBManager.get_or_add_followers_ids(461053984))
 
 def generate_follow_network():
     G = TweetUtils.TweetUtils().construct_follow_graph(None, 461053984, 100, False) # me
@@ -136,3 +140,6 @@ def generate_follow_network():
     data = Data(plot_data)
     fig = Figure(data=data, layout=layout)
     py.plot(fig, filename='github-network-community-igraph-{}'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S')))
+
+
+generate_follow_network()

@@ -1,6 +1,7 @@
 from tweets import TweepyHelper
 from data_structures.Node import Node
 from functools import reduce
+from database import DBManager
 from igraph import *
 
 class TweetUtils:
@@ -100,8 +101,8 @@ class TweetUtils:
         graph = self.add_vertex(graph, user_id) # Add user_id as initial vertex
 
         # Get info regarding following/followers
-        following_ids = TweepyHelper.retrieve_following_ids(user_id)
-        followers_ids = TweepyHelper.retrieve_followers_ids(user_id)
+        following_ids = DBManager.get_or_add_following_ids(user_id)
+        followers_ids = DBManager.get_or_add_followers_ids(user_id)
 
         if following_ids is not None and followers_ids is not None:
 
@@ -126,7 +127,7 @@ class TweetUtils:
     def add_vertex(self, graph, user_id):
         if graph.vcount() == 0 or graph.vs.select(name = str(user_id)).__len__() == 0:
             new_vertex = graph.add_vertex(str(user_id))
-            new_user = TweepyHelper.retrieve_user(user_id)
+            new_user = DBManager.get_or_add_user(user_id)
             if new_user is not None:
                 graph.vs[graph.vcount()-1]["screen_name"] = new_user.screen_name
 
