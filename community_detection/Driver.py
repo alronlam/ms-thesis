@@ -16,23 +16,26 @@ from database import DBManager
 # print(DBManager.get_or_add_following_ids(461053984))
 # print(DBManager.get_or_add_followers_ids(461053984))
 
+# print(DBManager.get_or_add_user(461053984))
+
 def generate_follow_network():
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, 461053984, 100, False) # me
+    finished_set = set()
+    G = TweetUtils.TweetUtils().construct_follow_graph(None, 461053984, 500, False, finished_set) # me
     print("Finished me\n")
     G.save("follow_graph.pickle")
     G = load("follow_graph.pickle")
 
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, 36858652, 100, False) # neill
+    G = TweetUtils.TweetUtils().construct_follow_graph(None, 36858652, 1000, False, finished_set) # neill
     print("Finished Neill\n")
     G.save("follow_graph.pickle")
     G = load("follow_graph.pickle")
 
-    G = TweetUtils.TweetUtils().construct_follow_graph(G, 67328299, 200, False) # earvin
+    G = TweetUtils.TweetUtils().construct_follow_graph(G, 67328299, 1500, False, finished_set) # earvin
     print("Finished Earvin\n")
     G.save("follow_graph.pickle")
     G = load("follow_graph.pickle")
 
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, 161196705, 1000, False) # clark
+    G = TweetUtils.TweetUtils().construct_follow_graph(None, 161196705, 2000, False, finished_set) # clark
     print("Finished Clark\n")
     G.save("follow_graph.pickle")
     # G = load("follow_graph.pickle")

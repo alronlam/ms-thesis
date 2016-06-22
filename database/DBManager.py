@@ -3,6 +3,7 @@ from tweets import TweepyHelper
 from bson.json_util import dumps
 from tweepy import *
 import json
+import sys
 
 client = MongoClient('localhost', 27017)
 db = client['twitter_db']
@@ -59,8 +60,9 @@ def add_or_update_list_db(id, collection, retrieve_func, list_name):
 def get_or_add(id, collection, retrieve_func, obj_constructor):
     try:
         from_db = json.loads(dumps(collection.find_one({"id":id})))
-        return obj_constructor(from_db) if from_db else add_or_update_db(id, collection, retrieve_func)
+        return obj_constructor(TweepyHelper.api, from_db) if from_db else add_or_update_db(id, collection, retrieve_func)
     except:
+        print("Unexpected error:", sys.exc_info()[0])
         return None
 
 def add_or_update_db(id, collection, retrieve_func):
@@ -68,5 +70,3 @@ def add_or_update_db(id, collection, retrieve_func):
     if from_api:
         collection.update({"id":id}, from_api._json, True)
     return from_api
-
-
