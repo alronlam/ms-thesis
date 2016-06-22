@@ -20,27 +20,15 @@ from database import DBManager
 
 def generate_follow_network():
     finished_set = set()
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, 461053984, 500, False, finished_set) # me
+    G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984] , 2000, False, finished_set) # me
     print("Finished me\n")
-    G.save("follow_graph.pickle")
-    G = load("follow_graph.pickle")
-
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, 36858652, 1000, False, finished_set) # neill
-    print("Finished Neill\n")
-    G.save("follow_graph.pickle")
-    G = load("follow_graph.pickle")
-
-    G = TweetUtils.TweetUtils().construct_follow_graph(G, 67328299, 1500, False, finished_set) # earvin
-    print("Finished Earvin\n")
-    G.save("follow_graph.pickle")
-    G = load("follow_graph.pickle")
-
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, 161196705, 2000, False, finished_set) # clark
-    print("Finished Clark\n")
     G.save("follow_graph.pickle")
     # G = load("follow_graph.pickle")
 
-    labels = list(G.vs['screen_name'])
+    # G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984,36858652,67328299,161196705] , 2000, False, finished_set) # me
+
+
+    labels = list(G.vs['full_name'])
     N = len(labels)
     E= [e.tuple for e in G.es]
 

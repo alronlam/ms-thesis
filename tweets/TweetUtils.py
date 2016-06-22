@@ -91,44 +91,45 @@ class TweetUtils:
 
 
     # Methods for constructing the graph
-    def construct_follow_graph(self, graph, user_id, vertices_limit, is_directed, finished_set):
+    def construct_follow_graph(self, graph, root_user_ids, vertices_limit, is_directed, finished_set):
 
         if graph is None:
             graph = Graph()
 
-        if graph.vcount() >= vertices_limit:
-            return graph
+        fringe = []
+        fringe.extend(root_user_ids)
 
-        # if level > 5:
-        #     return graph
+        while fringe.__len__() > 0:
+            user_id = fringe.pop(0)
 
-        graph = self.add_vertex(graph, user_id) # Add user_id as initial vertex
+            if graph.vcount() >= vertices_limit:
+                break
 
-        if user_id not in finished_set:
+            self.add_vertex(graph, user_id)
 
-            finished_set.add(user_id)
+            if user_id not in finished_set:
 
-            # Get info regarding following/followers
-            following_ids = DBManager.get_or_add_following_ids(user_id)
-            followers_ids = DBManager.get_or_add_followers_ids(user_id)
+                finished_set.add(user_id)
 
-            if following_ids is not None and followers_ids is not None:
+                # Get info regarding following/followers
+                following_ids = DBManager.get_or_add_following_ids(user_id)
+                followers_ids = DBManager.get_or_add_followers_ids(user_id)
 
-                intersection_ids = [id for id in followers_ids if id in following_ids]
+                if following_ids is not None and followers_ids is not None:
 
-                # Add appropriate vertices and edges
+                    intersection_ids = [id for id in followers_ids if id in following_ids]
 
-                if is_directed:
-                    pass # stub
-                else:
+                    # Add appropriate vertices and edges
 
-                    for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
-                        graph = self.add_vertex(graph, intersection_id)
-                        graph.add_edge(str(user_id), str(intersection_id))
+                    if is_directed:
+                        pass # stub
+                    else:
 
-                    for intersection_id in intersection_ids:
-                        graph = self.construct_follow_graph(graph, intersection_id, vertices_limit, is_directed, finished_set)
+                        for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
+                            graph = self.add_vertex(graph, intersection_id)
+                            graph.add_edge(str(user_id), str(intersection_id))
 
+                        fringe.extend(intersection_id for intersection_id in intersection_ids if intersection_id not in finished_set)
 
         return graph
 
