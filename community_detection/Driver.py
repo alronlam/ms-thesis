@@ -5,7 +5,7 @@ from igraph import *
 import plotly.plotly as py
 from plotly.graph_objs import *
 from datetime import datetime
-
+from random import randint
 from tweets import TweepyHelper
 from tweets import TweetUtils
 
@@ -18,16 +18,69 @@ from database import DBManager
 
 # print(DBManager.get_or_add_user(461053984))
 
+def _plot(g, membership=None):
+    if membership is not None:
+        gcopy = g.copy()
+        edges = []
+        edges_colors = []
+        for edge in g.es():
+            if membership[edge.tuple[0]] != membership[edge.tuple[1]]:
+                edges.append(edge)
+                edges_colors.append("gray")
+            else:
+                edges_colors.append("black")
+        gcopy.delete_edges(edges)
+        layout = gcopy.layout("kk")
+        g.es["color"] = edges_colors
+    else:
+        layout = g.layout("kk")
+        g.es["color"] = "gray"
+    visual_style = {}
+    visual_style["vertex_label_dist"] = 0
+    visual_style["vertex_shape"] = "circle"
+    visual_style["vertex_label_color"] = "#F22613"
+    visual_style["edge_color"] = g.es["color"]
+    visual_style["bbox"] = (8000, 5000)
+    visual_style["vertex_size"] = 30
+    visual_style["layout"] = layout
+    # visual_style["bbox"] = (1024, 768)
+    visual_style["margin"] = 40
+    # visual_style["edge_label"] = g.es["weight"]
+    for vertex in g.vs():
+        vertex["label"] = vertex["full_name"]
+    if membership is not None:
+        colors = []
+        for i in range(0, max(membership)+1):
+            colors.append('%06X' % randint(0, 0xFFFFFF))
+        for vertex in g.vs():
+            vertex["color"] = str('#') + colors[membership[vertex.index]]
+        visual_style["vertex_color"] = g.vs["color"]
+    visual_style["mark_groups"]=True
+    plot(g, **visual_style)
+
+
 def generate_follow_network():
     finished_set = set()
-    G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984] , 2000, False, finished_set) # me
-    print("Finished me\n")
-    G.save("follow_graph.pickle")
+    # G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984] , 5000, False, finished_set) # me
+    # print("Finished me\n")
+    # G.save("follow_graph.pickle")
     # G = load("follow_graph.pickle")
 
-    # G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984,36858652,67328299,161196705] , 2000, False, finished_set) # me
+
+    print("Going to construct the graph")
+    # G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984,36858652,67328299,161196705] , 1500, False, finished_set) # me
+    # G.save("follow_graph.pickle")
+    G = load("follow_graph.pickle")
+    print("Going to determine communities")
+    community = G.community_multilevel().membership
+
+    print("Going to plot the graph")
+    _plot(G, community)
+    #ploty_plot(G)
+    # plot(G.community_multilevel(), mark_groups=True)
 
 
+def ploty_plot(G):
     labels = list(G.vs['full_name'])
     N = len(labels)
     E= [e.tuple for e in G.es]
@@ -36,11 +89,11 @@ def generate_follow_network():
     community = G.community_multilevel().membership
     communities = len(set(community))
 
-    # dendrogram = g.community_edge_betweenness()
-    # clusters = dendrogram.as_clustering()
-    # summary(g)
-    # plot(g)
-    # plot(clusters)
+    dendrogram = g.community_edge_betweenness()
+    clusters = dendrogram.as_clustering()
+    summary(g)
+    plot(g)
+    plot(clusters)
 
     color_list = ['#DD5E34', '#69CD45', '#6959CD', '#000005', '#FF00FF', '#FFFF00', '#808000', '#00FF00', '#00FFFF', '#008080', '#000080', '#800080']
 
