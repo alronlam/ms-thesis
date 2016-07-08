@@ -56,7 +56,7 @@ def _plot(g, membership=None):
             vertex["color"] = str('#') + colors[membership[vertex.index]]
         visual_style["vertex_color"] = g.vs["color"]
     visual_style["mark_groups"]=True
-    plot(g, **visual_style)
+    plot(g, 'graph-{}.png'.format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), **visual_style)
 
 
 def generate_follow_network():
@@ -68,9 +68,9 @@ def generate_follow_network():
 
 
     print("Going to construct the graph")
-    # G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984,36858652,67328299,161196705] , 1500, False, finished_set) # me
-    # G.save("follow_graph.pickle")
-    G = load("follow_graph.pickle")
+    G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984,36858652,67328299,161196705] , 5000, False, finished_set) # me
+    G.save("follow_graph_mixed_5000.pickle")
+    # G = load("follow_graph_me_5000_nodes.pickle")
     print("Going to determine communities")
     community = G.community_multilevel().membership
 
