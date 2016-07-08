@@ -1,7 +1,8 @@
 from tweets import TweepyHelper
 from data_structures.Node import Node
 from functools import reduce
-
+from database import DBManager
+from igraph import *
 
 class TweetUtils:
 
@@ -86,3 +87,61 @@ class TweetUtils:
 
     def filter_reply_lengths_gte(self, reply_lengths, min_length):
         return (reply_length for reply_length in reply_lengths if reply_length['reply_length']  >= min_length)
+
+
+
+    # Methods for constructing the graph
+    def construct_follow_graph(self, graph, root_user_ids, vertices_limit, is_directed, finished_set):
+
+        if graph is None:
+            graph = Graph()
+
+        fringe = []
+        fringe.extend(root_user_ids)
+
+        while fringe.__len__() > 0:
+            user_id = fringe.pop(0)
+
+            if graph.vcount() >= vertices_limit:
+                break
+
+            self.add_vertex(graph, user_id)
+
+            if user_id not in finished_set:
+
+                finished_set.add(user_id)
+
+                # Get info regarding following/followers
+                following_ids = DBManager.get_or_add_following_ids(user_id)
+                followers_ids = DBManager.get_or_add_followers_ids(user_id)
+
+                if following_ids is not None and followers_ids is not None:
+
+                    intersection_ids = [id for id in followers_ids if id in following_ids]
+
+                    # Add appropriate vertices and edges
+
+                    if is_directed:
+                        pass # stub
+                    else:
+
+                        for intersection_id in intersection_ids[0:max(vertices_limit-graph.vcount(), 0)]:
+                            graph = self.add_vertex(graph, intersection_id)
+                            graph.add_edge(str(user_id), str(intersection_id))
+
+                        fringe.extend(intersection_id for intersection_id in intersection_ids if intersection_id not in finished_set)
+
+        return graph
+
+    def add_vertex(self, graph, user_id):
+        if not self.user_exists_in_graph(graph, user_id):
+            new_vertex = graph.add_vertex(str(user_id))
+            new_user = DBManager.get_or_add_user(user_id)
+            if new_user is not None:
+                graph.vs[graph.vcount()-1]["screen_name"] = new_user.screen_name
+                graph.vs[graph.vcount()-1]["full_name"] = new_user.name
+
+        return graph
+
+    def user_exists_in_graph(self, graph, user_id):
+        return graph.vcount() > 0 and graph.vs.select(name = str(user_id)).__len__() > 0

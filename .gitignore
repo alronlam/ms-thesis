@@ -1,3 +1,6 @@
 collected_data/
 __pycache__/
 results_*.txt
+*.pickle
+*.GraphML
+mongodb/
