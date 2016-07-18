@@ -46,7 +46,7 @@ training_set = nltk.classify.apply_features(FEATURE_EXTRACTOR.extract_features, 
 # training
 TRAINER = nltk.NaiveBayesClassifier
 # TRAINER = SklearnClassifier(BernoulliNB())
-classifier = train_or_load("nb_classifier.pickle", TRAINER, training_set, False)
+classifier = train_or_load("nb_classifier.pickle", TRAINER, training_set, True)
 print(classifier.show_most_informative_features(15))
 
 #classification
