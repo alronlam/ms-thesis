@@ -8,6 +8,10 @@ from datetime import datetime
 from random import randint
 from tweets import TweepyHelper
 from tweets import TweetUtils
+from community_detection.EdgeWeightModifier import *
+from community_detection.graph_construction import TweetGraphs
+from foldersio import FolderIO
+from jsonparser import JSONParser
 
 from database import DBManager
 
@@ -18,7 +22,7 @@ from database import DBManager
 
 # print(DBManager.get_or_add_user(461053984))
 
-def _plot(g, membership=None):
+def _plot(g,display_attribute, membership=None):
     if membership is not None:
         gcopy = g.copy()
         edges = []
@@ -47,7 +51,7 @@ def _plot(g, membership=None):
     visual_style["margin"] = 40
     # visual_style["edge_label"] = g.es["weight"]
     for vertex in g.vs():
-        vertex["label"] = vertex["full_name"]
+        vertex["label"] = vertex[display_attribute]
     if membership is not None:
         colors = []
         for i in range(0, max(membership)+1):
@@ -59,23 +63,49 @@ def _plot(g, membership=None):
     plot(g, 'graph-{}.png'.format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), **visual_style)
 
 
+def generate_tweet_network():
+
+    # Load tweets
+    # use dataset with all election hashtags
+    print("Reading data")
+    tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/03/elections/', False, '.json')
+    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
+    tweets = [DBManager.get_or_add_tweet_db_given_json(tweet)for tweet in tweet_generator]
+
+    # Construct base graph
+    print("Going to construct the graph")
+    G = TweetGraphs.construct_tweet_graph(None, tweets)
+    G.save("2016-03-04-tweets-pilipinasdebates.pickle")
+
+    # Modify edge weights
+
+    # Community Detection
+    print("Going to determine communities")
+    community = G.community_multilevel().membership
+
+    # Plot
+    print("Going to plot the graph")
+    _plot(G, "text", community)
+
+generate_tweet_network()
+
 def generate_follow_network():
     finished_set = set()
-    # G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984] , 5000, False, finished_set) # me
-    # print("Finished me\n")
-    # G.save("follow_graph.pickle")
-    # G = load("follow_graph.pickle")
-
 
     print("Going to construct the graph")
     G = TweetUtils.TweetUtils().construct_follow_graph(None, [461053984,36858652,67328299,161196705] , 5000, False, finished_set) # me
     G.save("follow_graph_mixed_5000.pickle")
     # G = load("follow_graph_me_5000_nodes.pickle")
+
+    # Modify edge weights
+    edge_weight_modifiers= [SAWeightModifier()]
+    modify_edge_weights(G, edge_weight_modifiers)
+
     print("Going to determine communities")
     community = G.community_multilevel().membership
 
     print("Going to plot the graph")
-    _plot(G, community)
+    _plot(G, "full_name", community)
     #ploty_plot(G)
     # plot(G.community_multilevel(), mark_groups=True)
 
@@ -185,5 +215,3 @@ def ploty_plot(G):
     fig = Figure(data=data, layout=layout)
     py.plot(fig, filename='github-network-community-igraph-{}'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S')))
 
-
-generate_follow_network()

@@ -14,6 +14,9 @@ followers_collection = db['followers_collection']
 
 # Tweet-related
 
+def get_or_add_tweet_db_given_json(tweet_json):
+    return add_or_update_db_given_json(tweet_json, tweet_collection, Status.parse)
+
 def get_or_add_tweet(tweet_id):
     return get_or_add(tweet_id, tweet_collection, TweepyHelper.retrieve_tweet, Status.parse)
 
@@ -70,3 +73,7 @@ def add_or_update_db(id, collection, retrieve_func):
     if from_api:
         collection.update({"id":id}, from_api._json, True)
     return from_api
+
+def add_or_update_db_given_json(json, collection, obj_constructor):
+    collection.update({"id":json["id"]}, json, True)
+    return obj_constructor(TweepyHelper.api, json)
