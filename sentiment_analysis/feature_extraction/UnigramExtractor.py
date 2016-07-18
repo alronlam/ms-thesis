@@ -16,7 +16,7 @@ class UnigramExtractor(FeatureExtractorBase):
     @staticmethod
     def get_word_features(wordlist):
         wordlist = nltk.FreqDist(wordlist)
-        word_features = wordlist.keys()
+        word_features = [word for word, count in wordlist.most_common(wordlist.__len__())]
         return word_features
 
     def extract_features(self, document):
