@@ -1,10 +1,30 @@
 import nltk
 from csv_parser.CSVParser import CSVParser
 from nltk.classify.naivebayes import NaiveBayesClassifier
+from sentiment_analysis.feature_extraction.UnigramExtractor import UnigramExtractor
+
+def train(labeled_featuresets, estimator=nltk.probability.ELEProbDist):
+    label_freqdist = nltk.FreqDist([label for words, label in labeled_featuresets])
+    label_probdist = estimator(label_freqdist)
+
+    feature_probidst = {}
+
+    return NaiveBayesClassifier(label_probdist, feature_probidst)
+
 
 row_generator = CSVParser.parse_file_into_csv_row_generator('sa_training_data/globe_dataset.csv')
-for row in row_generator:
-    print('{} - {}'.format(', '.join(row), row.__len__()))
+
+tweets = [([e.lower() for e in row[2].split() if len(e) >= 3], row[1]) for row in row_generator]
+
+unigram_extractor = UnigramExtractor(tweets)
+
+training_set = nltk.classify.apply_features(unigram_extractor.extract_features, tweets)
+# print(training_set)
+classifier = train(training_set)
+
+tweet = "Larry is my friend"
+
+print(classifier.classify(unigram_extractor.extract_features(tweet.split())))
 
 
 
