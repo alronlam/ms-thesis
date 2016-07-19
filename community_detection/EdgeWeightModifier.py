@@ -1,4 +1,5 @@
 import abc
+import sentiment_analysis.SAFacade
 
 class EdgeWeightModifierBase(object):
 
@@ -10,9 +11,33 @@ class EdgeWeightModifierBase(object):
         """
 
 class SAWeightModifier(EdgeWeightModifierBase):
+
+    def __init__(self):
+        self.classifier = sentiment_analysis.SAFacade.SAFacade()
+
     def modify_edge_weights(self, graph):
+        sentiment_dict = {}
+        for edge in graph.es:
+            source_vertex_id = edge.source
+            target_vertex_id = edge.target
+            source_vertex = graph.vs[source_vertex_id]
+            target_vertex = graph.vs[target_vertex_id]
+
+            source_vertex_sentiment = self.get_or_add_sentiment(source_vertex, sentiment_dict)
+            target_vertex_sentiment = self.get_or_add_sentiment(target_vertex, sentiment_dict)
+
+            if source_vertex_sentiment == target_vertex_sentiment:
+                edge["weight"] += 5
+
         return graph
 
+    def get_or_add_sentiment(self, vertex, sentiment_dict):
+        sentiment = sentiment_dict.get(vertex["tweet_id"], None)
+        if not sentiment:
+            sentiment = self.classifier.classify_sentiment(vertex["text"])
+            sentiment_dict[vertex["tweet_id"]] = sentiment
+            vertex["sentiment"] = sentiment
+        return sentiment
 
 def modify_edge_weights(graph, edge_weight_modifiers):
     for modifier in edge_weight_modifiers:

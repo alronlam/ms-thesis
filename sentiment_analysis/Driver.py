@@ -8,6 +8,7 @@ from sentiment_analysis.classifier.ClassifierIO import *
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from nltk.classify.scikitlearn import SklearnClassifier
 from sentiment_analysis.preprocessing.PreProcessing import *
+from sentiment_analysis.feature_extraction import FeatureExtractorBase
 
 def train_or_load(pickle_file_name, trainer, training_set, force_train=False):
     classifier = None
@@ -41,6 +42,7 @@ print("# TEST: {}".format(test_tweets.__len__()))
 
 # feature extraction
 FEATURE_EXTRACTOR = UnigramExtractor(train_tweets)
+FeatureExtractorBase.save_feature_extractor("unigram_feature_extractor.pickle", FEATURE_EXTRACTOR)
 training_set = nltk.classify.apply_features(FEATURE_EXTRACTOR.extract_features, train_tweets)
 
 # training
