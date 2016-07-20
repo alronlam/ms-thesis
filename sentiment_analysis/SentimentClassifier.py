@@ -22,6 +22,7 @@ class MLClassifier(SentimentClassifier):
     def __init__(self):
         self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/unigram_feature_extractor.pickle")
         self.classifier = load_classifier_from_pickle("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/nb_classifier.pickle")
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
 
     def classify_sentiment(self, tweet_text):
         tweet_text = self.preprocess(tweet_text)

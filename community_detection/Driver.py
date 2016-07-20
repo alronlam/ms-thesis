@@ -78,7 +78,7 @@ def generate_tweet_network():
 
     # Community Detection
     print("Going to determine communities")
-    community = G.community_multilevel().membership
+    community = G.community_multilevel(weights="weight").membership
 
     # Plot
     print("Going to plot the graph")

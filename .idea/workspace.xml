@@ -4,6 +4,7 @@
     <list default="true" id="8e531b76-7856-4ebf-81c9-739f607ad1aa" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/community_detection/Driver.py" afterPath="$PROJECT_DIR$/community_detection/Driver.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/community_detection/EdgeWeightModifier.py" afterPath="$PROJECT_DIR$/community_detection/EdgeWeightModifier.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" afterPath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
     </list>
     <ignored path="untitled.iws" />
@@ -65,9 +66,21 @@
       <file leaf-file-name="Driver.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/community_detection/Driver.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.5990566">
-              <caret line="66" column="43" selection-start-line="66" selection-start-column="43" selection-end-line="66" selection-end-column="43" />
+            <state vertical-scroll-proportion="0.5188679">
+              <caret line="76" column="55" selection-start-line="76" selection-start-column="55" selection-end-line="76" selection-end-column="55" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="EdgeWeightModifier.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/community_detection/EdgeWeightModifier.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="39" column="27" selection-start-line="39" selection-start-column="27" selection-end-line="39" selection-end-column="27" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -76,7 +89,7 @@
         <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+              <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
               <folding>
                 <element signature="e#0#56#0" expanded="true" />
               </folding>
@@ -142,14 +155,14 @@
         <option value="$PROJECT_DIR$/xml_parser/LexiconXMLParser.py" />
         <option value="$PROJECT_DIR$/database/DBManager.py" />
         <option value="$PROJECT_DIR$/database/ImportXML.py" />
-        <option value="$PROJECT_DIR$/community_detection/EdgeWeightModifier.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/SAFacade.py" />
-        <option value="$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/Driver.py" />
         <option value="$PROJECT_DIR$/database/LexiconManager.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/preprocessing/PreProcessing.py" />
-        <option value="$PROJECT_DIR$/community_detection/Driver.py" />
+        <option value="$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
+        <option value="$PROJECT_DIR$/community_detection/Driver.py" />
+        <option value="$PROJECT_DIR$/community_detection/EdgeWeightModifier.py" />
       </list>
     </option>
   </component>
@@ -886,16 +899,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/community_detection/EdgeWeightModifier.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="17" column="8" selection-start-line="17" selection-start-column="8" selection-end-line="17" selection-end-column="8" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/database/LexiconManager.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.5613208">
@@ -906,8 +909,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5589623">
-          <caret line="39" column="65" selection-start-line="39" selection-start-column="65" selection-end-line="39" selection-end-column="65" />
+        <state vertical-scroll-proportion="0.5188679">
+          <caret line="38" column="63" selection-start-line="38" selection-start-column="63" selection-end-line="38" selection-end-column="63" />
           <folding />
         </state>
       </provider>
@@ -915,17 +918,27 @@
     <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+          <caret line="25" column="0" selection-start-line="25" selection-start-column="0" selection-end-line="25" selection-end-column="0" />
           <folding>
             <element signature="e#0#56#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/community_detection/EdgeWeightModifier.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="39" column="27" selection-start-line="39" selection-start-column="27" selection-end-line="39" selection-end-column="27" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/community_detection/Driver.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5990566">
-          <caret line="66" column="43" selection-start-line="66" selection-start-column="43" selection-end-line="66" selection-end-column="43" />
+        <state vertical-scroll-proportion="0.5188679">
+          <caret line="76" column="55" selection-start-line="76" selection-start-column="55" selection-end-line="76" selection-end-column="55" />
           <folding />
         </state>
       </provider>
