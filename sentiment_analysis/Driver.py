@@ -23,13 +23,18 @@ def train_or_load(pickle_file_name, trainer, training_set, force_train=False):
 LIMIT = 213
 
 row_generator = CSVParser.parse_file_into_csv_row_generator('sa_training_data/globe_dataset.csv')
+tweet_texts = [row[2] for row in row_generator][:LIMIT]
 
-labeled_tweets = [([word for word in row[2].split()], row[1]) for row in row_generator]
-labeled_tweets = labeled_tweets[0:LIMIT]
+row_generator = CSVParser.parse_file_into_csv_row_generator('sa_training_data/globe_dataset.csv')
+tweet_labels = [row[1] for row in row_generator][:LIMIT]
 
 # pre-process tweets
-TWEET_PREPROCESSORS = [WordLengthFilter(3), WordToLowercase()]
-labeled_tweets = preprocess_tweets(labeled_tweets, TWEET_PREPROCESSORS)
+TWEET_PREPROCESSORS = [SplitWordByWhitespace(), WordLengthFilter(3), WordToLowercase()]
+tweet_texts = preprocess_tweets(tweet_texts, TWEET_PREPROCESSORS)
+
+# construct labeled tweets to be run with the classifiers
+labeled_tweets = list(zip(tweet_texts, tweet_labels))
+
 
 # partition training/testing sets
 random.shuffle(labeled_tweets) # shuffling here to randomize train and test tweets

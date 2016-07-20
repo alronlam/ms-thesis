@@ -38,7 +38,6 @@ def add_vertex(graph, tweet_id):
         if new_tweet is not None:
             graph.vs[graph.vcount()-1]["text"] = new_tweet.text
             graph.vs[graph.vcount()-1]["tweet_id"] = new_tweet.id
-            # graph.vs[graph.vcount()-1]["sentiment"] = new_tweet.sentiment
 
     return graph
 

@@ -1,5 +1,5 @@
 import abc
-import sentiment_analysis.SAFacade
+import sentiment_analysis.SentimentClassifier
 
 class EdgeWeightModifierBase(object):
 
@@ -12,8 +12,8 @@ class EdgeWeightModifierBase(object):
 
 class SAWeightModifier(EdgeWeightModifierBase):
 
-    def __init__(self):
-        self.classifier = sentiment_analysis.SAFacade.SAFacade()
+    def __init__(self, sentiment_classifier):
+        self.classifier = sentiment_classifier
 
     def modify_edge_weights(self, graph):
         sentiment_dict = {}

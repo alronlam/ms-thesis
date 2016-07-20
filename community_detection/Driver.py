@@ -12,6 +12,7 @@ from community_detection.EdgeWeightModifier import *
 from community_detection.graph_construction import TweetGraphs
 from foldersio import FolderIO
 from jsonparser import JSONParser
+from sentiment_analysis import SentimentClassifier
 
 from database import DBManager
 
@@ -84,7 +85,14 @@ def generate_tweet_network():
     print("Going to plot the graph")
     _plot(G, "text", community)
 
-generate_tweet_network()
+# generate_tweet_network()
+
+tweet_text = "I'm so happy. This is the best day ever!"
+sentiment_classifier = SentimentClassifier.LexiconClassifier()
+print(sentiment_classifier.classify_sentiment(tweet_text))
+print(sentiment_classifier.get_overall_sentiment_score(tweet_text))
+
+
 
 # def generate_follow_network():
 #     finished_set = set()
