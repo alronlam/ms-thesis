@@ -57,6 +57,31 @@ def _plot(g,display_attribute, membership=None):
     plot(g, 'graph-{}.png'.format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), **visual_style)
 
 
+def extract_vertices_in_communities(graph, membership):
+    dict = {}
+    num_communities = len(set(membership))
+
+    for i in range(num_communities):
+        dict[i] = set()
+
+    community_info = list(zip(graph.vs(), membership))
+
+    for vertex, community_number in community_info:
+        dict[community_number].add(vertex)
+
+    return dict
+
+def combine_text_for_each_community(community_dict):
+    text_dict = {}
+    for community_number, vertex_set in community_dict.items():
+        text_dict[community_number] = combine_text_in_vertex_set(vertex_set)
+
+    return text_dict
+
+
+def combine_text_in_vertex_set(vertex_set):
+    return " ".join([vertex["text"] for vertex in vertex_set ])
+
 def generate_tweet_network():
 
     # Load tweets
@@ -81,8 +106,16 @@ def generate_tweet_network():
     community = G.community_leading_eigenvector(weights="weight").membership
 
     # Plot
-    print("Going to plot the graph")
-    _plot(G, "text", community)
+    # print("Going to plot the graph")
+    # _plot(G, "text", community)
+
+    # Word Cloud
+    text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
+    for index, text in text_dict.items():
+        if index == 1:
+            break
+        print("{}\n{}".format(index, text))
+
 
 generate_tweet_network()
 

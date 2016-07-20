@@ -37,7 +37,7 @@ class SAWeightModifier(EdgeWeightModifierBase):
             sentiment = self.classifier.classify_sentiment(vertex["text"])
             sentiment_dict[vertex["tweet_id"]] = sentiment
             vertex["sentiment"] = sentiment
-            vertex["text"] = "(" + sentiment + ") " + vertex["text"]
+            # vertex["text"] = "(" + sentiment + ") " + vertex["text"]
         return sentiment
 
 def modify_edge_weights(graph, edge_weight_modifiers):
