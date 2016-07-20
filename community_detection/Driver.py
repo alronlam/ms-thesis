@@ -69,7 +69,7 @@ def generate_tweet_network():
     # Construct base graph
     print("Going to construct the graph")
     # G = load("2016-03-04-tweets-pilipinasdebates.pickle")
-    G = TweetGraphs.construct_tweet_graph(None, tweets, 100, 0)
+    G = TweetGraphs.construct_tweet_graph(None, tweets, 500, 0)
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
 
     # Modify edge weights
@@ -78,7 +78,7 @@ def generate_tweet_network():
 
     # Community Detection
     print("Going to determine communities")
-    community = G.community_multilevel(weights="weight").membership
+    community = G.community_leading_eigenvector(weights="weight").membership
 
     # Plot
     print("Going to plot the graph")
