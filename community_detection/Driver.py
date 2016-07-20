@@ -73,9 +73,8 @@ def generate_tweet_network():
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
 
     # Modify edge weights
-    G = SAWeightModifier().modify_edge_weights(G)
+    G = SAWeightModifier(SentimentClassifier.LexiconClassifier()).modify_edge_weights(G)
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
-
 
     # Community Detection
     print("Going to determine communities")
@@ -85,13 +84,12 @@ def generate_tweet_network():
     print("Going to plot the graph")
     _plot(G, "text", community)
 
-# generate_tweet_network()
+generate_tweet_network()
 
-tweet_text = "I'm so happy. This is the best day ever!"
-sentiment_classifier = SentimentClassifier.LexiconClassifier()
-print(sentiment_classifier.classify_sentiment(tweet_text))
-print(sentiment_classifier.get_overall_sentiment_score(tweet_text))
-
+# tweet_text = "I'm so happy. This is the best day ever!"
+# sentiment_classifier = SentimentClassifier.LexiconClassifier()
+# print(sentiment_classifier.classify_sentiment(tweet_text))
+# print(sentiment_classifier.get_overall_sentiment_score(tweet_text))
 
 
 # def generate_follow_network():

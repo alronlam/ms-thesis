@@ -39,7 +39,7 @@ class LexiconClassifier(SentimentClassifier):
         # get all scores for the words in the text
         for tweet_word in tweet_text:
             tweet_word_sentiment_scores.append(LexiconManager.get_sentiment_score(tweet_word))
-        print(tweet_word_sentiment_scores)
+
         return sum(tweet_word_sentiment_scores)
 
     def classify_sentiment(self, tweet_text):

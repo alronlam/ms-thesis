@@ -2,14 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8e531b76-7856-4ebf-81c9-739f607ad1aa" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/database/LexiconManager.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/sentiment_analysis/SAFacade.py" afterPath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/community_detection/Driver.py" afterPath="$PROJECT_DIR$/community_detection/Driver.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/community_detection/EdgeWeightModifier.py" afterPath="$PROJECT_DIR$/community_detection/EdgeWeightModifier.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py" afterPath="$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sentiment_analysis/Driver.py" afterPath="$PROJECT_DIR$/sentiment_analysis/Driver.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sentiment_analysis/preprocessing/PreProcessing.py" afterPath="$PROJECT_DIR$/sentiment_analysis/preprocessing/PreProcessing.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" afterPath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -51,7 +46,7 @@
               <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="18" selection-end-column="69" />
               <folding>
                 <element signature="e#0#39#0" expanded="true" />
-                <marker date="1468997971861" expanded="true" signature="71:72" placeholder="..." />
+                <marker date="1469003468420" expanded="true" signature="71:72" placeholder="..." />
               </folding>
             </state>
           </provider>
@@ -70,21 +65,9 @@
       <file leaf-file-name="Driver.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/community_detection/Driver.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6014151">
-              <caret line="90" column="54" selection-start-line="90" selection-start-column="54" selection-end-line="90" selection-end-column="54" />
+            <state vertical-scroll-proportion="0.5990566">
+              <caret line="66" column="43" selection-start-line="66" selection-start-column="43" selection-end-line="66" selection-end-column="43" />
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="EdgeWeightModifier.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/community_detection/EdgeWeightModifier.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="15" column="46" selection-start-line="15" selection-start-column="46" selection-end-line="15" selection-end-column="46" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -93,41 +76,9 @@
         <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="32" column="144" selection-start-line="32" selection-start-column="144" selection-end-line="32" selection-end-column="144" />
+              <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
               <folding>
                 <element signature="e#0#56#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LexiconManager.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/database/LexiconManager.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TweetGraphs.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="39" column="65" selection-start-line="39" selection-start-column="65" selection-end-line="39" selection-end-column="65" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="PreProcessing.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sentiment_analysis/preprocessing/PreProcessing.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="38" column="46" selection-start-line="38" selection-start-column="46" selection-end-line="38" selection-end-column="46" />
-              <folding>
-                <element signature="e#0#10#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -902,16 +853,8 @@
           <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="18" selection-end-column="69" />
           <folding>
             <element signature="e#0#39#0" expanded="true" />
-            <marker date="1468997971861" expanded="true" signature="71:72" placeholder="..." />
+            <marker date="1469003468420" expanded="true" signature="71:72" placeholder="..." />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="39" column="65" selection-start-line="39" selection-start-column="65" selection-end-line="39" selection-end-column="65" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -933,24 +876,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/database/LexiconManager.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/community_detection/EdgeWeightModifier.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="15" column="46" selection-start-line="15" selection-start-column="46" selection-end-line="15" selection-end-column="46" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/sentiment_analysis/preprocessing/PreProcessing.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -961,10 +886,36 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/community_detection/EdgeWeightModifier.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="17" column="8" selection-start-line="17" selection-start-column="8" selection-end-line="17" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/database/LexiconManager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5613208">
+          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5589623">
+          <caret line="39" column="65" selection-start-line="39" selection-start-column="65" selection-end-line="39" selection-end-column="65" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="32" column="144" selection-start-line="32" selection-start-column="144" selection-end-line="32" selection-end-column="144" />
+          <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
           <folding>
             <element signature="e#0#56#0" expanded="true" />
           </folding>
@@ -973,8 +924,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/community_detection/Driver.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6014151">
-          <caret line="90" column="54" selection-start-line="90" selection-start-column="54" selection-end-line="90" selection-end-column="54" />
+        <state vertical-scroll-proportion="0.5990566">
+          <caret line="66" column="43" selection-start-line="66" selection-start-column="43" selection-end-line="66" selection-end-column="43" />
           <folding />
         </state>
       </provider>
