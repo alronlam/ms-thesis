@@ -6,3 +6,4 @@ results_*.txt
 mongodb/
 *.png
 sa_training_data/
+xml_parser/*.xml

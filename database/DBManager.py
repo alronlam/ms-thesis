@@ -11,9 +11,18 @@ tweet_collection = db['tweet_collection']
 user_collection = db['user_collection']
 following_collection = db['following_collection']
 followers_collection = db['followers_collection']
+lexicon_so_collection = db['lexicon_so_collection']
+
+# Lexicon-related
+def get_lexicon_so(lexicon_id):
+    # return lexicon_so_collection.find_one()
+    return lexicon_so_collection.find_one({"id":lexicon_id})
+
+def add_lexicon_so_entries(lexicon_entries):
+    for lexicon_entry in lexicon_entries:
+        lexicon_so_collection.insert(lexicon_entry)
 
 # Tweet-related
-
 def get_or_add_tweet_db_given_json(tweet_json):
     return add_or_update_db_given_json(tweet_json, tweet_collection, Status.parse)
 
