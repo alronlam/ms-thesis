@@ -1,6 +1,7 @@
 import nltk
 import math
 import random
+from sklearn import metrics
 from foldersio import FolderIO
 from csv_parser import CSVParser
 from csv_parser.CSVParser import CSVParser
@@ -12,6 +13,7 @@ from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from nltk.classify.scikitlearn import SklearnClassifier
 from sentiment_analysis.preprocessing.PreProcessing import *
 from sentiment_analysis.feature_extraction import FeatureExtractorBase
+
 
 def train_or_load(pickle_file_name, trainer, training_set, force_train=False):
     classifier = None
@@ -66,7 +68,7 @@ def test_nltk():
 
 
 def test_senti_election_data():
-    csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files', False, '.csv')
+    csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files/test', False, '.csv')
 
     csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
 
@@ -75,15 +77,29 @@ def test_senti_election_data():
     correct = 0
     total = 0
 
+    actual_arr = []
+    predicted_arr = []
+
     for csv_row in csv_rows:
-        actual_class = csv_row[6]
-        predicted_class = classifier.classify_sentiment(csv_row[1])
+        try:
+            actual_class = csv_row[6]
+            predicted_class = classifier.classify_sentiment(csv_row[1])
 
-        if actual_class.lower() == predicted_class.lower():
-            correct += 1
-        total += 1
+            if actual_class.lower() == predicted_class.lower():
+                correct += 1
+            total += 1
 
-        print('{:.2f} = {}/{}'.format(correct/total, correct, total))
+            print('{:.2f} = {}/{}'.format(correct/total, correct, total))
+
+            actual_arr.append(actual_class.lower())
+            predicted_arr.append(predicted_class.lower())
+        except Exception as e:
+            print(e)
+            pass
+
+    print('Accuracy: {}'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
+    print(metrics.classification_report(actual_arr, predicted_arr))
+    print(metrics.confusion_matrix(actual_arr, predicted_arr)) # ordering is alphabetical order of label names
 
 test_senti_election_data()
 
