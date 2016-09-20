@@ -7,6 +7,7 @@ from csv_parser.CSVParser import CSVParser
 from nltk.classify.naivebayes import NaiveBayesClassifier
 from sentiment_analysis.feature_extraction.UnigramExtractor import UnigramExtractor
 from sentiment_analysis.classifier.ClassifierIO import *
+from sentiment_analysis import SentimentClassifier
 from sklearn.naive_bayes import MultinomialNB, BernoulliNB
 from nltk.classify.scikitlearn import SklearnClassifier
 from sentiment_analysis.preprocessing.PreProcessing import *
@@ -65,13 +66,24 @@ def test_nltk():
 
 
 def test_senti_election_data():
-    print("INSIDE HERE")
     csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files', False, '.csv')
-    print("FINISHED READING CSV FILES")
-    print(csv_files.__len__())
-    csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files)
-    print("FINISHED READIN CSV ROWS")
+
+    csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
+
+    classifier = SentimentClassifier.LexiconClassifier()
+
+    correct = 0
+    total = 0
+
     for csv_row in csv_rows:
-        print(csv_row)
+        actual_class = csv_row[6]
+        predicted_class = classifier.classify_sentiment(csv_row[1])
+
+        if actual_class.lower() == predicted_class.lower():
+            correct += 1
+        total += 1
+
+        print('{:.2f} = {}/{}'.format(correct/total, correct, total))
+
 test_senti_election_data()
 

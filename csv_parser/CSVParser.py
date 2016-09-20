@@ -4,11 +4,13 @@ import os
 class CSVParser:
 
     @staticmethod
-    def parse_file_into_csv_row_generator(file):
+    def parse_file_into_csv_row_generator(file, ignore_first_row):
         with open(file.absolute().__str__(), newline='') as csv_file:
             row_reader = csv.reader(csv_file, delimiter=',')
-
-            for row in CSVParser.iterator_wrapper(row_reader):
+            generator = CSVParser.iterator_wrapper(row_reader)
+            if ignore_first_row:
+                generator.__next__()
+            for row in generator:
                 yield_row = [x for x in row if x.strip() != "" ]
                 if yield_row.__len__() > 0:
                     yield yield_row
@@ -25,8 +27,8 @@ class CSVParser:
               pass
 
     @staticmethod
-    def parse_files_into_csv_row_generator(files):
+    def parse_files_into_csv_row_generator(files, ignore_first_row):
         generator = iter(())
         for file in files:
-            generator = chain(generator, CSVParser.parse_file_into_csv_row_generator(file))
+            generator = chain(generator, CSVParser.parse_file_into_csv_row_generator(file, ignore_first_row))
         return generator
