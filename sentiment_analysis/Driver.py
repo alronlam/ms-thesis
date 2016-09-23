@@ -1,6 +1,8 @@
 import nltk
 import math
 import random
+import numpy
+from datetime import datetime
 from sklearn import metrics
 from foldersio import FolderIO
 from csv_parser import CSVParser
@@ -67,6 +69,16 @@ def test_nltk():
     print(nltk.classify.accuracy(classifier, test_set))
 
 
+def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
+    metrics_file = open(metrics_file_name, 'w')
+    metrics_file.write('Total: {}\n'.format(actual_arr.__len__()))
+    metrics_file.write('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
+    metrics_file.write(metrics.classification_report(actual_arr, predicted_arr))
+    metrics_file.write('\n')
+    metrics_file.write(numpy.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
+    metrics_file.write('\n')
+    metrics_file.close()
+
 def test_senti_election_data():
     csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files/test', False, '.csv')
 
@@ -79,6 +91,8 @@ def test_senti_election_data():
 
     actual_arr = []
     predicted_arr = []
+
+    metrics_file_name = 'metrics-{}.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
 
     for csv_row in csv_rows:
         try:
@@ -93,13 +107,14 @@ def test_senti_election_data():
 
             actual_arr.append(actual_class.lower())
             predicted_arr.append(predicted_class.lower())
+
+            if total % 500 == 0:
+                write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
+
         except Exception as e:
             print(e)
             pass
 
-    print('Accuracy: {}'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
-    print(metrics.classification_report(actual_arr, predicted_arr))
-    print(metrics.confusion_matrix(actual_arr, predicted_arr)) # ordering is alphabetical order of label names
 
 test_senti_election_data()
 
