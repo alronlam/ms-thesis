@@ -1,0 +1,10 @@
+Total: 33000
+Accuracy: 0.507
+             precision    recall  f1-score   support
+
+   negative       0.00      0.00      0.00      9059
+    neutral       0.49      0.76      0.59     13812
+   positive       0.55      0.62      0.58     10129
+
+avg / total       0.37      0.51      0.43     33000
+
