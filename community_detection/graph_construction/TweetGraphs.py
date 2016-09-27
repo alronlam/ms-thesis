@@ -42,10 +42,10 @@ def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
         tweet = DBManager.get_or_add_tweet(tweet_id)
 
         if tweet is not None:
-
+            print("Found tweet")
             # user_id = tweet["user"]["id_str"]
-            user_id = tweet["user"]["id"]
-            username = tweet["user"]["screen_name"]
+            user_id = tweet.user.id
+            username = tweet.user.screen_name
 
             add_user_vertex(graph, user_id, username)
 
