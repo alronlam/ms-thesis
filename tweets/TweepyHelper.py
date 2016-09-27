@@ -33,6 +33,10 @@ def retrieve_following_ids(user_id):
         func = lambda user_id: api.friends_ids(user_id)
         return tweepy_function(func, user_id)
 
+def show_friendship(source_id, target_id):
+    func = lambda source_id, target_id: api.show_friendship(source_id=source_id, target_id=target_id)
+    return tweepy_function(func, source_id, target_id)
+
 def tweepy_function(func, *args):
     try:
         return func(*args)

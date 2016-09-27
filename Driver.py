@@ -1,8 +1,8 @@
 import datetime
 
 from data_structures.Node import Node
-from foldersio.FolderIO import FolderIO
-from jsonparser.JSONParser import JSONParser
+# from foldersio.FolderIO import FolderIO
+# from jsonparser.JSONParser import JSONParser
 from tweets.TweetUtils import TweetUtils
 from operator import itemgetter
 import itertools
@@ -153,7 +153,7 @@ def desired_main():
         # file.write(full_reply_threads)
         file_results.flush()
 
-desired_main()
+# desired_main()
 
 def test_node_printing():
     node1 = Node("1")
@@ -180,7 +180,11 @@ def test_node_printing():
 
     print("Count of nodes is {}".format(count_nodes(node1)))
 
+from tweets import TweepyHelper
+from pprint import pprint
 
 
 
-
+friendship_result = TweepyHelper.show_friendship(268721392, 461053984)
+pprint(friendship_result[0])
+pprint(friendship_result[1])

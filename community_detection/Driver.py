@@ -117,7 +117,41 @@ def generate_tweet_network():
         print("{}\n{}".format(index, text))
 
 
-generate_tweet_network()
+# generate_tweet_network()
+
+def generate_user_network():
+     # Load tweets
+    # use dataset with all election hashtags
+    print("Reading data")
+    tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/03/elections/', False, '.json')
+    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
+    tweets = [DBManager.get_or_add_tweet_db_given_json(tweet)for tweet in tweet_generator]
+
+    # Construct base graph (directed)
+    print("Going to construct the graph")
+    # G = load("2016-03-04-tweets-pilipinasdebates.pickle")
+    # construct graph based on user objects
+    # G = TweetGraphs.construct_tweet_graph(None, tweets, 500, 0)
+    G.save("2016-03-04-tweets-pilipinasdebates.pickle")
+
+    # Modify edge weights
+    G = SAWeightModifier(SentimentClassifier.LexiconClassifier()).modify_edge_weights(G)
+    G.save("2016-03-04-tweets-pilipinasdebates.pickle")
+
+    # Community Detection
+    print("Going to determine communities")
+    community = G.community_leading_eigenvector(weights="weight").membership
+
+    # Plot
+    # print("Going to plot the graph")
+    # _plot(G, "text", community)
+
+    # Word Cloud
+    text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
+    for index, text in text_dict.items():
+        if index == 1:
+            break
+        print("{}\n{}".format(index, text))
 
 # tweet_text = "I'm so happy. This is the best day ever!"
 # sentiment_classifier = SentimentClassifier.LexiconClassifier()
