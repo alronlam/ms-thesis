@@ -182,9 +182,9 @@ def test_node_printing():
 
 from tweets import TweepyHelper
 from pprint import pprint
+from database import DBManager
 
+import json
 
-
-friendship_result = TweepyHelper.show_friendship(268721392, 461053984)
-pprint(friendship_result[0])
-pprint(friendship_result[1])
+# friendship_result = TweepyHelper.show_friendship(268721392, 461053984)
+print(DBManager.get_or_add_friendship(268721392,461053984 ))

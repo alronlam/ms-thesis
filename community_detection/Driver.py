@@ -121,40 +121,52 @@ def generate_tweet_network():
 # generate_tweet_network()
 
 def generate_user_network():
+
+    GRAPH_PICKLE_FILE_NAME = "sona-data-directed-clique.pickle"
+
      # Load tweets
     # use dataset with all election hashtags
     print("Reading data")
-    csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files/test', False, '.csv')
-    csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
-    tweet_ids = [csv_row[0] for csv_row in csv_rows]
+    # csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files/test', False, '.csv')
+    # csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
+    # tweet_ids = [csv_row[0] for csv_row in csv_rows]
+
+    tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/test/', False, '.json')
+    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
+    tweet_ids = [tweet["id"] for tweet in tweet_generator]
 
     # Construct base graph (directed)
     print("Going to construct the graph")
-    # G = load("2016-03-04-tweets-pilipinasdebates.pickle")
+    # G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
     G = TweetGraphs.construct_user_graph(None, tweet_ids)
-    G.save("senti-data-directed-clique.pickle")
+    G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
     # G = SAWeightModifier(SentimentClassifier.LexiconClassifier()).modify_edge_weights(G)
-    # G.save("2016-03-04-tweets-pilipinasdebates.pickle")
+    # G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Community Detection
     print("Going to determine communities")
-    community = G.community_leading_eigenvector(weights="weight").membership
+    community = G.community_infomap().membership
 
     # Plot
-    # print("Going to plot the graph")
-    # _plot(G, "text", community)
+    print("Going to plot the graph")
+    _plot(G, "username", community)
 
     # Word Cloud
-    text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
-    for index, text in text_dict.items():
-        if index == 1:
-            break
-        print("{}\n{}".format(index, text))
+    # text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
+    # for index, text in text_dict.items():
+    #     if index == 1:
+    #         break
+    #     print("{}\n{}".format(index, text))
 
 generate_user_network()
+
+
+# print(len(TweepyHelper.test_new_retrieve_followers_ids(330826792)))
+
+
 
 # tweet_text = "I'm so happy. This is the best day ever!"
 # sentiment_classifier = SentimentClassifier.LexiconClassifier()

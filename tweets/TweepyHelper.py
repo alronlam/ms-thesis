@@ -23,15 +23,45 @@ def retrieve_user(user_id):
 
 def retrieve_followers_ids(user_id):
     user = retrieve_user(user_id)
-    if user is not None:
-        func = lambda user_id: api.followers_ids(user_id)
-        return tweepy_function(func, user_id)
+    followers_ids = set()
+    pages = tweepy.Cursor(api.followers_ids, id=user_id).pages()
+    while(True):
+        try:
+            for page in pages:
+                followers_ids.update(page)
+                print("# of followers found: {}".format(followers_ids.__len__()))
+            return followers_ids
+        except tweepy.RateLimitError:
+            print("Hit the Twitter API rate limit. Sleeping for 3 minutes.")
+            time.sleep(60*3)
+            print("Finished sleeping. Resuming execution.")
+        except TweepError as err:
+            print("Tweep Error: {}".format(err))
+            break
+        except Exception as e:
+            print("{}".format(e))
+            break
 
 def retrieve_following_ids(user_id):
     user = retrieve_user(user_id)
-    if user is not None:
-        func = lambda user_id: api.friends_ids(user_id)
-        return tweepy_function(func, user_id)
+    followers_ids = set()
+    pages = tweepy.Cursor(api.friends_ids, id=user_id).pages()
+    while(True):
+        try:
+            for page in pages:
+                followers_ids.update(page)
+                print("# of following found: {}".format(followers_ids.__len__()))
+            return followers_ids
+        except tweepy.RateLimitError:
+            print("Hit the Twitter API rate limit. Sleeping for 3 minutes.")
+            time.sleep(60*3)
+            print("Finished sleeping. Resuming execution.")
+        except TweepError as err:
+            print("Tweep Error: {}".format(err))
+            break
+        except Exception as e:
+            print("{}".format(e))
+            break
 
 def show_friendship(source_id, target_id):
     func = lambda source_id, target_id: api.show_friendship(source_id=source_id, target_id=target_id)
@@ -47,5 +77,5 @@ def tweepy_function(func, *args):
         tweepy_function(func, args)
     except TweepError as err:
         print("Tweep Error: {}".format(err))
-    except:
-        print("Unexpected error:", sys.exc_info()[0])
+    except Exception as e:
+        print("Unexpected error: {}".format(e))

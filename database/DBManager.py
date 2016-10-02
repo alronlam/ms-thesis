@@ -11,6 +11,7 @@ tweet_collection = db['tweet_collection']
 user_collection = db['user_collection']
 following_collection = db['following_collection']
 followers_collection = db['followers_collection']
+friendship_collection = db['friendship_collection']
 lexicon_so_collection = db['lexicon_so_collection']
 
 # Lexicon-related
@@ -21,6 +22,30 @@ def get_lexicon_so(lexicon_id):
 def add_lexicon_so_entries(lexicon_entries):
     for lexicon_entry in lexicon_entries:
         lexicon_so_collection.insert(lexicon_entry)
+
+# Friendship-related
+def get_or_add_friendship(source_id, target_id):
+    if source_id > target_id:
+        return get_or_add_friendship(target_id, source_id)
+
+    friendship_identifier = str(source_id)+"-"+str(target_id)
+
+    try:
+        from_db = json.loads(dumps(friendship_collection.find_one({"id":friendship_identifier})))
+        if from_db:
+            return from_db
+
+        from_api = TweepyHelper.show_friendship(source_id, target_id)
+        if from_api:
+            new_dict = {"id": friendship_identifier, "following": from_api[0].following, "followed_by":from_api[0].followed_by}
+            friendship_collection.insert_one(new_dict)
+
+        return new_dict
+
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        return None
+
 
 # Tweet-related
 def get_or_add_tweet_db_given_json(tweet_json):
