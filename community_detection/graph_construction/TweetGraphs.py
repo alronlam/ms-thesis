@@ -32,7 +32,7 @@ def construct_tweet_graph(graph, tweets, limit=10000, start_index=0):
     return graph
 
 
-def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
+def construct_user_graph(graph, tweet_ids, pickle_file_name='user-graph.pickle', limit=10000, start_index=0):
     if graph is None:
         graph = Graph(directed=True)
 
@@ -40,7 +40,7 @@ def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
     found_tweets = 0
     for index, tweet_id in enumerate(tweet_ids):
 
-        print("Processed {}/{}".format(found_tweets, index))
+        print("Processing {}/{}".format(found_tweets, index))
 
         tweet = DBManager.get_or_add_tweet(tweet_id)
 
@@ -48,6 +48,8 @@ def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
             found_tweets += 1
             user_id = tweet.user.id_str
             username = tweet.user.screen_name
+
+            print("Processing {} with id {}".format(username, user_id))
 
             add_user_vertex(graph, user_id, username)
 
@@ -82,9 +84,11 @@ def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
             #             if friendship["followed_by"] is True:
             #                 new_edges.add((user_id, other_user_id))
 
+            graph.save(pickle_file_name)
+            print("Saved {} at tweet index {}".format(pickle_file_name, index))
+            print("# of edges after processing {} - {}".format(user_id, new_edges.__len__()))
 
-            print("New edges after processing {}".format(user_id))
-            print("# of edges: {}".format(new_edges.__len__()))
+
 
     print("Final edges to be added: ")
     print(new_edges)

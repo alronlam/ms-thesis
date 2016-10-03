@@ -122,7 +122,7 @@ def generate_tweet_network():
 
 def generate_user_network():
 
-    GRAPH_PICKLE_FILE_NAME = "sona-data-directed-clique.pickle"
+    GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 
      # Load tweets
     # use dataset with all election hashtags
@@ -139,7 +139,7 @@ def generate_user_network():
     print("Going to construct the graph")
     # G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_graph(None, tweet_ids)
+    G = TweetGraphs.construct_user_graph(None, tweet_ids, pickle_file_name=GRAPH_PICKLE_FILE_NAME)
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
