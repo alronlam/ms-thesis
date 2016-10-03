@@ -37,7 +37,9 @@ def retrieve_followers_ids(user_id):
             print("Finished sleeping. Resuming execution.")
         except TweepError as err:
             print("Tweep Error: {}".format(err))
-            break
+            print("Sleeping for 5 seconds before re-trying")
+            time.sleep(5)
+            print("Finished sleeping. Resuming execution.")
         except Exception as e:
             print("{}".format(e))
             break
@@ -58,7 +60,9 @@ def retrieve_following_ids(user_id):
             print("Finished sleeping. Resuming execution.")
         except TweepError as err:
             print("Tweep Error: {}".format(err))
-            break
+            print("Sleeping for 5 seconds before re-trying")
+            time.sleep(5)
+            print("Finished sleeping. Resuming execution.")
         except Exception as e:
             print("{}".format(e))
             break
