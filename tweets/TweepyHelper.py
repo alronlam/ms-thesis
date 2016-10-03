@@ -37,9 +37,12 @@ def retrieve_followers_ids(user_id):
             print("Finished sleeping. Resuming execution.")
         except TweepError as err:
             print("Tweep Error: {}".format(err))
-            print("Sleeping for 5 seconds before re-trying")
-            time.sleep(5)
-            print("Finished sleeping. Resuming execution.")
+            if "http" in "{}".format(err).lower():
+                print("Sleeping for 5 seconds before re-trying")
+                time.sleep(5)
+                print("Finished sleeping. Resuming execution.")
+            else:
+                break
         except Exception as e:
             print("{}".format(e))
             break
@@ -60,9 +63,12 @@ def retrieve_following_ids(user_id):
             print("Finished sleeping. Resuming execution.")
         except TweepError as err:
             print("Tweep Error: {}".format(err))
-            print("Sleeping for 5 seconds before re-trying")
-            time.sleep(5)
-            print("Finished sleeping. Resuming execution.")
+            if "http" in "{}".format(err).lower():
+                print("Sleeping for 5 seconds before re-trying")
+                time.sleep(5)
+                print("Finished sleeping. Resuming execution.")
+            else:
+                break
         except Exception as e:
             print("{}".format(e))
             break

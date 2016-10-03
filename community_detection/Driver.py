@@ -122,8 +122,8 @@ def generate_tweet_network():
 
 def generate_user_network():
 
-    GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-
+    # GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    GRAPH_PICKLE_FILE_NAME = "user-graph-2016-10-04-00-06-05.pickle"
      # Load tweets
     # use dataset with all election hashtags
     print("Reading data")
@@ -137,9 +137,9 @@ def generate_user_network():
 
     # Construct base graph (directed)
     print("Going to construct the graph")
-    # G = load(GRAPH_PICKLE_FILE_NAME)
+    G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_graph(None, tweet_ids, pickle_file_name=GRAPH_PICKLE_FILE_NAME)
+    G = TweetGraphs.construct_user_graph(G, tweet_ids, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=172)
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
@@ -154,7 +154,7 @@ def generate_user_network():
     print("Going to plot the graph")
     _plot(G, "username", community)
 
-    # Word Cloud
+    # Word Cloudnew_edges.__len__()
     # text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
     # for index, text in text_dict.items():
     #     if index == 1:
