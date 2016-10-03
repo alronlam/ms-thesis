@@ -59,11 +59,14 @@ def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
             follower_ids = DBManager.get_or_add_followers_ids(user_id)
             following_ids = DBManager.get_or_add_following_ids(user_id)
 
+            if follower_ids and following_ids:
+                print("Followers: {}, Following: {}".format(follower_ids.__len__(), following_ids.__len__()))
+
             for other_user_id in all_user_ids:
-                if follower_ids is not None and other_user_id in follower_ids:
+                if follower_ids and int(other_user_id) in follower_ids:
                     new_edges.add((other_user_id, user_id))
 
-                if following_ids is not None and other_user_id in following_ids:
+                if following_ids and int(other_user_id) in following_ids:
                     new_edges.add((user_id, other_user_id))
 
             # for other_user_id in all_user_ids:
@@ -84,7 +87,7 @@ def construct_user_graph(graph, tweet_ids, limit=10000, start_index=0):
 
 
             print("New edges after processing {}".format(user_id))
-            print(new_edges)
+            print("# of edges: {}".format(new_edges.__len__()))
 
     print("Final edges to be added: ")
     print(new_edges)
