@@ -122,8 +122,8 @@ def generate_tweet_network():
 
 def generate_user_network():
 
-    # GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    GRAPH_PICKLE_FILE_NAME = "user-graph-2016-10-04-00-06-05.pickle"
+    GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    # GRAPH_PICKLE_FILE_NAME = "user-graph-2016-10-04-22-27-53.pickle"
      # Load tweets
     # use dataset with all election hashtags
     print("Reading data")
@@ -133,13 +133,19 @@ def generate_user_network():
 
     tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/test/', False, '.json')
     tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
-    tweet_ids = [tweet["id"] for tweet in tweet_generator]
+    # tweet_ids = [tweet["id"] for tweet in tweet_generator]
+    tweet_ids = []
+    for tweet in tweet_generator:
+        try:
+            tweet_ids.append(tweet["id"])
+        except Exception as e:
+            pass
 
     # Construct base graph (directed)
     print("Going to construct the graph")
-    G = load(GRAPH_PICKLE_FILE_NAME)
+    # G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_graph(G, tweet_ids, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=172)
+    G = TweetGraphs.construct_user_graph(None, tweet_ids, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0)
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
@@ -162,9 +168,10 @@ def generate_user_network():
     #     print("{}\n{}".format(index, text))
 
 generate_user_network()
-
-
-# print(len(TweepyHelper.test_new_retrieve_followers_ids(330826792)))
+# DBManager.delete_followers_ids(461053984)
+# print(len(DBManager.get_or_add_followers_ids(461053984)))
+# print(len(DBManager.get_or_add_followers_ids(48284511)))
+# print(len(DBManager.get_or_add_following_ids(48284511)))
 
 
 

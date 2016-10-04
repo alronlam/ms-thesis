@@ -64,10 +64,10 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
                 following_ids = DBManager.get_or_add_following_ids(user_id)
 
                 for other_user_id in all_user_ids:
-                    if follower_ids and int(other_user_id) in follower_ids:
+                    if follower_ids and other_user_id in follower_ids:
                         new_edges.add((other_user_id, user_id))
 
-                    if following_ids and int(other_user_id) in following_ids:
+                    if following_ids and other_user_id in following_ids:
                         new_edges.add((user_id, other_user_id))
 
                 # for other_user_id in all_user_ids:
@@ -86,14 +86,16 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
                 #             if friendship["followed_by"] is True:
                 #                 new_edges.add((user_id, other_user_id))
 
+
+                graph.add_edges(list(new_edges))
                 graph.save(pickle_file_name)
+                new_edges = set()
                 print("Saved {} at tweet index {}".format(pickle_file_name, index))
                 print("# of edges after processing {} - {}".format(user_id, new_edges.__len__()))
 
-
-    print("Final edges to be added: ")
-    print(new_edges)
-    graph.add_edges(list(new_edges))
+    # print("Final edges to be added: ")
+    # print(new_edges)
+    # graph.add_edges(list(new_edges))
 
     return graph
 

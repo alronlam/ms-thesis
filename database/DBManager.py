@@ -84,11 +84,13 @@ def get_or_add_list(id, collection, retrieve_func, list_name):
     try:
         from_db = collection.find_one({'id':id})
         return from_db[list_name] if from_db else add_or_update_list_db(id, collection, retrieve_func, list_name)
-    except:
+    except Exception as e:
+        print("Get or add list exception: {}".format(e))
         return None
 
 def add_or_update_list_db(id, collection, retrieve_func, list_name):
     from_api = retrieve_func(id)
+    from_api = [str(x) for x in from_api]
     if from_api:
         json = {"id":id, list_name:from_api}
         collection.update({"id":id}, json, True)
