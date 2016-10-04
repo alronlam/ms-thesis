@@ -90,8 +90,8 @@ def get_or_add_list(id, collection, retrieve_func, list_name):
 
 def add_or_update_list_db(id, collection, retrieve_func, list_name):
     from_api = retrieve_func(id)
-    from_api = [str(x) for x in from_api]
     if from_api:
+        from_api = [str(x) for x in from_api]
         json = {"id":id, list_name:from_api}
         collection.update({"id":id}, json, True)
     return from_api
