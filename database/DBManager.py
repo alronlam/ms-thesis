@@ -14,6 +14,8 @@ followers_collection = db['followers_collection']
 friendship_collection = db['friendship_collection']
 lexicon_so_collection = db['lexicon_so_collection']
 
+UNAVAILABLE_KEY = 'unavailable'
+
 # Lexicon-related
 def get_lexicon_so(lexicon_id):
     # return lexicon_so_collection.find_one()
@@ -83,7 +85,16 @@ def delete_followers_ids(user_id):
 def get_or_add_list(id, collection, retrieve_func, list_name):
     try:
         from_db = collection.find_one({'id':id})
-        return from_db[list_name] if from_db else add_or_update_list_db(id, collection, retrieve_func, list_name)
+
+        if from_db:
+            # this means the API cannot give the information needed (based on a past query, so don't retry the query anymore); TODO: review this, might miss out on info not retrieved due to connectivity issues
+            if UNAVAILABLE_KEY in from_db:
+                return None
+            else:
+                return from_db[list_name]
+        else:
+            add_or_update_list_db(id, collection, retrieve_func, list_name)
+        # return from_db[list_name] if from_db else add_or_update_list_db(id, collection, retrieve_func, list_name)
     except Exception as e:
         print("Get or add list exception: {}".format(e))
         return None
@@ -94,12 +105,22 @@ def add_or_update_list_db(id, collection, retrieve_func, list_name):
         from_api = [str(x) for x in from_api]
         json = {"id":id, list_name:from_api}
         collection.update({"id":id}, json, True)
+    else:
+        collection.update({"id":id}, {"id":id, UNAVAILABLE_KEY:True}, True)
     return from_api
 
 def get_or_add(id, collection, retrieve_func, obj_constructor):
     try:
         from_db = json.loads(dumps(collection.find_one({"id":id})))
-        return obj_constructor(TweepyHelper.api, from_db) if from_db else add_or_update_db(id, collection, retrieve_func)
+
+        if from_db:
+            if UNAVAILABLE_KEY in from_db:
+                return None
+            else:
+                return obj_constructor(TweepyHelper.api, from_db)
+        else:
+            add_or_update_db(id, collection, retrieve_func)
+        # return obj_constructor(TweepyHelper.api, from_db) if from_db else add_or_update_db(id, collection, retrieve_func)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         return None
@@ -108,6 +129,8 @@ def add_or_update_db(id, collection, retrieve_func):
     from_api = retrieve_func(id)
     if from_api:
         collection.update({"id":id}, from_api._json, True)
+    else:
+        collection.update({"id":id}, {"id":id, UNAVAILABLE_KEY:True}, True)
     return from_api
 
 def add_or_update_db_given_json(json, collection, obj_constructor):

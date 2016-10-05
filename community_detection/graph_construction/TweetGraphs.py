@@ -51,7 +51,7 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
                 user_id = tweet.user.id_str
                 username = tweet.user.screen_name
 
-                print("Processing {} with id {}".format(username, user_id))
+                print("Processing tweet id {} posted by {} with id {}".format(tweet_id, username, user_id))
 
                 add_user_vertex(graph, user_id, username)
 
@@ -91,7 +91,8 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
                 graph.save(pickle_file_name)
                 new_edges = set()
                 print("Saved {} at tweet index {}".format(pickle_file_name, index))
-                print("# of edges after processing {} - {}".format(user_id, new_edges.__len__()))
+                print("# of edges and vertices after processing {} - {} - {}".format(user_id, new_edges.__len__(), all_user_ids.__len__()))
+                print()
 
     # print("Final edges to be added: ")
     # print(new_edges)
