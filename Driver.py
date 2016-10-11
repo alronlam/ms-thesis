@@ -1,9 +1,9 @@
 import datetime
 
-from data_structures.Node import Node
+from data.data_structures.Node import Node
 # from foldersio.FolderIO import FolderIO
 # from jsonparser.JSONParser import JSONParser
-from tweets.TweetUtils import TweetUtils
+from data.tweets.TweetUtils import TweetUtils
 from operator import itemgetter
 import itertools
 
@@ -180,11 +180,8 @@ def test_node_printing():
 
     print("Count of nodes is {}".format(count_nodes(node1)))
 
-from tweets import TweepyHelper
-from pprint import pprint
-from database import DBManager
 
-import json
+from data.database import DBManager
 
 # friendship_result = TweepyHelper.show_friendship(268721392, 461053984)
-print(DBManager.get_or_add_friendship(268721392,461053984 ))
+print(DBManager.get_or_add_friendship(268721392, 461053984))

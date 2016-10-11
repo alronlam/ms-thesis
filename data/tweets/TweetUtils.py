@@ -1,8 +1,11 @@
-from tweets import TweepyHelper
-from data_structures.Node import Node
 from functools import reduce
-from database import DBManager
+
 from igraph import *
+
+from data.data_structures.Node import Node
+from data.database import DBManager
+from data.tweets import TweepyHelper
+
 
 class TweetUtils:
 

@@ -1,12 +1,13 @@
 from datetime import datetime
+
+from analysis.viz import CommunityViz
 from community_detection.EdgeWeightModifier import *
 from community_detection.graph_construction import TweetGraphs
-from foldersio import FolderIO
-from jsonparser import JSONParser
+from data.database import DBManager
+from data.parsing.foldersio import FolderIO
+from data.parsing.jsonparser import JSONParser
 from sentiment_analysis import SentimentClassifier
-from analysis.viz import CommunityViz
 
-from database import DBManager
 
 def extract_vertices_in_communities(graph, membership):
     dict = {}
@@ -40,7 +41,7 @@ def generate_tweet_network():
     print("Reading data")
     tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/03/elections/', False, '.json')
     tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
-    tweets = [DBManager.get_or_add_tweet_db_given_json(tweet)for tweet in tweet_generator]
+    tweets = [DBManager.get_or_add_tweet_db_given_json(tweet) for tweet in tweet_generator]
 
     # Construct base graph
     print("Going to construct the graph")

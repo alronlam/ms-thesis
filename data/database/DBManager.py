@@ -1,9 +1,11 @@
-from pymongo import MongoClient
-from tweets import TweepyHelper
-from bson.json_util import dumps
-from tweepy import *
 import json
 import sys
+
+from bson.json_util import dumps
+from pymongo import MongoClient
+from tweepy import *
+
+from data.tweets import TweepyHelper
 
 client = MongoClient('localhost', 27017)
 db = client['twitter_db']

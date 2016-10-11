@@ -1,6 +1,7 @@
-from foldersio.FolderIO import FolderIO
-from dialog_acts.TSVParser import TSVParser
+from data.parsing.foldersio.FolderIO import FolderIO
 from dialog_acts.ConversationManager import ConversationManager
+from dialog_acts.TSVParser import TSVParser
+
 
 # get all tsv files within the directory
 def filter_tsv_conversations():
