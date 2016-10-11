@@ -1,4 +1,4 @@
-from data.database import DBManager
+from twitter_data.database import DBManager
 
 def import_lexicon_to_db(xml_row_generator):
     document_batch =[]

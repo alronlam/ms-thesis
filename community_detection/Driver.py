@@ -3,9 +3,9 @@ from datetime import datetime
 from analysis.viz import CommunityViz
 from community_detection.EdgeWeightModifier import *
 from community_detection.graph_construction import TweetGraphs
-from data.database import DBManager
-from data.parsing.foldersio import FolderIO
-from data.parsing.jsonparser import JSONParser
+from twitter_data.database import DBManager
+from twitter_data.parsing.folders import FolderIO
+from twitter_data.parsing.json_parser import JSONParser
 from sentiment_analysis import SentimentClassifier
 
 

@@ -2,9 +2,9 @@ from functools import reduce
 
 from igraph import *
 
-from data.data_structures.Node import Node
-from data.database import DBManager
-from data.tweets import TweepyHelper
+from dialog_acts.data_structures.Node import Node
+from twitter_data.database import DBManager
+from twitter_data.api import TweepyHelper
 
 
 class TweetUtils:

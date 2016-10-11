@@ -1,8 +1,7 @@
 import abc
 
-from data.database import LexiconManager
-from sentiment_analysis.classifier.ClassifierIO import *
-from sentiment_analysis.feature_extraction import FeatureExtractorBase
+from sentiment_analysis.lexicon.database import LexiconManager
+from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
 

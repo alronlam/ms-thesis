@@ -1,4 +1,4 @@
-from data.database import DBManager
+from twitter_data.database import DBManager
 
 def get_sentiment_score(word):
     eng_score = DBManager.lexicon_so_collection.find_one({"eng":word})

@@ -5,7 +5,7 @@ from bson.json_util import dumps
 from pymongo import MongoClient
 from tweepy import *
 
-from data.tweets import TweepyHelper
+from twitter_data.api import TweepyHelper
 
 client = MongoClient('localhost', 27017)
 db = client['twitter_db']

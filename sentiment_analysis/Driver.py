@@ -4,14 +4,13 @@ from datetime import datetime
 
 import nltk
 import numpy
+from sentiment_analysis.feature_extraction import FeatureExtractorBase
 from sklearn import metrics
 
-from data.parsing.csv_parser import CSVParser
-from data.parsing.foldersio import FolderIO
+from twitter_data.parsing.csv_parser import CSVParser
+from twitter_data.parsing.folders import FolderIO
 from sentiment_analysis import SentimentClassifier
-from sentiment_analysis.classifier.ClassifierIO import *
-from sentiment_analysis.feature_extraction import FeatureExtractorBase
-from sentiment_analysis.feature_extraction.UnigramExtractor import UnigramExtractor
+from sentiment_analysis.machine_learning.feature_extraction.UnigramExtractor import UnigramExtractor
 from sentiment_analysis.preprocessing.PreProcessing import *
 
 

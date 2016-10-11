@@ -1,4 +1,4 @@
-from data.parsing.foldersio.FolderIO import FolderIO
+from twitter_data.parsing.folders.FolderIO import FolderIO
 from dialog_acts.ConversationManager import ConversationManager
 from dialog_acts.TSVParser import TSVParser
 

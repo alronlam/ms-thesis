@@ -1,4 +1,4 @@
-from data.data_structures import ClassifiedTweet
+from dialog_acts.data_structures import ClassifiedTweet
 
 class ConversationManager:
 

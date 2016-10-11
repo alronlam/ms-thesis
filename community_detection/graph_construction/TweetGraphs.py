@@ -1,6 +1,6 @@
 from igraph import *
 
-from data.database import DBManager
+from twitter_data.database import DBManager
 
 
 # edge exists if tweet_graph has same hashtag
