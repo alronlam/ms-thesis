@@ -1,6 +1,6 @@
 import abc
 
-from sentiment_analysis.lexicon.database import LexiconManager
+from sentiment_analysis.lexicon.simple.database import LexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
