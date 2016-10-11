@@ -1,5 +1,7 @@
 import nltk
-from sentiment_analysis.feature_extraction.FeatureExtractorBase import FeatureExtractorBase
+
+from sentiment_analysis.machine_learning.feature_extraction.FeatureExtractorBase import FeatureExtractorBase
+
 
 class UnigramExtractor(FeatureExtractorBase):
 

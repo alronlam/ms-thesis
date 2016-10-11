@@ -7,3 +7,4 @@ mongodb/
 *.png
 sa_training_data/
 xml_parser/*.xml
+sentiment_analysis/*.txt

@@ -1,9 +1,11 @@
-from pymongo import MongoClient
-from tweets import TweepyHelper
-from bson.json_util import dumps
-from tweepy import *
 import json
 import sys
+
+from bson.json_util import dumps
+from pymongo import MongoClient
+from tweepy import *
+
+from twitter_data.api import TweepyHelper
 
 client = MongoClient('localhost', 27017)
 db = client['twitter_db']
@@ -11,7 +13,10 @@ tweet_collection = db['tweet_collection']
 user_collection = db['user_collection']
 following_collection = db['following_collection']
 followers_collection = db['followers_collection']
+friendship_collection = db['friendship_collection']
 lexicon_so_collection = db['lexicon_so_collection']
+
+UNAVAILABLE_KEY = 'unavailable'
 
 # Lexicon-related
 def get_lexicon_so(lexicon_id):
@@ -21,6 +26,30 @@ def get_lexicon_so(lexicon_id):
 def add_lexicon_so_entries(lexicon_entries):
     for lexicon_entry in lexicon_entries:
         lexicon_so_collection.insert(lexicon_entry)
+
+# Friendship-related
+def get_or_add_friendship(source_id, target_id):
+    if source_id > target_id:
+        return get_or_add_friendship(target_id, source_id)
+
+    friendship_identifier = str(source_id)+"-"+str(target_id)
+
+    try:
+        from_db = json.loads(dumps(friendship_collection.find_one({"id":friendship_identifier})))
+        if from_db:
+            return from_db
+
+        from_api = TweepyHelper.show_friendship(source_id, target_id)
+        if from_api:
+            new_dict = {"id": friendship_identifier, "following": from_api[0].following, "followed_by":from_api[0].followed_by}
+            friendship_collection.insert_one(new_dict)
+
+        return new_dict
+
+    except:
+        print("Unexpected error:", sys.exc_info()[0])
+        return None
+
 
 # Tweet-related
 def get_or_add_tweet_db_given_json(tweet_json):
@@ -58,21 +87,42 @@ def delete_followers_ids(user_id):
 def get_or_add_list(id, collection, retrieve_func, list_name):
     try:
         from_db = collection.find_one({'id':id})
-        return from_db[list_name] if from_db else add_or_update_list_db(id, collection, retrieve_func, list_name)
-    except:
+
+        if from_db:
+            # this means the API cannot give the information needed (based on a past query, so don't retry the query anymore); TODO: review this, might miss out on info not retrieved due to connectivity issues
+            if UNAVAILABLE_KEY in from_db:
+                return None
+            else:
+                return from_db[list_name]
+        else:
+            add_or_update_list_db(id, collection, retrieve_func, list_name)
+        # return from_db[list_name] if from_db else add_or_update_list_db(id, collection, retrieve_func, list_name)
+    except Exception as e:
+        print("Get or add list exception: {}".format(e))
         return None
 
 def add_or_update_list_db(id, collection, retrieve_func, list_name):
     from_api = retrieve_func(id)
     if from_api:
+        from_api = [str(x) for x in from_api]
         json = {"id":id, list_name:from_api}
         collection.update({"id":id}, json, True)
+    else:
+        collection.update({"id":id}, {"id":id, UNAVAILABLE_KEY:True}, True)
     return from_api
 
 def get_or_add(id, collection, retrieve_func, obj_constructor):
     try:
         from_db = json.loads(dumps(collection.find_one({"id":id})))
-        return obj_constructor(TweepyHelper.api, from_db) if from_db else add_or_update_db(id, collection, retrieve_func)
+
+        if from_db:
+            if UNAVAILABLE_KEY in from_db:
+                return None
+            else:
+                return obj_constructor(TweepyHelper.api, from_db)
+        else:
+            add_or_update_db(id, collection, retrieve_func)
+        # return obj_constructor(TweepyHelper.api, from_db) if from_db else add_or_update_db(id, collection, retrieve_func)
     except:
         print("Unexpected error:", sys.exc_info()[0])
         return None
@@ -81,6 +131,8 @@ def add_or_update_db(id, collection, retrieve_func):
     from_api = retrieve_func(id)
     if from_api:
         collection.update({"id":id}, from_api._json, True)
+    else:
+        collection.update({"id":id}, {"id":id, UNAVAILABLE_KEY:True}, True)
     return from_api
 
 def add_or_update_db_given_json(json, collection, obj_constructor):

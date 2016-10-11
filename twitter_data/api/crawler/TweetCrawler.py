@@ -8,7 +8,7 @@ import time
 import tweepy
 from tweepy import *
 
-from tweets.TweetUtils import TweetUtils
+from dialog_acts.TweetUtils import TweetUtils
 
 consumer_key = 'fwbtkGf8N97yyUZyH5YzLw'
 consumer_secret = 'oQA5DunUy89Co5Hr7p4O2WmdzqiGTzssn2kMphKc8g'

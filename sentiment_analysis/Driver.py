@@ -1,20 +1,17 @@
-import nltk
 import math
 import random
-import numpy
 from datetime import datetime
-from sklearn import metrics
-from foldersio import FolderIO
-from csv_parser import CSVParser
-from csv_parser.CSVParser import CSVParser
-from nltk.classify.naivebayes import NaiveBayesClassifier
-from sentiment_analysis.feature_extraction.UnigramExtractor import UnigramExtractor
-from sentiment_analysis.classifier.ClassifierIO import *
-from sentiment_analysis import SentimentClassifier
-from sklearn.naive_bayes import MultinomialNB, BernoulliNB
-from nltk.classify.scikitlearn import SklearnClassifier
-from sentiment_analysis.preprocessing.PreProcessing import *
+
+import nltk
+import numpy
 from sentiment_analysis.feature_extraction import FeatureExtractorBase
+from sklearn import metrics
+
+from twitter_data.parsing.csv_parser import CSVParser
+from twitter_data.parsing.folders import FolderIO
+from sentiment_analysis import SentimentClassifier
+from sentiment_analysis.machine_learning.feature_extraction.UnigramExtractor import UnigramExtractor
+from sentiment_analysis.preprocessing.PreProcessing import *
 
 
 def train_or_load(pickle_file_name, trainer, training_set, force_train=False):
