@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8e531b76-7856-4ebf-81c9-739f607ad1aa" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/parsing/AnewCsvParser.py" afterPath="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ImportANEWToDB.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/parsing/__init__.py" afterPath="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/__init__.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ANEWLexiconManager.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" afterPath="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
     </list>
     <ignored path="untitled.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -28,69 +29,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Driver.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/community_detection/Driver.py">
+      <file leaf-file-name="SentimentClassifier.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="80" column="36" selection-start-line="80" selection-start-column="27" selection-end-line="80" selection-end-column="36" />
+            <state vertical-scroll-proportion="1.2302483">
+              <caret line="82" column="0" selection-start-line="82" selection-start-column="0" selection-end-line="82" selection-end-column="0" />
               <folding>
-                <element signature="e#0#29#0" expanded="true" />
-                <element signature="e#448#731#0" expanded="false" />
-                <element signature="e#790#967#0" expanded="false" />
-                <element signature="e#1018#1077#0" expanded="false" />
-                <element signature="e#1114#2372#0" expanded="false" />
+                <element signature="e#0#10#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="FolderIO.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/twitter_data/parsing/folders/FolderIO.py">
+      <file leaf-file-name="ANEWLexiconManager.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ANEWLexiconManager.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="3" column="12" selection-start-line="3" selection-start-column="8" selection-end-line="3" selection-end-column="12" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ImportANEWToDB.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ImportANEWToDB.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.9209932">
-              <caret line="39" column="28" selection-start-line="39" selection-start-column="28" selection-end-line="39" selection-end-column="28" />
-              <folding>
-                <element signature="e#0#53#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LexiconXMLParser.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/simple/parsing/LexiconXMLParser.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="15" column="19" selection-start-line="15" selection-start-column="19" selection-end-line="15" selection-end-column="19" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ImportXMLToDB.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/simple/database/ImportXMLToDB.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CSVParser.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/twitter_data/parsing/csv_parser/CSVParser.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
+              <caret line="9" column="39" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="39" />
               <folding />
             </state>
           </provider>
@@ -111,7 +66,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/TweetSearcher.py" />
         <option value="$PROJECT_DIR$/TweetHelper.py" />
         <option value="$PROJECT_DIR$/results_full.txt" />
         <option value="$PROJECT_DIR$/results_frequency.txt" />
@@ -155,13 +109,14 @@
         <option value="$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py" />
         <option value="$PROJECT_DIR$/database/DBManager.py" />
         <option value="$PROJECT_DIR$/analysis/viz/CommunityViz.py" />
-        <option value="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/lexicon/database/ImportXMLToDB.py" />
         <option value="$PROJECT_DIR$/community_detection/Driver.py" />
         <option value="$PROJECT_DIR$/twitter_data/parsing/csv_parser/CSVParser.py" />
         <option value="$PROJECT_DIR$/twitter_data/database/DBManager.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/parsing/AnewCsvParser.py" />
         <option value="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ImportANEWToDB.py" />
+        <option value="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ANEWLexiconManager.py" />
+        <option value="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
       </list>
     </option>
   </component>
@@ -270,6 +225,54 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="simple" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MS_Thesis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ms-thesis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="sentiment_analysis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lexicon" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="simple" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="database" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MS_Thesis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="ms-thesis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="sentiment_analysis" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lexicon" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="anew" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -325,7 +328,7 @@
       <recent name="C:\Users\user\PycharmProjects\ms-thesis\sentiment_analysis\lexicon\parsing" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.AnewCsvParser">
+  <component name="RunManager" selected="Python.SentimentClassifier">
     <configuration default="false" name="Driver (2)" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -340,42 +343,6 @@
       <module name="MS_Thesis" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/community_detection/Driver.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Driver (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="MS_Thesis" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Driver.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="TweetGraphs" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/community_detection/graph_construction" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="MS_Thesis" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/community_detection/graph_construction/TweetGraphs.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -412,6 +379,42 @@
       <module name="MS_Thesis" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/twitter_data/database/DBManager.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="ANEWLexiconManager" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MS_Thesis" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ANEWLexiconManager.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="SentimentClassifier" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/sentiment_analysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="MS_Thesis" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <method />
@@ -546,18 +549,18 @@
     </configuration>
     <list size="5">
       <item index="0" class="java.lang.String" itemvalue="Python.Driver (2)" />
-      <item index="1" class="java.lang.String" itemvalue="Python.Driver (1)" />
-      <item index="2" class="java.lang.String" itemvalue="Python.TweetGraphs" />
-      <item index="3" class="java.lang.String" itemvalue="Python.AnewCsvParser" />
-      <item index="4" class="java.lang.String" itemvalue="Python.DBManager" />
+      <item index="1" class="java.lang.String" itemvalue="Python.AnewCsvParser" />
+      <item index="2" class="java.lang.String" itemvalue="Python.DBManager" />
+      <item index="3" class="java.lang.String" itemvalue="Python.ANEWLexiconManager" />
+      <item index="4" class="java.lang.String" itemvalue="Python.SentimentClassifier" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.AnewCsvParser" />
-        <item index="1" class="java.lang.String" itemvalue="Python.DBManager" />
-        <item index="2" class="java.lang.String" itemvalue="Python.Driver (2)" />
-        <item index="3" class="java.lang.String" itemvalue="Python.TweetGraphs" />
-        <item index="4" class="java.lang.String" itemvalue="Python.Driver (1)" />
+        <item index="0" class="java.lang.String" itemvalue="Python.SentimentClassifier" />
+        <item index="1" class="java.lang.String" itemvalue="Python.ANEWLexiconManager" />
+        <item index="2" class="java.lang.String" itemvalue="Python.AnewCsvParser" />
+        <item index="3" class="java.lang.String" itemvalue="Python.DBManager" />
+        <item index="4" class="java.lang.String" itemvalue="Python.Driver (2)" />
       </list>
     </recent_temporary>
   </component>
@@ -844,13 +847,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="43" column="0" selection-start-line="43" selection-start-column="0" selection-end-line="43" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/dialog_acts/data_structures/ClassifiedTweet.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.42713568">
@@ -873,13 +869,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/simple/database/LexiconManager.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5330033">
-          <caret line="19" column="13" selection-start-line="19" selection-start-column="13" selection-end-line="19" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/community_detection/Driver.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -896,7 +885,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/twitter_data/parsing/csv_parser/CSVParser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
+        <state vertical-scroll-proportion="0.42212188">
           <caret line="13" column="31" selection-start-line="13" selection-start-column="31" selection-end-line="13" selection-end-column="31" />
           <folding />
         </state>
@@ -904,7 +893,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/simple/database/ImportXMLToDB.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
+        <state vertical-scroll-proportion="0.1918736">
           <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
           <folding />
         </state>
@@ -912,7 +901,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/simple/parsing/LexiconXMLParser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
+        <state vertical-scroll-proportion="0.5756208">
           <caret line="15" column="19" selection-start-line="15" selection-start-column="19" selection-end-line="15" selection-end-column="19" />
           <folding />
         </state>
@@ -936,10 +925,36 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ImportANEWToDB.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9209932">
-          <caret line="39" column="28" selection-start-line="39" selection-start-column="28" selection-end-line="39" selection-end-column="28" />
+        <state vertical-scroll-proportion="0.8058691">
+          <caret line="36" column="25" selection-start-line="36" selection-start-column="25" selection-end-line="36" selection-end-column="25" />
           <folding>
             <element signature="e#0#53#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/simple/database/LexiconManager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.49887133">
+          <caret line="13" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sentiment_analysis/lexicon/anew/database/ANEWLexiconManager.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="9" column="39" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="39" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sentiment_analysis/SentimentClassifier.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.2302483">
+          <caret line="82" column="0" selection-start-line="82" selection-start-column="0" selection-end-line="82" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
           </folding>
         </state>
       </provider>

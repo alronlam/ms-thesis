@@ -1,6 +1,7 @@
 import abc
 
 from sentiment_analysis.lexicon.simple.database import LexiconManager
+from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
@@ -41,6 +42,32 @@ class LexiconClassifier(SentimentClassifier):
         # get all scores for the words in the text
         for tweet_word in tweet_text:
             tweet_word_sentiment_scores.append(LexiconManager.get_sentiment_score(tweet_word))
+
+        return sum(tweet_word_sentiment_scores)
+
+    def classify_sentiment(self, tweet_text):
+        sentiment_score = self.get_overall_sentiment_score(tweet_text)
+
+        if sentiment_score > 0:
+            return "positive"
+        elif sentiment_score < 0:
+            return "negative"
+        else:
+            return "neutral"
+
+
+class ANEWLexiconClassifier(SentimentClassifier):
+
+    def __init__(self):
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
+
+    def get_overall_sentiment_score(self, tweet_text):
+        tweet_text = self.preprocess(tweet_text)
+        tweet_word_sentiment_scores = []
+
+        # get all scores for the words in the text
+        for tweet_word in tweet_text:
+            tweet_word_sentiment_scores.append(ANEWLexiconManager.get_sentiment_score(tweet_word))
 
         return sum(tweet_word_sentiment_scores)
 
