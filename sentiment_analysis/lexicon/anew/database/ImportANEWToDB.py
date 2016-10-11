@@ -16,7 +16,7 @@ def create_dict_from_anew_row(row):
         print("AnewCsvParser.create_dict_from_anew_row exception: {}".format(e))
         pass
 
-def import_lexicon_to_db(csv_row_generator):
+def import_anew_lexicon_to_db(csv_row_generator):
     document_batch =[]
     for index, row in enumerate(csv_row_generator):
         # print(row)
@@ -37,4 +37,4 @@ def import_lexicon_to_db(csv_row_generator):
 def driver_import_code():
     anew_csv_file = Path('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/lexicon/anew/ANEW Lexicon with Filipino Translation.csv')
     csv_row_generator = CSVParser.parse_file_into_csv_row_generator(anew_csv_file, True)
-    import_lexicon_to_db(csv_row_generator)
+    import_anew_lexicon_to_db(csv_row_generator)
