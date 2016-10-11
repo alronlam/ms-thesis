@@ -9,7 +9,7 @@ def parse_file_into_csv_row_generator(file, ignore_first_row):
         if ignore_first_row:
             generator.__next__()
         for row in generator:
-            yield_row = [x for x in row if x.strip() != "" ]
+            yield_row = [x for x in row]
             if yield_row.__len__() > 0:
                 yield yield_row
 

@@ -15,6 +15,7 @@ following_collection = db['following_collection']
 followers_collection = db['followers_collection']
 friendship_collection = db['friendship_collection']
 lexicon_so_collection = db['lexicon_so_collection']
+anew_lexicon_collection = db['anew_lexicon_collection']
 
 UNAVAILABLE_KEY = 'unavailable'
 
@@ -24,8 +25,15 @@ def get_lexicon_so(lexicon_id):
     return lexicon_so_collection.find_one({"id":lexicon_id})
 
 def add_lexicon_so_entries(lexicon_entries):
-    for lexicon_entry in lexicon_entries:
-        lexicon_so_collection.insert(lexicon_entry)
+    add_batch_entries(lexicon_so_collection, lexicon_entries)
+
+# ANEW Lexicon-related
+
+def get_anew_lexicon(anew_lexicon_id):
+    return anew_lexicon_collection.find_one({"id":anew_lexicon_id})
+
+def add_anew_lexicon_entries(anew_lexicon_entries):
+    add_batch_entries(anew_lexicon_collection, anew_lexicon_entries)
 
 # Friendship-related
 def get_or_add_friendship(source_id, target_id):
@@ -83,6 +91,10 @@ def delete_followers_ids(user_id):
 
 
 # Helper functions
+
+def add_batch_entries(collection, entries):
+     for entry in entries:
+        collection.insert(entry)
 
 def get_or_add_list(id, collection, retrieve_func, list_name):
     try:
