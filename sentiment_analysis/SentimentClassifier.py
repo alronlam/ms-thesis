@@ -74,7 +74,7 @@ class ANEWLexiconClassifier(SentimentClassifier):
         for tweet_word in tweet_text:
             tweet_word_sentiment_scores.append(ANEWLexiconManager.get_sentiment_score(tweet_word))
 
-        return sum(tweet_word_sentiment_scores)/tweet_text.__len__()
+        return sum(tweet_word_sentiment_scores)
 
     def classify_sentiment(self, tweet_text):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
