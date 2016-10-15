@@ -3,6 +3,7 @@ from sentiment_analysis import SentimentClassifier
 from twitter_data.parsing.folders import FolderIO
 from twitter_data.database import DBManager
 
+import pickle
 from datetime import datetime
 
 import numpy
@@ -43,9 +44,16 @@ def test_vanzo_eng_dataset(classifier):
             # print("{} vs {}".format( actual_class,predicted_class))
 
         if index % 100 == 0 and index > 0:
+            pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
             write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
 
-test_vanzo_eng_dataset(classifier=SentimentClassifier.ANEWLexiconClassifier())
+    pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
+    write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-# print(DBManager.get_or_add_tweet("100002637658849280"))
+
+lexicon_classifier = SentimentClassifier.LexiconClassifier()
+anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
+globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
+
+test_vanzo_eng_dataset(anew_lexicon_classifier)

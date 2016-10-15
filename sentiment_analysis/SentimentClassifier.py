@@ -1,4 +1,5 @@
 import abc
+import pickle
 
 from sentiment_analysis.lexicon.simple.database import LexiconManager
 from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
@@ -21,14 +22,18 @@ class SentimentClassifier(object):
         """
 
 class MLClassifier(SentimentClassifier):
-    def __init__(self):
-        self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/unigram_feature_extractor.pickle")
-        self.classifier = load_classifier_from_pickle("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/nb_classifier.pickle")
+    def __init__(self, feature_extractor_path, classifier_pickle_path):
+        self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle(feature_extractor_path)
+        self.classifier = self.load_classifier_from_pickle(classifier_pickle_path)
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
 
     def classify_sentiment(self, tweet_text):
         tweet_text = self.preprocess(tweet_text)
         return self.classifier.classify(self.feature_extractor.extract_features(tweet_text))
+
+    def load_classifier_from_pickle(self, pickle_file_name):
+        with open(pickle_file_name, 'rb') as pickle_file:
+            return pickle.load(pickle_file)
 
 class LexiconClassifier(SentimentClassifier):
 
@@ -69,7 +74,7 @@ class ANEWLexiconClassifier(SentimentClassifier):
         for tweet_word in tweet_text:
             tweet_word_sentiment_scores.append(ANEWLexiconManager.get_sentiment_score(tweet_word))
 
-        return sum(tweet_word_sentiment_scores)
+        return sum(tweet_word_sentiment_scores)/tweet_text.__len__()
 
     def classify_sentiment(self, tweet_text):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
