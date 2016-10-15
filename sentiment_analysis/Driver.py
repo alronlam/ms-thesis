@@ -4,7 +4,7 @@ from datetime import datetime
 
 import nltk
 import numpy
-from sentiment_analysis.feature_extraction import FeatureExtractorBase
+from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sklearn import metrics
 
 from twitter_data.parsing.csv_parser import CSVParser
@@ -81,7 +81,7 @@ def test_senti_election_data():
 
     csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
 
-    classifier = SentimentClassifier.LexiconClassifier()
+    classifier = SentimentClassifier.ANEWLexiconClassifier()
 
     correct = 0
     total = 0
