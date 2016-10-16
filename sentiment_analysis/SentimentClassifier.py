@@ -1,6 +1,8 @@
 import abc
 import pickle
 
+from afinn import Afinn
+
 from sentiment_analysis.lexicon.simple.database import LexiconManager
 from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
@@ -72,16 +74,39 @@ class ANEWLexiconClassifier(SentimentClassifier):
 
         # get all scores for the words in the text
         for tweet_word in tweet_text:
-            tweet_word_sentiment_scores.append(ANEWLexiconManager.get_sentiment_score(tweet_word))
+            sentiment_score = ANEWLexiconManager.get_sentiment_score((tweet_word))
+            if sentiment_score < 0:
+                sentiment_score *= 1.8
+            tweet_word_sentiment_scores.append(sentiment_score)
 
         return sum(tweet_word_sentiment_scores)
 
     def classify_sentiment(self, tweet_text):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
-        if sentiment_score > 0:
+        if sentiment_score > 10/3:
             return "positive"
-        elif sentiment_score < 0:
+        elif sentiment_score < -10/3:
+            return "negative"
+        else:
+            return "neutral"
+
+class AFINNLexiconClassifier(SentimentClassifier):
+
+    def __init__(self):
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
+        self.afinn = Afinn()
+
+    def get_overall_sentiment_score(self, tweet_text):
+        tweet_text = self.preprocess(tweet_text)
+        return self.afinn.score(" ".join(tweet_text))
+
+    def classify_sentiment(self, tweet_text):
+        sentiment_score = self.get_overall_sentiment_score(tweet_text)
+
+        if sentiment_score > 0.5:
+            return "positive"
+        elif sentiment_score < -0.5:
             return "negative"
         else:
             return "neutral"

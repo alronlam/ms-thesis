@@ -13,7 +13,11 @@ def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
     metrics_file = open(metrics_file_name, 'w')
     metrics_file.write('Total: {}\n'.format(actual_arr.__len__()))
     metrics_file.write('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
-    metrics_file.write(metrics.classification_report(actual_arr, predicted_arr))
+    try:
+        metrics_file.write(metrics.classification_report(actual_arr, predicted_arr))
+    except Exception as e:
+        print(e)
+        pass
     metrics_file.write('\n')
     metrics_file.write(numpy.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
     metrics_file.write('\n')
@@ -27,7 +31,7 @@ def test_vanzo_eng_dataset(classifier):
     actual_arr = []
     predicted_arr = []
 
-    metrics_file_name = 'metrics-vanzo-eng-{}.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+    metrics_file_name = 'metrics-vanzo-eng-{}-afinn.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
 
     for index, conversation in enumerate(conversations):
         target_tweet = conversation[-1]
@@ -55,5 +59,9 @@ def test_vanzo_eng_dataset(classifier):
 lexicon_classifier = SentimentClassifier.LexiconClassifier()
 anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
 globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
+afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
 
-test_vanzo_eng_dataset(anew_lexicon_classifier)
+test_vanzo_eng_dataset(afinn_classifier)
+# test_vanzo_eng_dataset(anew_lexicon_classifier)
+# test_vanzo_eng_dataset(lexicon_classifier)
+# test_vanzo_eng_dataset(globe_ml_classifier)
