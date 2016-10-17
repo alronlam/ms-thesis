@@ -35,7 +35,6 @@ def train_or_load(pickle_file_name, trainer, training_set, force_train=False):
 
 def test_nltk():
     # read data
-    LIMIT = 30000
     dataset_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/test', False, '.tsv')
     conversation_generator = TSVParser.parse_files_into_conversation_generator(dataset_files)
     tweet_texts = []
@@ -44,12 +43,10 @@ def test_nltk():
         target_tweet = conversation[-1]
         tweet_id = target_tweet["tweet_id"]
         tweet_object = DBManager.get_or_add_tweet(tweet_id)
-        if tweet_object:
+        if tweet_object and tweet_object.text:
             tweet_texts.append(tweet_object.text)
             tweet_labels.append(target_tweet["class"])
-        if index >= LIMIT:
-            break
-        print("Constructing data lists. At index {}".format(index))
+            print("Constructing data lists. At index {}".format(index))
 
     # pre-process tweets
     TWEET_PREPROCESSORS = [SplitWordByWhitespace(), WordLengthFilter(3), WordToLowercase()]
@@ -60,7 +57,7 @@ def test_nltk():
 
     # partition training/testing sets
     random.shuffle(labeled_tweets) # shuffling here to randomize train and test tweets
-    num_train = math.floor(LIMIT * 0.6)
+    num_train = math.floor(tweet_texts.__len__() * 0.9)
     train_tweets = labeled_tweets[:num_train]
     test_tweets = labeled_tweets[num_train:]
 
