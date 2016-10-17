@@ -10,11 +10,36 @@ from sentiment_analysis.preprocessing import PreProcessing
 
 
 class SentimentClassifier(object):
-
     def preprocess(self, tweet_text):
         for preprocessor in self.preprocessors:
             tweet_text = preprocessor.preprocess_tweet(tweet_text)
         return tweet_text
+
+    def get_sum_based_score(self, tweet_text, lexicon_manager):
+        tweet_text = self.preprocess(tweet_text)
+        tweet_word_sentiment_scores = []
+
+        # get all scores for the words in the text
+        for tweet_word in tweet_text:
+            sentiment_score = lexicon_manager.get_sentiment_score(tweet_word)
+            if sentiment_score < 0:
+                sentiment_score *= 1.8
+            tweet_word_sentiment_scores.append(sentiment_score)
+        return sum(tweet_word_sentiment_scores)
+
+    def get_majority_score(self, tweet_text, lexicon_manager):
+        tweet_text = self.preprocess(tweet_text)
+        positive_count = 0
+        negative_count = 0
+
+        for tweet_word in tweet_text:
+            sentiment_score = lexicon_manager.get_sentiment_score(tweet_word)
+            if sentiment_score > 0:
+                positive_count += 1
+            elif sentiment_score < 0:
+                negative_count += 1
+
+        return positive_count + negative_count
 
     @abc.abstractmethod
     def classify_sentiment(self, text):
@@ -23,11 +48,19 @@ class SentimentClassifier(object):
         :return: "negative" "positive" or "neutral"
         """
 
+    @abc.abstractmethod
+    def get_name(self):
+        """
+        :return: short name describing the classifier
+        """
+
+
 class MLClassifier(SentimentClassifier):
     def __init__(self, feature_extractor_path, classifier_pickle_path):
         self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle(feature_extractor_path)
         self.classifier = self.load_classifier_from_pickle(classifier_pickle_path)
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                              PreProcessing.RemovePunctuationFromWords()]
 
     def classify_sentiment(self, tweet_text):
         tweet_text = self.preprocess(tweet_text)
@@ -37,36 +70,36 @@ class MLClassifier(SentimentClassifier):
         with open(pickle_file_name, 'rb') as pickle_file:
             return pickle.load(pickle_file)
 
-class LexiconClassifier(SentimentClassifier):
+    def get_name(self):
+        return "ML"
 
+
+class WiebeLexiconClassifier(SentimentClassifier):
     def __init__(self):
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                              PreProcessing.RemovePunctuationFromWords()]
 
     def get_overall_sentiment_score(self, tweet_text):
-        tweet_text = self.preprocess(tweet_text)
-        tweet_word_sentiment_scores = []
-
-        # get all scores for the words in the text
-        for tweet_word in tweet_text:
-            tweet_word_sentiment_scores.append(LexiconManager.get_sentiment_score(tweet_word))
-
-        return sum(tweet_word_sentiment_scores)
+        return self.get_majority_score(tweet_text, LexiconManager)
 
     def classify_sentiment(self, tweet_text):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
-        if sentiment_score > 0:
+        if sentiment_score > 0.5:
             return "positive"
-        elif sentiment_score < 0:
+        elif sentiment_score < -0.5:
             return "negative"
         else:
             return "neutral"
 
+    def get_name(self):
+        return "Lexicon_Wiebe"
+
 
 class ANEWLexiconClassifier(SentimentClassifier):
-
     def __init__(self):
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                              PreProcessing.RemovePunctuationFromWords()]
 
     def get_overall_sentiment_score(self, tweet_text):
         tweet_text = self.preprocess(tweet_text)
@@ -84,17 +117,21 @@ class ANEWLexiconClassifier(SentimentClassifier):
     def classify_sentiment(self, tweet_text):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
-        if sentiment_score > 10/3:
+        if sentiment_score > 0.5:
             return "positive"
-        elif sentiment_score < -10/3:
+        elif sentiment_score < -0.5:
             return "negative"
         else:
             return "neutral"
 
-class AFINNLexiconClassifier(SentimentClassifier):
+    def get_name(self):
+        return "Lexicon_ANEW"
 
+
+class AFINNLexiconClassifier(SentimentClassifier):
     def __init__(self):
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(), PreProcessing.RemovePunctuationFromWords()]
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                              PreProcessing.RemovePunctuationFromWords()]
         self.afinn = Afinn()
 
     def get_overall_sentiment_score(self, tweet_text):
@@ -110,3 +147,6 @@ class AFINNLexiconClassifier(SentimentClassifier):
             return "negative"
         else:
             return "neutral"
+
+    def get_name(self):
+        return "Lexicon_AFINN"

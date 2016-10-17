@@ -23,6 +23,12 @@ def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
     metrics_file.write('\n')
     metrics_file.close()
 
+
+def count_vanzo_eng_dataset():
+    tsv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/test', True, '.tsv')
+    conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
+    print([x for x in conversations].__len__())
+
 def test_vanzo_eng_dataset(classifier):
 
     tsv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/test', True, '.tsv')
@@ -31,7 +37,7 @@ def test_vanzo_eng_dataset(classifier):
     actual_arr = []
     predicted_arr = []
 
-    metrics_file_name = 'metrics-vanzo-eng-{}-afinn.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
+    metrics_file_name = 'metrics-vanzo-eng-{}-{}.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), classifier.get_name())
 
     for index, conversation in enumerate(conversations):
         target_tweet = conversation[-1]
@@ -51,17 +57,16 @@ def test_vanzo_eng_dataset(classifier):
             pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
             write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-
     pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
     write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-
-lexicon_classifier = SentimentClassifier.LexiconClassifier()
+lexicon_classifier = SentimentClassifier.WiebeLexiconClassifier()
 anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
-globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
 afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
+globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
 
-test_vanzo_eng_dataset(afinn_classifier)
+#
+# test_vanzo_eng_dataset(afinn_classifier)
 # test_vanzo_eng_dataset(anew_lexicon_classifier)
-# test_vanzo_eng_dataset(lexicon_classifier)
+test_vanzo_eng_dataset(lexicon_classifier)
 # test_vanzo_eng_dataset(globe_ml_classifier)
