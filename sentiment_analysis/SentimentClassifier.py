@@ -8,6 +8,8 @@ from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
+from sentiment_analysis.subjectivity import SubjectivityClassifier
+
 
 class SentimentClassifier(object):
     def preprocess(self, tweet_text):
@@ -81,13 +83,14 @@ class WiebeLexiconClassifier(SentimentClassifier):
 
     def get_overall_sentiment_score(self, tweet_text):
         return self.get_majority_score(tweet_text, LexiconManager)
+        # return self.get_sum_based_score(tweet_text, LexiconManager)
 
     def classify_sentiment(self, tweet_text):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
-        if sentiment_score > 0.5:
+        if sentiment_score > 0:
             return "positive"
-        elif sentiment_score < -0.5:
+        elif sentiment_score < 0:
             return "negative"
         else:
             return "neutral"
