@@ -74,6 +74,8 @@ print("TRAINING")
 #Train the model over train_reviews (this may take several minutes)
 vanzo_w2v.train(x_train)
 
+import pickle
+pickle.dump(vanzo_w2v, open( "vanzo_corpus_w2v.pickle", "wb"))
 
 def buildWordVector(text, size):
     vec = np.zeros(size).reshape((1, size))
@@ -104,20 +106,23 @@ from sentiment_analysis.subjectivity import SubjectivityClassifier
 lr = SGDClassifier(loss='log', penalty='l1')
 lr.fit(train_vecs, y_train)
 
+
+pickle.dump(lr, open( "sgd_classifier.pickle", "wb"))
+
 print('Test Accuracy: {}'.format(lr.score(test_vecs, y_test)))
 
 #Create ROC curve
-# from sklearn.metrics import roc_curve, auc
-# import matplotlib.pyplot as plt
-#
-# pred_probas = lr.predict_proba(test_vecs)[:,1]
-#
-# fpr,tpr,_ = roc_curve(y_test, pred_probas)
-# roc_auc = auc(fpr,tpr)
-# plt.plot(fpr,tpr,label='area = %.2f' %roc_auc)
-# plt.plot([0, 1], [0, 1], 'k--')
-# plt.xlim([0.0, 1.0])
-# plt.ylim([0.0, 1.05])
-# plt.legend(loc='lower right')
+from sklearn.metrics import roc_curve, auc
+import matplotlib.pyplot as plt
 
-# plt.show()
+pred_probas = lr.predict_proba(test_vecs)[:,1]
+
+fpr,tpr,_ = roc_curve(y_test, pred_probas)
+roc_auc = auc(fpr,tpr)
+plt.plot(fpr,tpr,label='area = %.2f' %roc_auc)
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.legend(loc='lower right')
+
+plt.show()

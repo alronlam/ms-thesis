@@ -1,6 +1,8 @@
 import abc
 import pickle
+import numpy
 
+from sklearn.preprocessing import scale
 from afinn import Afinn
 
 from sentiment_analysis.lexicon.simple.database import LexiconManager
@@ -43,10 +45,15 @@ class SentimentClassifier(object):
 
         return positive_count + negative_count
 
+    def load_from_pickle(self, pickle_file_name):
+        with open(pickle_file_name, 'rb') as pickle_file:
+            return pickle.load(pickle_file)
+
     @abc.abstractmethod
-    def classify_sentiment(self, text):
+    def classify_sentiment(self, text, contextual_info_dict):
         """
         :param text: string to be analyzed
+        :param contextual_info_dict: dictionary containing any additional info available
         :return: "negative" "positive" or "neutral"
         """
 
@@ -55,6 +62,30 @@ class SentimentClassifier(object):
         """
         :return: short name describing the classifier
         """
+
+class ConversationalContextClassifier(SentimentClassifier):
+
+    def __init__(self, corpus_pickle_file_name, classifier_pickle_file_name):
+        self.classifier = self.load_from_pickle(classifier_pickle_file_name)
+        self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
+
+    def classify_sentiment(self, text, contextual_info_dict):
+        text_vector = scale(self.buildWordVector(text, 300))
+        return self.classifier.predict_proba(text_vector)
+
+    def buildWordVector(self, text, size):
+        vec = numpy.zeros(size).reshape((1, size))
+        count = 0.
+        for word in text:
+            try:
+                vec += self.corpus_w2v[word].reshape((1, size))
+                count += 1.
+            except KeyError:
+                continue
+        if count != 0:
+            vec /= count
+        return vec
+
 
 
 class MLClassifier(SentimentClassifier):
