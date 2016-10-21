@@ -98,15 +98,15 @@ x_test = cleanText(x_test)
 print("BUILDING VOCAB")
 n_dim = 300
 # Initialize model and build vocab
-vanzo_w2v = Word2Vec(size=n_dim, min_count=10)
-vanzo_w2v.build_vocab(x_train)
+# vanzo_w2v = Word2Vec(size=n_dim, min_count=10)
+# vanzo_w2v.build_vocab(x_train)
+#
+# print("TRAINING")
+# # Train the model over train_reviews (this may take several minutes)
+# vanzo_w2v.train(x_train)
+# pickle.dump(vanzo_w2v, open("vanzo_corpus_w2v.pickle", "wb"))
 
-print("TRAINING")
-# Train the model over train_reviews (this may take several minutes)
-vanzo_w2v.train(x_train)
-
-pickle.dump(vanzo_w2v, open("vanzo_corpus_w2v.pickle", "wb"))
-
+vanzo_w2v = Word2Vec.load_word2vec_format('D:/DLSU/Masters/MS Thesis/Resources/GoogleNews-vectors-negative300.bin', binary=True)
 
 def buildWordVector(text, size):
     vec = np.zeros(size).reshape((1, size))
@@ -128,7 +128,7 @@ train_vecs = np.concatenate([buildWordVector(z, n_dim) for z in x_train])
 train_vecs = scale(train_vecs)
 
 # Train word2vec on test tweets
-vanzo_w2v.train(x_test)
+# vanzo_w2v.train(x_test)
 
 test_vecs = np.concatenate([buildWordVector(z, n_dim) for z in x_test])
 test_vecs = scale(test_vecs)

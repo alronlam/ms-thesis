@@ -63,14 +63,16 @@ class SentimentClassifier(object):
         :return: short name describing the classifier
         """
 
+from gensim.models.word2vec import Word2Vec
 class ConversationalContextClassifier(SentimentClassifier):
 
-    def __init__(self, corpus_pickle_file_name, classifier_pickle_file_name):
+    def __init__(self, corpus_bin_file_name, classifier_pickle_file_name):
+        self.corpus_w2v = Word2Vec.load_word2vec_format(corpus_bin_file_name, binary=True)
+        # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
         self.classifier = self.load_from_pickle(classifier_pickle_file_name)
-        self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
 
     def classify_sentiment(self, text, contextual_info_dict):
-        text_vector = scale(self.buildWordVector(text, 300))
+        text_vector = self.buildWordVector(text, 300)
         label = self.classifier.predict(text_vector)
         return label[0]
 
