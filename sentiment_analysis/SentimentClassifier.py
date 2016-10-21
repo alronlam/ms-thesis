@@ -72,10 +72,7 @@ class ConversationalContextClassifier(SentimentClassifier):
     def classify_sentiment(self, text, contextual_info_dict):
         text_vector = scale(self.buildWordVector(text, 300))
         label = self.classifier.predict(text_vector)
-        if label == 1:
-            return "positive"
-        else:
-            return "negative"
+        return label[0]
 
     def buildWordVector(self, text, size):
         vec = numpy.zeros(size).reshape((1, size))
