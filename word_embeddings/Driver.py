@@ -106,7 +106,6 @@ from sentiment_analysis.subjectivity import SubjectivityClassifier
 lr = SGDClassifier(loss='log', penalty='l1')
 lr.fit(train_vecs, y_train)
 
-
 pickle.dump(lr, open( "sgd_classifier.pickle", "wb"))
 
 print('Test Accuracy: {}'.format(lr.score(test_vecs, y_test)))

@@ -51,7 +51,7 @@ def test_vanzo_eng_dataset(classifier):
             if subjectivity_classifier.classify_subjectivity(tweet_object.text) == 'objective':
                 predicted_class = 'neutral'
             else:
-                predicted_class = classifier.classify_sentiment(tweet_object.text)
+                predicted_class = classifier.classify_sentiment(tweet_object.text, {'conversation': conversation})
 
             actual_class = target_tweet["class"]
 
@@ -72,8 +72,14 @@ anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
 afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
 globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
 
+
+corpus_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_corpus_w2v.pickle'
+classifier_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/sgd_classifier.pickle'
+conversational_context_clasifier = SentimentClassifier.ConversationalContextClassifier(corpus_pickle_file_name, classifier_pickle_file_name)
+
 #
 # test_vanzo_eng_dataset(afinn_classifier)
 # test_vanzo_eng_dataset(anew_lexicon_classifier)
-test_vanzo_eng_dataset(wiebe_lexicon_classifier)
+# test_vanzo_eng_dataset(wiebe_lexicon_classifier)
 # test_vanzo_eng_dataset(globe_ml_classifier)
+test_vanzo_eng_dataset(conversational_context_clasifier)
