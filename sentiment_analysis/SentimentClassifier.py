@@ -77,12 +77,7 @@ class ConversationalContextClassifier(SentimentClassifier):
     def classify_sentiment(self, text, contextual_info_dict):
         text = self.preprocess(text)
         text_vector = self.buildWordVector(text, 300)
-        print("***** WORD VECTOR *****")
-        print(text_vector)
         text_vector = self.scaler.transform(text_vector)
-        print("***** SCALED WORD VECTOR *****")
-        print(text_vector)
-        print("***** PREDICTED *****")
         label = self.classifier.predict(text_vector)
         return label[0]
 
