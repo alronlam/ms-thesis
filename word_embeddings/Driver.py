@@ -51,7 +51,6 @@ def construct_text_class_arrays_from_txt():
 
     return x, y
 
-
 def construct_text_class_arrays_from_tsv(dataset_path):
     tsv_files = FolderIO.get_files(dataset_path, True, '.tsv')
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
@@ -100,9 +99,9 @@ n_dim = 300
 # Initialize model and build vocab
 # vanzo_w2v = Word2Vec(size=n_dim, min_count=10)
 # vanzo_w2v.build_vocab(x_train)
-#
-# print("TRAINING")
-# # Train the model over train_reviews (this may take several minutes)
+# #
+# # print("TRAINING")
+# # # Train the model over train_reviews (this may take several minutes)
 # vanzo_w2v.train(x_train)
 # pickle.dump(vanzo_w2v, open("vanzo_corpus_w2v.pickle", "wb"))
 
@@ -122,37 +121,38 @@ def buildWordVector(text, size):
     return vec
 
 
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import StandardScaler
 
 train_vecs = np.concatenate([buildWordVector(z, n_dim) for z in x_train])
-train_vecs = scale(train_vecs)
-
+scaler = StandardScaler().fit(train_vecs)
+train_vecs = scaler.transform(train_vecs)
 # Train word2vec on test tweets
 # vanzo_w2v.train(x_test)
 
 test_vecs = np.concatenate([buildWordVector(z, n_dim) for z in x_test])
-test_vecs = scale(test_vecs)
+test_vecs = scaler.transform(test_vecs)
 
 from sklearn.linear_model import SGDClassifier
 from sentiment_analysis.subjectivity import SubjectivityClassifier
 import sklearn
+from sklearn import naive_bayes
 
+# lr = naive_bayes.GaussianNB()
 lr = sklearn.svm.SVC()
 # lr = SGDClassifier(loss='log', penalty='l1')
 lr.fit(train_vecs, y_train)
 
-pickle.dump(lr, open("sgd_classifier.pickle", "wb"))
+pickle.dump(scaler, open('svm_scaler.pickle', "wb"))
+pickle.dump(lr, open("svm_classifier.pickle", "wb"))
 
 print('Test Accuracy: {}'.format(lr.score(test_vecs, y_test)))
-
-print(lr.predict(scale(buildWordVector("I hate you so much", n_dim))))
 
 # Create ROC curve
 from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
 # pred_probas = lr.predict_proba(test_vecs)[:, 1]
-
+#
 # fpr, tpr, _ = roc_curve(y_test, pred_probas)
 # roc_auc = auc(fpr, tpr)
 # plt.plot(fpr, tpr, label='area = %.2f' % roc_auc)

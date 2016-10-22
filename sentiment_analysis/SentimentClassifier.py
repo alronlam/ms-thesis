@@ -66,13 +66,23 @@ class SentimentClassifier(object):
 from gensim.models.word2vec import Word2Vec
 class ConversationalContextClassifier(SentimentClassifier):
 
-    def __init__(self, corpus_bin_file_name, classifier_pickle_file_name):
+    def __init__(self, corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name):
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                     PreProcessing.RemovePunctuationFromWords()]
         self.corpus_w2v = Word2Vec.load_word2vec_format(corpus_bin_file_name, binary=True)
         # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
         self.classifier = self.load_from_pickle(classifier_pickle_file_name)
+        self.scaler = self.load_from_pickle(scaler_pickle_file_name)
 
     def classify_sentiment(self, text, contextual_info_dict):
+        text = self.preprocess(text)
         text_vector = self.buildWordVector(text, 300)
+        print("***** WORD VECTOR *****")
+        print(text_vector)
+        text_vector = self.scaler.transform(text_vector)
+        print("***** SCALED WORD VECTOR *****")
+        print(text_vector)
+        print("***** PREDICTED *****")
         label = self.classifier.predict(text_vector)
         return label[0]
 
