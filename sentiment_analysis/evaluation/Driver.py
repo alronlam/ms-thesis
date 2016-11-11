@@ -51,7 +51,7 @@ def test_vanzo_eng_dataset(classifier):
             if subjectivity_classifier.classify_subjectivity(tweet_object.text) == 'objective':
                 predicted_class = 'neutral'
             else:
-                predicted_class = classifier.classify_sentiment(tweet_object.text)
+                predicted_class = classifier.classify_sentiment(tweet_object.text, {'conversation': conversation})
 
             actual_class = target_tweet["class"]
 
@@ -67,13 +67,32 @@ def test_vanzo_eng_dataset(classifier):
     pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
     write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-wiebe_lexicon_classifier = SentimentClassifier.WiebeLexiconClassifier()
-anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
-afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
-globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
+# wiebe_lexicon_classifier = SentimentClassifier.WiebeLexiconClassifier()
+# anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
+# afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
+# globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
 
+
+# corpus_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_corpus_w2v.pickle'
+corpus_bin_file_name = 'D:/DLSU/Masters/MS Thesis/Resources/GoogleNews-vectors-negative300.bin'
+classifier_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_classifier.pickle'
+scaler_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_scaler.pickle'
+
+print("Initializing classifier")
+conversational_context_clasifier = SentimentClassifier.ConversationalContextClassifier(corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name)
+print("Finished loading classifier")
 #
 # test_vanzo_eng_dataset(afinn_classifier)
 # test_vanzo_eng_dataset(anew_lexicon_classifier)
-test_vanzo_eng_dataset(wiebe_lexicon_classifier)
+# test_vanzo_eng_dataset(wiebe_lexicon_classifier)
 # test_vanzo_eng_dataset(globe_ml_classifier)
+test_vanzo_eng_dataset(conversational_context_clasifier)
+
+
+def test_classify(classifier):
+    while True:
+        print("Enter text:")
+        text = input()
+        print(classifier.classify_sentiment(text, {}))
+
+# test_classify(conversational_context_clasifier)
