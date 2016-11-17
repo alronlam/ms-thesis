@@ -51,6 +51,8 @@ for index, conversation in enumerate(conversations):
 
         Y_train.append(y)
         Y_test.append(embedded_word)
+    if index > 50:
+        break
 
 
 
