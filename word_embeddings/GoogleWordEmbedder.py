@@ -25,4 +25,5 @@ def google_embedding(text):
             continue
     if count != 0:
         vec /= count
-    return vec
+
+    return np.reshape(vec, SIZE)
