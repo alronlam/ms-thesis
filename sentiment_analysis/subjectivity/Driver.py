@@ -34,59 +34,61 @@ def train_or_load(pickle_file_name, trainer, training_set, force_train=False):
         save_classifier_to_pickle(pickle_file_name, classifier)
     return classifier
 
-def test_nltk():
-    # read data
-    dataset_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/test', False, '.tsv')
+
+def read_data(source_dir, file_extension):
+    dataset_files = FolderIO.get_files(source_dir, False, file_extension)
     conversation_generator = TSVParser.parse_files_into_conversation_generator(dataset_files)
-    tweet_texts = []
-    tweet_labels = []
+    X = []
+    Y = []
     for index, conversation in enumerate(conversation_generator):
         target_tweet = conversation[-1]
         tweet_id = target_tweet["tweet_id"]
         tweet_object = DBManager.get_or_add_tweet(tweet_id)
         if tweet_object and tweet_object.text:
-            tweet_texts.append(tweet_object.text)
+            X.append(tweet_object.text)
             if target_tweet["class"] == 'neutral':
-                tweet_labels.append('objective')
+                Y.append('objective')
             else:
-                tweet_labels.append('subjective')
+                Y.append('subjective')
             print("Constructing data lists. At index {}".format(index))
+
+    return (X,Y)
+
+def train_subj_classifier_with_nltk():
+    # read data
+    (X_train,Y_train) = read_data('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train', '.tsv')
+    (X_test, Y_test ) = read_data('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test', '.tsv')
 
     # pre-process tweets
     TWEET_PREPROCESSORS = [SplitWordByWhitespace(), WordLengthFilter(3), RemovePunctuationFromWords(), WordToLowercase()]
-    tweet_texts = preprocess_tweets(tweet_texts, TWEET_PREPROCESSORS)
+    X_train = preprocess_tweets(X_train, TWEET_PREPROCESSORS)
+    X_test = preprocess_tweets(X_test, TWEET_PREPROCESSORS)
     print("FINISHED PREPROCESSING")
-    # construct labeled tweets to be run with the classifiers
-    labeled_tweets = list(zip(tweet_texts, tweet_labels))
 
-    # partition training/testing sets
-    random.shuffle(labeled_tweets) # shuffling here to randomize train and test tweets
-    num_train = math.floor(tweet_texts.__len__() * 0.9)
-    train_tweets = labeled_tweets[:num_train]
-    test_tweets = labeled_tweets[num_train:]
+    # construct labeled tweets to be run with the classifiers
+    train_tweets = list(zip(X_train, Y_train))
+    test_tweets = list(zip(X_test, Y_test))
 
     print("# TRAIN: {}".format(train_tweets.__len__()))
     print("# TEST: {}".format(test_tweets.__len__()))
 
     # feature extraction
     FEATURE_EXTRACTOR = UnigramExtractor(train_tweets)
-    FeatureExtractorBase.save_feature_extractor("subj4_unigram_feature_extractor.pickle", FEATURE_EXTRACTOR)
+    FeatureExtractorBase.save_feature_extractor("subj_unigram_feature_extractor_vanzo_conv_train", FEATURE_EXTRACTOR)
     training_set = nltk.classify.apply_features(FEATURE_EXTRACTOR.extract_features, train_tweets)
 
     # training
     TRAINER = nltk.NaiveBayesClassifier
     # TRAINER = SklearnClassifier(BernoulliNB())
-    classifier = train_or_load("subj4_nb_classifier.pickle", TRAINER, training_set, True)
+    classifier = train_or_load("subj_nb_classifier_vanzo_conv_train", TRAINER, training_set, True)
     print(classifier.show_most_informative_features(15))
 
     #classification
     test_set = nltk.classify.apply_features(FEATURE_EXTRACTOR.extract_features, test_tweets)
     print(nltk.classify.accuracy(classifier, test_set))
 
-    print(nltk.classify.accuracy(classifier, training_set + test_set))
 
-
-# test_nltk()
+train_subj_classifier_with_nltk()
 
 def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
     metrics_file = open(metrics_file_name, 'w')
@@ -131,5 +133,5 @@ def test_on_vanzo_dataset(classifier):
     pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
     write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier.pickle.pickle' )
-test_on_vanzo_dataset(subjectivity_classifier)
+# subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier.pickle.pickle' )
+# test_on_vanzo_dataset(subjectivity_classifier)
