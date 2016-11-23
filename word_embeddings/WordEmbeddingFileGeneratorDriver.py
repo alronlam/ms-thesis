@@ -1,5 +1,8 @@
 import pickle
 
+import math
+import random
+
 import numpy
 
 from sentiment_analysis.evaluation import TSVParser
@@ -8,7 +11,37 @@ from twitter_data.parsing.folders import FolderIO
 from word_embeddings import GoogleWordEmbedder
 
 
-def save_dataset_to_embedding_file(tweet_objects, classes, x_file_name):
+def shuffle_dataset_balanced(X, Y, test_percentage):
+    target_num_test_instances = math.floor(len(X) * test_percentage)
+
+    # stores the count for negative, neutral, and positive respectively
+    # TODO: automatically extract this from unique values in the classes list
+    test_classes_count = [0,0,0]
+    target_limit_per_class = math.ciel(target_num_test_instances/3)
+
+    test_X = []
+    test_Y = []
+
+    while sum(test_classes_count) < target_num_test_instances:
+        random_index = random.randint(0, len(X))
+        random_tweet = X[random_index]
+        random_tweet_class = Y[random_index]
+
+        if test_classes_count[random_tweet_class] < target_limit_per_class:
+            test_X.append(random_tweet)
+            test_Y.append(random_tweet_class)
+
+            X.remove(random_index)
+            Y.remove(random_index)
+
+    train_X = X
+    train_Y = Y
+
+    return (train_X, train_Y, test_X, test_Y)
+
+
+
+def save_dataset_to_embedding_file_multiclass(tweet_objects, classes, x_file_name):
 
     X = []
     Y = []
