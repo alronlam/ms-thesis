@@ -66,7 +66,7 @@ def generate_npz(source_dir, file_extension, npz_file_name ):
         print("{} - {}".format(index, target_tweet["tweet_id"]))
         tweet_object = DBManager.get_or_add_tweet(target_tweet["tweet_id"])
         if tweet_object:
-            X.append(GoogleWordEmbedder.google_embedding(tweet_object.text))
+            X.append(GoogleWordEmbedder.google_embedding_avg(tweet_object.text))
             Y.append(convert_sentiment_class_to_number(target_tweet["class"]))
 
     print("ENTERING FILE WRITING FUNCTION")

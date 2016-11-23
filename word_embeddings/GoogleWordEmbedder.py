@@ -13,7 +13,7 @@ def clean_text(text):
 
     return text
 
-def google_embedding(text):
+def google_embedding_avg(text):
     text = clean_text(text)
     vec = np.zeros(SIZE).reshape((1, SIZE))
     count = 0.
