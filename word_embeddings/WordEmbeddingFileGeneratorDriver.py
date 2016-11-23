@@ -45,24 +45,6 @@ from word_embeddings import GoogleWordEmbedder
 #     return (train_X, train_Y, test_X, test_Y)
 
 
-
-def save_dataset_to_embedding_file_multiclass(tweet_objects, classes, x_file_name):
-
-    X = []
-    Y = []
-    for index, tweet_object in enumerate(tweet_objects):
-        if tweet_object:
-            print("{}".format(index))
-
-            y = convert_sentiment_class_to_number(classes[index])
-            embedded_word = GoogleWordEmbedder.google_embedding(tweet_object.text)
-
-            X.append(embedded_word)
-            Y.append(y)
-
-    numpy.savez(x_file_name, X=X, Y=Y)
-
-
 def convert_sentiment_class_to_number(sentiment_class):
     sentiment_class = sentiment_class.lower()
     if sentiment_class == "negative":
@@ -72,9 +54,8 @@ def convert_sentiment_class_to_number(sentiment_class):
     if sentiment_class == "positive":
         return 2
 
-
-def save_driver_code():
-    tsv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/test', True, '.tsv')
+def generate_npz(source_dir, file_extension, npz_file_name ):
+    tsv_files = FolderIO.get_files(source_dir, True, file_extension)
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
 
     print("CONSTRUCTING LISTS")
@@ -87,12 +68,13 @@ def save_driver_code():
         if tweet_object:
             X.append(GoogleWordEmbedder.google_embedding(tweet_object.text))
             Y.append(convert_sentiment_class_to_number(target_tweet["class"]))
-            if len(X) >= 100:
-                break
+
     print("ENTERING FILE WRITING FUNCTION")
     # (train_X, train_Y, test_X, test_Y) = shuffle_dataset_balanced(X, Y, 0.3)
     # numpy.savez("vanzo_dataset_partitioned_balanced.npz", train_X=train_X, trainY=train_Y, test_X=test_X, test_Y=test_Y)
-    save_dataset_to_embedding_file_multiclass(X, Y, "vanzo_dataset.npz")
+
+    numpy.savez(npz_file_name, X=X, Y=Y)
 
 
-save_driver_code()
+generate_npz('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train', '.tsv', 'vanzo_train.npz')
+generate_npz('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test', '.tsv', 'vanzo_test.npz')
