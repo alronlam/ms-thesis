@@ -70,10 +70,17 @@ def test_vanzo_eng_dataset(classifier, subjectivity_classifier):
 
 # wiebe_lexicon_classifier = SentimentClassifier.WiebeLexiconClassifier()
 # anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
-afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
+# afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
 # globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
-subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier.pickle.pickle' )
+subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor_vanzo_conv_train.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier_vanzo_conv_train.pickle' )
 
+
+
+
+# test_vanzo_eng_dataset(afinn_classifier, subjectivity_classifier)
+# test_vanzo_eng_dataset(anew_lexicon_classifier, subjectivity_classifier)
+# test_vanzo_eng_dataset(wiebe_lexicon_classifier, subjectivity_classifier)
+# test_vanzo_eng_dataset(globe_ml_classifier, subjectivity_classifier)
 
 # corpus_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_corpus_w2v.pickle'
 corpus_bin_file_name = 'D:/DLSU/Masters/MS Thesis/Resources/GoogleNews-vectors-negative300.bin'
@@ -83,12 +90,7 @@ scaler_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddin
 print("Initializing classifier")
 conversational_context_clasifier = SentimentClassifier.ConversationalContextClassifier(corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name)
 print("Finished loading classifier")
-
-test_vanzo_eng_dataset(afinn_classifier, subjectivity_classifier)
-# test_vanzo_eng_dataset(anew_lexicon_classifier, subjectivity_classifier)
-# test_vanzo_eng_dataset(wiebe_lexicon_classifier, subjectivity_classifier)
-# test_vanzo_eng_dataset(globe_ml_classifier, subjectivity_classifier)
-# test_vanzo_eng_dataset(conversational_context_clasifier)
+test_vanzo_eng_dataset(conversational_context_clasifier, None)
 
 
 def test_classify(classifier):

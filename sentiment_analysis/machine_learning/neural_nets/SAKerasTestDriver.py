@@ -30,9 +30,9 @@ Y_test = test_data["Y"]
 def build_model():
     model = Sequential()
 
-    # model.add(Dense(300, input_dim=300, init='normal', activation='relu'))
-    # model.add(Dense(3, init="normal", activation="sigmoid"))
-    # model.compile(loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+    model.add(Dense(300, input_dim=300, init='normal', activation='relu'))
+    model.add(Dense(3, init="normal", activation="sigmoid"))
+    model.compile(loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
     # model.add(Convolution1D(nb_filter=32, filter_length=3, activation="tanh", border_mode="same", input_shape=(300,)))
     # model.add(MaxPooling1D(pool_length=2))

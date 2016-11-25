@@ -50,9 +50,9 @@ class SentimentClassifier(object):
             return pickle.load(pickle_file)
 
     @abc.abstractmethod
-    def classify_sentiment(self, text, contextual_info_dict):
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
         """
-        :param text: string to be analyzed
+        :param tweet_text: string to be analyzed
         :param contextual_info_dict: dictionary containing any additional info available
         :return: "negative" "positive" or "neutral"
         """
@@ -74,9 +74,9 @@ class ConversationalContextClassifier(SentimentClassifier):
         self.classifier = self.load_from_pickle(classifier_pickle_file_name)
         self.scaler = self.load_from_pickle(scaler_pickle_file_name)
 
-    def classify_sentiment(self, text, contextual_info_dict):
-        text = self.preprocess(text)
-        text_vector = self.buildWordVector(text, 300)
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
+        tweet_text = self.preprocess(tweet_text)
+        text_vector = self.buildWordVector(tweet_text, 300)
         text_vector = self.scaler.transform(text_vector)
         label = self.classifier.predict(text_vector)
         return label[0]
@@ -104,7 +104,7 @@ class MLClassifier(SentimentClassifier):
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
                               PreProcessing.RemovePunctuationFromWords()]
 
-    def classify_sentiment(self, tweet_text):
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
         tweet_text = self.preprocess(tweet_text)
         return self.classifier.classify(self.feature_extractor.extract_features(tweet_text))
 
@@ -125,7 +125,7 @@ class WiebeLexiconClassifier(SentimentClassifier):
         return self.get_majority_score(tweet_text, LexiconManager)
         # return self.get_sum_based_score(tweet_text, LexiconManager)
 
-    def classify_sentiment(self, tweet_text):
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
         if sentiment_score > 0:
@@ -157,7 +157,7 @@ class ANEWLexiconClassifier(SentimentClassifier):
 
         return sum(tweet_word_sentiment_scores)
 
-    def classify_sentiment(self, tweet_text):
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
         if sentiment_score > 0.5:
@@ -181,7 +181,7 @@ class AFINNLexiconClassifier(SentimentClassifier):
         tweet_text = self.preprocess(tweet_text)
         return self.afinn.score(" ".join(tweet_text))
 
-    def classify_sentiment(self, tweet_text):
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
         if sentiment_score > 0.5:

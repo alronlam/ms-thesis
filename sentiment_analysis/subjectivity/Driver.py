@@ -88,7 +88,7 @@ def train_subj_classifier_with_nltk():
     print(nltk.classify.accuracy(classifier, test_set))
 
 
-train_subj_classifier_with_nltk()
+# train_subj_classifier_with_nltk()
 
 def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
     metrics_file = open(metrics_file_name, 'w')
@@ -105,7 +105,7 @@ def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
     metrics_file.close()
 
 def test_on_vanzo_dataset(classifier):
-    tsv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/test', True, '.tsv')
+    tsv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test', True, '.tsv')
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
 
     metrics_file_name = 'metrics-vanzo-eng-{}-{}.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), classifier.get_name())
@@ -133,5 +133,5 @@ def test_on_vanzo_dataset(classifier):
     pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
     write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-# subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier.pickle.pickle' )
-# test_on_vanzo_dataset(subjectivity_classifier)
+subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor_vanzo_conv_train.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier_vanzo_conv_train.pickle' )
+test_on_vanzo_dataset(subjectivity_classifier)
