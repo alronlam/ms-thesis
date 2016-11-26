@@ -17,7 +17,6 @@ class SubjectivityClassifier(object):
         :return: "negative" "positive" or "neutral"
         """
 
-
 class MLSubjectivityClassifier(SubjectivityClassifier):
     def __init__(self, feature_extractor_path, classifier_pickle_path):
         self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle(feature_extractor_path)
@@ -35,3 +34,32 @@ class MLSubjectivityClassifier(SubjectivityClassifier):
 
     def get_name(self):
         return "ML Subjectivity Classifier"
+
+
+class EmbeddingSubjectivityClassifier(object):
+
+    def load_from_pickle(self, pickle_file_name):
+        with open(pickle_file_name, 'rb') as pickle_file:
+            return pickle.load(pickle_file)
+
+
+    @abc.abstractmethod
+    def classify_subjectivity(self, tweet_embedding):
+        """
+        :param tweet_embedding: embedding to be analyzed
+        :return: "subjective" or "objective
+        """
+
+class MLEmbeddingSubjectivityClassifier(EmbeddingSubjectivityClassifier):
+
+
+
+    def __init__(self, classifier_pickle_file_name, scaler_pickle_file_name):
+        # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
+        self.classifier = self.load_from_pickle(classifier_pickle_file_name)
+        self.scaler = self.load_from_pickle(scaler_pickle_file_name)
+
+    def classify_subjectivity(self, tweet_embedding):
+        tweet_embedding = self.scaler.transform(tweet_embedding)
+        label = self.classifier.predict(tweet_embedding)
+        return label[0]

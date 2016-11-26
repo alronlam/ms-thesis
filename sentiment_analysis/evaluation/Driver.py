@@ -1,8 +1,10 @@
+from sentiment_analysis.SentimentClassifier import MLEmbeddingSentimentClassifier
 from sentiment_analysis.evaluation import TSVParser
 from sentiment_analysis import SentimentClassifier
 from twitter_data.parsing.folders import FolderIO
 from twitter_data.database import DBManager
-from sentiment_analysis.subjectivity.SubjectivityClassifier import MLSubjectivityClassifier
+from sentiment_analysis.subjectivity.SubjectivityClassifier import MLSubjectivityClassifier, \
+    EmbeddingSubjectivityClassifier, MLEmbeddingSubjectivityClassifier
 import pickle
 from datetime import datetime
 
@@ -79,7 +81,7 @@ svm_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/Pycharm
 # test_vanzo_eng_dataset(wiebe_lexicon_classifier, None)
 # test_vanzo_eng_dataset(globe_ml_classifier, None)
 # test_vanzo_eng_dataset(nb_unigram_classifier, None)
-test_vanzo_eng_dataset(svm_unigram_classifier, None)
+# test_vanzo_eng_dataset(svm_unigram_classifier, None)
 
 
 # test_vanzo_eng_dataset(afinn_classifier, subjectivity_classifier)
@@ -87,7 +89,7 @@ test_vanzo_eng_dataset(svm_unigram_classifier, None)
 # test_vanzo_eng_dataset(wiebe_lexicon_classifier, subjectivity_classifier)
 # test_vanzo_eng_dataset(globe_ml_classifier, subjectivity_classifier)
 # test_vanzo_eng_dataset(nb_unigram_classifier, subjectivity_classifier)
-test_vanzo_eng_dataset(svm_unigram_classifier, subjectivity_classifier)
+# test_vanzo_eng_dataset(svm_unigram_classifier, subjectivity_classifier)
 
 # corpus_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_corpus_w2v.pickle'
 corpus_bin_file_name = 'D:/DLSU/Masters/MS Thesis/Resources/GoogleNews-vectors-negative300.bin'
@@ -98,6 +100,50 @@ scaler_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddin
 # conversational_context_clasifier = SentimentClassifier.ConversationalContextClassifier(corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name)
 # print("Finished loading classifier")
 # test_vanzo_eng_dataset(conversational_context_clasifier, subjectivity_classifier)
+
+def test_vanzo_eng_dataset_from_embeddings(classifier, subjectivity_classifier, results_file_name):
+
+
+    metrics_file_name = 'metrics-vanzo-eng-{}-{}-{}.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), results_file_name, "w_subj" if subjectivity_classifier else "" )
+
+    test_data = numpy.load("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_test.npz")
+    X_test = test_data["X"]
+    Y_test = test_data["Y"]
+
+    actual_arr = []
+    predicted_arr = []
+
+    def convert_numeric_to_string(y):
+        if y == 0:
+            return "negative"
+        if y == 1:
+            return "neutral"
+        if y == 2:
+            return "positive"
+
+    for index, x in enumerate(X_test):
+
+        if subjectivity_classifier and subjectivity_classifier.classify_subjectivity(x) == 'objective':
+            predicted_class = "neutral"
+        else:
+            predicted_class = classifier.classify_sentiment(x)
+
+        actual_class = convert_numeric_to_string(Y_test[index])
+        actual_arr.append(actual_class)
+        predicted_arr.append(predicted_class)
+
+            # print("{} vs {}".format( actual_class,predicted_class))
+
+        if index % 100 == 0 and index > 0:
+            pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
+            write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
+
+    pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
+    write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
+
+sentiment_classifier = MLEmbeddingSentimentClassifier('C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_classifier.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_scaler.pickle')
+subjectivity_classifier = MLEmbeddingSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/subj_svm_classifier.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/subj_svm_scaler.pickle' )
+test_vanzo_eng_dataset_from_embeddings(sentiment_classifier,subjectivity_classifier, "SVM_embeddings")
 
 
 def test_classify(classifier):

@@ -44,7 +44,7 @@ def train_sa():
 
     print('Test Accuracy: {}'.format(lr.score(X_test, Y_test)))
 
-train_sa()
+# train_sa()
 
 def train_subjectivity():
 
@@ -86,4 +86,4 @@ def train_subjectivity():
     print('Test Accuracy: {}'.format(lr.score(X_test, Y_test)))
 
 
-# train_subjectivity()
+train_subjectivity()

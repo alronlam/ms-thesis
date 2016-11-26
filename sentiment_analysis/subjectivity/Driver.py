@@ -88,7 +88,6 @@ def train_subj_classifier_with_nltk():
     print(nltk.classify.accuracy(classifier, test_set))
 
 
-print("HOY")
 # train_subj_classifier_with_nltk()
 
 def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):

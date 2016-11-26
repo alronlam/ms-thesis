@@ -193,3 +193,28 @@ class AFINNLexiconClassifier(SentimentClassifier):
 
     def get_name(self):
         return "Lexicon_AFINN"
+
+
+class EmbeddingSentimentClassifier(object):
+
+    def load_from_pickle(self, pickle_file_name):
+        with open(pickle_file_name, 'rb') as pickle_file:
+            return pickle.load(pickle_file)
+
+    @abc.abstractmethod
+    def classify_sentiment(self, tweet_embedding):
+        """
+        :param text: string to be analyzed
+        :return: "negative" "positive" or "neutral"
+        """
+
+class MLEmbeddingSentimentClassifier(EmbeddingSentimentClassifier):
+
+    def __init__(self, classifier_pickle_file_name, scaler_pickle_file_name):
+        self.classifier = self.load_from_pickle(classifier_pickle_file_name)
+        self.scaler = self.load_from_pickle(scaler_pickle_file_name)
+
+    def classify_sentiment(self, tweet_embedding):
+        tweet_embedding = self.scaler.transform(tweet_embedding)
+        label = self.classifier.predict(tweet_embedding)
+        return label[0]
