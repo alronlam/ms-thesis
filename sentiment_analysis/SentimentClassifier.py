@@ -95,7 +95,7 @@ class ConversationalContextClassifier(SentimentClassifier):
         return vec
 
     def get_name(self):
-        return "word2vec-sgd"
+        return "word2vec-svm"
 
 class MLClassifier(SentimentClassifier):
     def __init__(self, feature_extractor_path, classifier_pickle_path):
