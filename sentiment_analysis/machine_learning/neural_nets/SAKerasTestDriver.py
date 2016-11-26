@@ -26,6 +26,10 @@ Y_train = train_data["Y"]
 X_test = test_data["X"]
 Y_test = test_data["Y"]
 
+from itertools import groupby
+for key, group in groupby(Y_test):
+    print("{}-{}".format(key, len(list(group))))
+
 # create the model
 def build_model():
     model = Sequential()

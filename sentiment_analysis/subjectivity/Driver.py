@@ -74,7 +74,7 @@ def train_subj_classifier_with_nltk():
 
     # feature extraction
     FEATURE_EXTRACTOR = UnigramExtractor(train_tweets)
-    FeatureExtractorBase.save_feature_extractor("subj_unigram_feature_extractor_vanzo_conv_train", FEATURE_EXTRACTOR)
+    FeatureExtractorBase.save_feature_extractor("subj_unigram_feature_extractor_vanzo_conv_train.pickle", FEATURE_EXTRACTOR)
     training_set = nltk.classify.apply_features(FEATURE_EXTRACTOR.extract_features, train_tweets)
 
     # training
@@ -88,6 +88,7 @@ def train_subj_classifier_with_nltk():
     print(nltk.classify.accuracy(classifier, test_set))
 
 
+print("HOY")
 # train_subj_classifier_with_nltk()
 
 def write_metrics_file(actual_arr, predicted_arr, metrics_file_name):
@@ -133,5 +134,5 @@ def test_on_vanzo_dataset(classifier):
     pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
     write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor_vanzo_conv_train.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier_vanzo_conv_train.pickle' )
-test_on_vanzo_dataset(subjectivity_classifier)
+# subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor_vanzo_conv_train.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier_vanzo_conv_train.pickle' )
+# test_on_vanzo_dataset(subjectivity_classifier)

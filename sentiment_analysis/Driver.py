@@ -1,8 +1,18 @@
+import pickle
 from datetime import datetime
 
+import nltk
 import numpy
+import sklearn
 from sklearn import metrics
 
+from sentiment_analysis.evaluation import TSVParser
+from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
+from sentiment_analysis.machine_learning.feature_extraction.UnigramExtractor import UnigramExtractor
+from sentiment_analysis.preprocessing import PreProcessing
+from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, WordLengthFilter, \
+    RemovePunctuationFromWords, WordToLowercase
+from twitter_data.database import DBManager
 from twitter_data.parsing.csv_parser import CSVParser
 from twitter_data.parsing.folders import FolderIO
 from sentiment_analysis import SentimentClassifier
@@ -55,4 +65,3 @@ def test_senti_election_data():
 
 
 # test_senti_election_data()
-
