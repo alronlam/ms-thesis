@@ -4,6 +4,9 @@ import math
 import random
 
 import numpy
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
+from keras.utils.np_utils import to_categorical
 
 from sentiment_analysis.evaluation import TSVParser
 from twitter_data.database import DBManager
@@ -45,6 +48,12 @@ from word_embeddings import GoogleWordEmbedder
 #     return (train_X, train_Y, test_X, test_Y)
 
 
+##### SOME CONSTANTS #####
+VANZO_TRAIN_DIR = 'D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train'
+VANZO_TEST_DIR = 'D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test'
+
+
+##### UTILITY FUNCTIONS #####
 def convert_sentiment_class_to_number(sentiment_class):
     sentiment_class = sentiment_class.lower()
     if sentiment_class == "negative":
@@ -54,27 +63,95 @@ def convert_sentiment_class_to_number(sentiment_class):
     if sentiment_class == "positive":
         return 2
 
-def generate_npz(source_dir, file_extension, npz_file_name ):
-    tsv_files = FolderIO.get_files(source_dir, True, file_extension)
+def load_tsv_dataset(path):
+    texts = []
+    labels = []
+    tsv_files = FolderIO.get_files(path, True, '.tsv')
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
+    for index, conversation in enumerate(conversations):
+        target_tweet = conversation[-1]
+        tweet_object = DBManager.get_or_add_tweet(target_tweet["tweet_id"])
+        if tweet_object:
+            tweet_class = target_tweet["class"]
+            tweet_text = tweet_object.text
+
+            texts.append(tweet_text)
+            labels.append(convert_sentiment_class_to_number(tweet_class))
+        print(index)
+
+    return (texts, labels)
+
+##### Google Word Embedding Functions - Output can be used directly as word vectors #####
+def generate_npz_avg_embedding(source_dir, npz_file_name ):
+    (texts, labels) = load_tsv_dataset(source_dir)
 
     print("CONSTRUCTING LISTS")
     X = []
     Y = []
-    for index, conversation in enumerate(conversations):
-        target_tweet = conversation[-1]
-        print("{} - {}".format(index, target_tweet["tweet_id"]))
-        tweet_object = DBManager.get_or_add_tweet(target_tweet["tweet_id"])
-        if tweet_object:
-            X.append(GoogleWordEmbedder.google_embedding_avg(tweet_object.text))
-            Y.append(convert_sentiment_class_to_number(target_tweet["class"]))
+
+    for index in range(len(texts)):
+        X.append(GoogleWordEmbedder.google_embedding_avg(texts[index]))
+        Y.append(convert_sentiment_class_to_number(labels[index]))
 
     print("ENTERING FILE WRITING FUNCTION")
-    # (train_X, train_Y, test_X, test_Y) = shuffle_dataset_balanced(X, Y, 0.3)
-    # numpy.savez("vanzo_dataset_partitioned_balanced.npz", train_X=train_X, trainY=train_Y, test_X=test_X, test_Y=test_Y)
-
     numpy.savez(npz_file_name, X=X, Y=Y)
 
 
-generate_npz('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train', '.tsv', 'vanzo_train.npz')
-generate_npz('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test', '.tsv', 'vanzo_test.npz')
+# generate_npz_avg_embedding(VANZO_TRAIN_DIR, 'vanzo_train_avg.npz')
+# generate_npz_avg_embedding(VANZO_TEST_DIR, 'vanzo_test_avg.npz')
+
+
+def generate_npz_concat_embedding(source_dir, npz_file_name, max_word_count):
+
+    (texts, labels) = load_tsv_dataset(source_dir)
+
+    print("CONSTRUCTING LISTS")
+    X = []
+    Y = []
+
+    for index in range(len(texts)):
+        X.append(GoogleWordEmbedder.google_embedding_concat(texts[index], max_word_count))
+        Y.append(convert_sentiment_class_to_number(labels[index]))
+
+    print("ENTERING FILE WRITING FUNCTION")
+    numpy.savez(npz_file_name, X=X, Y=Y)
+
+
+# generate_npz_concat_embedding(VANZO_TRAIN_DIR, 'vanzo_train_concat.npz', 15)
+# generate_npz_concat_embedding(VANZO_TEST_DIR, 'vanzo_test_concat.npz', 15)
+
+##### Word Index Sequence Functions - output can be used with an embedding layer  #####
+def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32 ):
+
+    (x_train, y_train) = load_tsv_dataset(train_dir)
+    (x_test, y_test) = load_tsv_dataset(test_dir)
+
+    tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
+    tokenizer.fit_on_texts(x_train + x_test)
+    train_sequences = tokenizer.texts_to_sequences(x_train)
+    test_sequences = tokenizer.texts_to_sequences(x_test)
+
+    word_index = tokenizer.word_index
+    print('Found %s unique tokens.' % len(word_index))
+
+    x_train = pad_sequences(train_sequences, maxlen=MAX_SEQUENCE_LENGTH)
+    x_test = pad_sequences(test_sequences, maxlen=MAX_SEQUENCE_LENGTH)
+
+    y_train = to_categorical(numpy.asarray(y_train))
+    y_test = to_categorical(numpy.asarray(y_test))
+
+    print('Shape of train data tensor:', x_train.shape)
+    print('Shape of train label tensor:', y_train.shape)
+
+    print('Shape of test data tensor:', x_train.shape)
+    print('Shape of test label tensor:', y_test.shape)
+
+    print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
+
+    numpy.savez(npz_file_name, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
+    pickle.dump(tokenizer.word_index, open( "{}-word_index.pickle".format(npz_file_name), "wb"))
+
+
+generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat.npz')
+
+
