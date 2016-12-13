@@ -121,6 +121,43 @@ def generate_npz_concat_embedding(source_dir, npz_file_name, max_word_count):
 # generate_npz_concat_embedding(VANZO_TEST_DIR, 'vanzo_test_concat.npz', 15)
 
 ##### Word Index Sequence Functions - output can be used with an embedding layer  #####
+
+
+#######################################################
+### Create Embedding Matrix for the Embedding Layer ###
+#######################################################
+
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+
+def generate_embedding_matrix(word_index):
+
+    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove_test/glove/glove.twitter.27B.200d.txt"
+    EMBEDDING_DIM = 200
+
+    embeddings_index = {}
+    f = open(GLOVE_DIR, errors='ignore')
+    for line in f:
+        try:
+            values = line.split()
+            word = values[0]
+            coefs = numpy.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        except:
+            continue
+    f.close()
+
+    print('Found %s word vectors.' % len(embeddings_index))
+
+    embedding_matrix = numpy.zeros((len(word_index) + 1, EMBEDDING_DIM))
+    for word, i in word_index.items():
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            # words not found in embedding index will be all-zeros.
+            embedding_matrix[i] = embedding_vector
+
+    return embedding_matrix
+
 def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32 ):
 
     (x_train, y_train) = load_tsv_dataset(train_dir)
@@ -148,10 +185,10 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
 
     print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
 
-    numpy.savez(npz_file_name, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test)
-    pickle.dump(tokenizer.word_index, open( "{}-word_index.pickle".format(npz_file_name), "wb"))
+    # pickle.dump(tokenizer.word_index, open( "{}-word_index.pickle".format(npz_file_name), "wb"))
+    embedding_matrix = generate_embedding_matrix(tokenizer.word_index)
+    numpy.savez(npz_file_name, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test, embedding_matrix=embedding_matrix)
 
 
 generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat.npz')
-
 

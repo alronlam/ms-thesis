@@ -2,6 +2,8 @@ import os
 import pickle
 
 from keras.engine import Model, Input
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
 
 import numpy as np
@@ -77,10 +79,11 @@ def load_vanzo_dataset():
     y_train = data["y_train"]
     x_test = data["x_test"]
     y_test = data["y_test"]
+    embedding_matrix = data["embedding_matrix"]
 
-    word_index = pickle.load(open("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz-word_index.pickle", "rb"))
+    # word_index = pickle.load(open("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz-word_index.pickle", "rb"))
 
-    return (x_train, y_train, x_test, y_test, word_index)
+    return (x_train, y_train, x_test, y_test, embedding_matrix)
 
 
 #########################################################################################################
@@ -97,41 +100,10 @@ def load_vanzo_dataset():
 #################
 
 # (x_train, y_train, x_test, y_test, word_index) = load_news_dataset()
-(x_train, y_train, x_test, y_test, word_index) = load_vanzo_dataset()
+(x_train, y_train, x_test, y_test, embedding_matrix) = load_vanzo_dataset()
 actual_arr = y_test
 
 print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
-
-
-
-#######################################################
-### Create Embedding Matrix for the Embedding Layer ###
-#######################################################
-
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-
-embeddings_index = {}
-f = open(os.path.join(GLOVE_DIR, GLOVE_FILE), errors='ignore')
-for line in f:
-    try:
-        values = line.split()
-        word = values[0]
-        coefs = np.asarray(values[1:], dtype='float32')
-        embeddings_index[word] = coefs
-    except:
-        continue
-f.close()
-
-print('Found %s word vectors.' % len(embeddings_index))
-
-embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
-for word, i in word_index.items():
-    embedding_vector = embeddings_index.get(word)
-    if embedding_vector is not None:
-        # words not found in embedding index will be all-zeros.
-        embedding_matrix[i] = embedding_vector
-
 
 
 ##############################################
@@ -140,8 +112,8 @@ for word, i in word_index.items():
 
 from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense
 
-embedding_layer = Embedding(len(word_index) + 1,
-                            EMBEDDING_DIM,
+embedding_layer = Embedding(embedding_matrix.shape[0],
+                            embedding_matrix.shape[1],
                             weights=[embedding_matrix],
                             input_length=MAX_SEQUENCE_LENGTH,
                             trainable=False)
@@ -179,7 +151,7 @@ print("Y shape: {}".format(y_train.shape))
 ######################
 
 model.fit(x_train, y_train, validation_data=(x_test, y_test),
-          nb_epoch=10, batch_size=128)
+          nb_epoch=10, batch_size=128, verbose=1)
 
 predicted_probabilities = model.predict(x_test, batch_size=128, verbose=1)
 predicted_arr = predicted_probabilities.argmax(axis=1)
