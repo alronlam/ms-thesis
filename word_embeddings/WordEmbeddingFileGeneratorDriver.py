@@ -7,6 +7,7 @@ import numpy
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sentiment_analysis.evaluation import TSVParser
 from twitter_data.database import DBManager
@@ -66,9 +67,11 @@ def convert_sentiment_class_to_number(sentiment_class):
 def load_tsv_dataset(path):
     texts = []
     labels = []
+    contextual_tweets = []
     tsv_files = FolderIO.get_files(path, True, '.tsv')
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
     for index, conversation in enumerate(conversations):
+        # actual tweet
         target_tweet = conversation[-1]
         tweet_object = DBManager.get_or_add_tweet(target_tweet["tweet_id"])
         if tweet_object:
@@ -79,7 +82,23 @@ def load_tsv_dataset(path):
             labels.append(convert_sentiment_class_to_number(tweet_class))
         print(index)
 
-    return (texts, labels)
+        # generate the list of conversational tweets for the target tweet
+        curr_contextual_tweets = []
+        for contextual_tweet in conversation[:-1]:
+            tweet_object = DBManager.get_or_add_tweet(contextual_tweet["tweet_id"])
+            if tweet_object:
+                curr_contextual_tweets.append(tweet_object.text)
+        curr_contextual_tweets.append(curr_contextual_tweets)
+
+        # append the current list of conversational tweets to the overall list
+        contextual_tweets.append(curr_contextual_tweets)
+
+        if index >= 5:
+            break
+
+    return (texts, labels, contextual_tweets)
+
+
 
 ##### Google Word Embedding Functions - Output can be used directly as word vectors #####
 def generate_npz_avg_embedding(source_dir, npz_file_name ):
@@ -130,7 +149,7 @@ def generate_npz_concat_embedding(source_dir, npz_file_name, max_word_count):
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 
-def generate_embedding_matrix(word_index):
+def generate_glove_embedding_matrix(word_index):
 
     GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove_test/glove/glove.twitter.27B.200d.txt"
     EMBEDDING_DIM = 200
@@ -158,36 +177,69 @@ def generate_embedding_matrix(word_index):
 
     return embedding_matrix
 
+
+def convert_contextual_tweets_by_idf(contextual_tweets):
+
+    top_keywords = []
+
+    for curr_contextual_tweets in contextual_tweets:
+        print(curr_contextual_tweets[0])
+        tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
+        tfidf_vectorizer.fit_transform(curr_contextual_tweets)
+
+        indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
+        features = tfidf_vectorizer.get_feature_names()
+        top_n = 32
+        top_features = [features[i] for i in indices[:top_n]]
+        top_keywords.append(top_features)
+
+        print(top_features)
+
+    return top_keywords
+
+
 def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32 ):
 
-    (x_train, y_train) = load_tsv_dataset(train_dir)
-    (x_test, y_test) = load_tsv_dataset(test_dir)
+    (x_train, y_train, x_conv_train) = load_tsv_dataset(train_dir)
+    (x_test, y_test, x_conv_test) = load_tsv_dataset(test_dir)
+
+    x_conv_train = convert_contextual_tweets_by_idf(x_conv_train)
+    x_conv_test = convert_contextual_tweets_by_idf(x_conv_test)
 
     tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
-    tokenizer.fit_on_texts(x_train + x_test)
+    tokenizer.fit_on_texts(x_train + x_conv_train)
     train_sequences = tokenizer.texts_to_sequences(x_train)
     test_sequences = tokenizer.texts_to_sequences(x_test)
+    train_conv_sequences = tokenizer.texts_to_sequences(x_conv_train)
+    test_conv_sequences = tokenizer.texts_to_sequences(x_conv_test)
 
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
 
     x_train = pad_sequences(train_sequences, maxlen=MAX_SEQUENCE_LENGTH)
     x_test = pad_sequences(test_sequences, maxlen=MAX_SEQUENCE_LENGTH)
+    x_conv_train = pad_sequences(train_conv_sequences, maxlen=MAX_SEQUENCE_LENGTH)
+    x_conv_test = pad_sequences(test_conv_sequences, maxlen=MAX_SEQUENCE_LENGTH)
 
     y_train = to_categorical(numpy.asarray(y_train))
     y_test = to_categorical(numpy.asarray(y_test))
 
     print('Shape of train data tensor:', x_train.shape)
     print('Shape of train label tensor:', y_train.shape)
+    print('Shape of train conv data tensor:', x_conv_train.shape)
 
     print('Shape of test data tensor:', x_train.shape)
     print('Shape of test label tensor:', y_test.shape)
+    print('Shape of test conv data tensor:', x_conv_test.shape)
 
     print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
 
     # pickle.dump(tokenizer.word_index, open( "{}-word_index.pickle".format(npz_file_name), "wb"))
-    embedding_matrix = generate_embedding_matrix(tokenizer.word_index)
-    numpy.savez(npz_file_name, x_train=x_train, y_train=y_train, x_test=x_test, y_test=y_test, embedding_matrix=embedding_matrix)
+    embedding_matrix = generate_glove_embedding_matrix(tokenizer.word_index)
+    numpy.savez(npz_file_name,
+                x_train=x_train, y_train=y_train, x_conv_train=x_conv_train,
+                x_test=x_test, y_test=y_test, x_conv_test=x_conv_test,
+                embedding_matrix=embedding_matrix)
 
 
 generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat.npz')
