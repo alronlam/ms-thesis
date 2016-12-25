@@ -80,21 +80,18 @@ def load_tsv_dataset(path):
 
             texts.append(tweet_text)
             labels.append(convert_sentiment_class_to_number(tweet_class))
+
+            # generate the list of conversational tweets for the target tweet
+            curr_contextual_tweets = []
+            for contextual_tweet in conversation[:-1]:
+                tweet_object = DBManager.get_or_add_tweet(contextual_tweet["tweet_id"])
+                if tweet_object:
+                    curr_contextual_tweets.append(tweet_object.text)
+
+            # append the current list of conversational tweets to the overall list
+            contextual_tweets.append(curr_contextual_tweets)
+
         print(index)
-
-        # generate the list of conversational tweets for the target tweet
-        curr_contextual_tweets = []
-        for contextual_tweet in conversation[:-1]:
-            tweet_object = DBManager.get_or_add_tweet(contextual_tweet["tweet_id"])
-            if tweet_object:
-                curr_contextual_tweets.append(tweet_object.text)
-        curr_contextual_tweets.append(curr_contextual_tweets)
-
-        # append the current list of conversational tweets to the overall list
-        contextual_tweets.append(curr_contextual_tweets)
-
-        if index >= 5:
-            break
 
     return (texts, labels, contextual_tweets)
 
@@ -178,22 +175,25 @@ def generate_glove_embedding_matrix(word_index):
     return embedding_matrix
 
 
-def convert_contextual_tweets_by_idf(contextual_tweets):
+def convert_contextual_tweets_by_idf(contextual_tweets, TOP_N_KEYWORDS = 32):
 
     top_keywords = []
 
     for curr_contextual_tweets in contextual_tweets:
-        print(curr_contextual_tweets[0])
-        tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
-        tfidf_vectorizer.fit_transform(curr_contextual_tweets)
+        try:
+            tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
+            tfidf_vectorizer.fit_transform(curr_contextual_tweets)
 
-        indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
-        features = tfidf_vectorizer.get_feature_names()
-        top_n = 32
-        top_features = [features[i] for i in indices[:top_n]]
-        top_keywords.append(top_features)
+            indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
+            features = tfidf_vectorizer.get_feature_names()
+            top_features = [features[i] for i in indices[:TOP_N_KEYWORDS]]
+            print(top_features)
+        except Exception as e:
+            print(e)
+            top_features = []
 
-        print(top_features)
+        top_feature_string = " ".join(top_features)
+        top_keywords.append(top_feature_string)
 
     return top_keywords
 
@@ -228,7 +228,7 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
     print('Shape of train label tensor:', y_train.shape)
     print('Shape of train conv data tensor:', x_conv_train.shape)
 
-    print('Shape of test data tensor:', x_train.shape)
+    print('Shape of test data tensor:', x_test.shape)
     print('Shape of test label tensor:', y_test.shape)
     print('Shape of test conv data tensor:', x_conv_test.shape)
 
