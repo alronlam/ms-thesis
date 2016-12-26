@@ -1,7 +1,7 @@
 import os
 import pickle
 
-from keras.engine import Model, Input
+from keras.engine import Model, Input, merge
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
@@ -17,6 +17,7 @@ import numpy as np
 TEXT_DATA_DIR = "20_newsgroup"
 MAX_NB_WORDS = 20000
 MAX_SEQUENCE_LENGTH = 32
+MAX_CONTEXTUAL_WORDS = 32
 VALIDATION_SPLIT = 0.1
 GLOVE_DIR = "glove"
 GLOVE_FILE = "glove.twitter.27B.200d.txt"
@@ -77,13 +78,17 @@ def load_vanzo_dataset():
     data = np.load("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz")
     x_train = data["x_train"]
     y_train = data["y_train"]
+    x_conv_train = data["x_conv_train"]
+
     x_test = data["x_test"]
     y_test = data["y_test"]
+    x_conv_test = data["x_conv_test"]
+
     embedding_matrix = data["embedding_matrix"]
 
     # word_index = pickle.load(open("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz-word_index.pickle", "rb"))
 
-    return (x_train, y_train, x_test, y_test, embedding_matrix)
+    return (x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix)
 
 
 #########################################################################################################
@@ -100,8 +105,7 @@ def load_vanzo_dataset():
 #################
 
 # (x_train, y_train, x_test, y_test, word_index) = load_news_dataset()
-(x_train, y_train, x_test, y_test, embedding_matrix) = load_vanzo_dataset()
-actual_arr = y_test
+(x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix) = load_vanzo_dataset()
 
 print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
 
@@ -116,7 +120,7 @@ embedding_layer = Embedding(embedding_matrix.shape[0],
                             embedding_matrix.shape[1],
                             weights=[embedding_matrix],
                             input_length=MAX_SEQUENCE_LENGTH,
-                            trainable=False)
+                            trainable=True)
 
 sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(sequence_input)
@@ -126,17 +130,28 @@ embedded_sequences = embedding_layer(sequence_input)
 # x = MaxPooling1D(5)(x)
 # x = Conv1D(128, 5, activation='relu')(x)
 # x = MaxPooling1D(35)(x)  # global max pooling
-x = Conv1D(128, 3, activation="relu")(embedded_sequences)
+x = Conv1D(1, 3, border_mode="valid", activation="tanh")(embedded_sequences)
 x = MaxPooling1D(3)(x)
-x = Conv1D(128, 3, activation="relu")(x)
-x = MaxPooling1D(8)(x) # global max pooling
 x = Flatten()(x)
-x = Dense(128, activation='relu')(x)
+
+aux_input = Input(shape=(MAX_CONTEXTUAL_WORDS,), dtype='int32')
+contextual_embedding_layer = Embedding(embedding_matrix.shape[0],
+                            embedding_matrix.shape[1],
+                            weights=[embedding_matrix],
+                            input_length=MAX_SEQUENCE_LENGTH,
+                            trainable=True)
+aux_embedded_sequences = contextual_embedding_layer(aux_input)
+aux_network = MaxPooling1D(3)(aux_embedded_sequences)
+aux_network = Flatten()(aux_network)
+
+x = merge([x, aux_network], mode='concat')
+x = Dense(64, activation='relu')(x)
+
 preds = Dense(3, activation='softmax')(x)
 
-model = Model(sequence_input, preds)
+model = Model(input=[sequence_input, aux_input], output=[preds])
 model.compile(loss='categorical_crossentropy',
-              optimizer='rmsprop',
+              optimizer='adagrad',
               metrics=['acc'])
 
 print(model.summary())
@@ -150,11 +165,14 @@ print("Y shape: {}".format(y_train.shape))
 ### Evaluate Model ###
 ######################
 
-model.fit(x_train, y_train, validation_data=(x_test, y_test),
+model.fit([x_train,  x_conv_train], y_train, validation_data=([x_test, x_conv_test], y_test),
           nb_epoch=10, batch_size=128, verbose=1)
 
-predicted_probabilities = model.predict(x_test, batch_size=128, verbose=1)
+predicted_probabilities = model.predict([x_test, x_conv_test], batch_size=128, verbose=1)
 predicted_arr = predicted_probabilities.argmax(axis=1)
+
+actual_arr = y_test.argmax(axis=1)
+
 
 from sklearn import metrics
 print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
