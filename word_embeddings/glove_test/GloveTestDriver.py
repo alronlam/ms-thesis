@@ -116,24 +116,26 @@ print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
 
 from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, AveragePooling1D
 
+
+###############################
+### Create the main network ###
+###############################
 embedding_layer = Embedding(embedding_matrix.shape[0],
                             embedding_matrix.shape[1],
                             weights=[embedding_matrix],
                             input_length=MAX_SEQUENCE_LENGTH,
                             trainable=False)
 
-sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
-embedded_sequences = embedding_layer(sequence_input)
-# x = Conv1D(128, 5, activation='relu')(embedded_sequences)
-# x = MaxPooling1D(5)(x)
-# x = Conv1D(128, 5, activation='relu')(x)
-# x = MaxPooling1D(5)(x)
-# x = Conv1D(128, 5, activation='relu')(x)
-# x = MaxPooling1D(35)(x)  # global max pooling
-x = Conv1D(1, 3, border_mode="valid", activation="tanh")(embedded_sequences)
-x = AveragePooling1D(3)(x)
-x = Flatten()(x)
+main_sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
+embedded_sequences = embedding_layer(main_sequence_input)
+main_network = Conv1D(1, 3, border_mode="valid", activation="tanh")(embedded_sequences)
+main_network = AveragePooling1D(3)(main_network)
+main_network = Flatten()(main_network)
 
+
+#####################################
+### Create the contextual network ###
+#####################################
 aux_input = Input(shape=(MAX_CONTEXTUAL_WORDS,), dtype='int32')
 contextual_embedding_layer = Embedding(embedding_matrix.shape[0],
                             embedding_matrix.shape[1],
@@ -144,21 +146,26 @@ aux_embedded_sequences = contextual_embedding_layer(aux_input)
 aux_network = AveragePooling1D(3)(aux_embedded_sequences)
 aux_network = Flatten()(aux_network)
 
-x = merge([x, aux_network], mode='concat')
-x = Dense(64, activation='relu')(x)
+############################################
+### Merge the main & contextual networks ###
+############################################
+main_network = merge([main_network, aux_network], mode='concat')
+main_network = Dense(64, activation='relu')(main_network)
 
-preds = Dense(3, activation='softmax')(x)
+preds = Dense(3, activation='softmax')(main_network)
 
-model = Model(input=[sequence_input, aux_input], output=[preds])
+model = Model(input=[main_sequence_input, aux_input], output=[preds])
 model.compile(loss='categorical_crossentropy',
               optimizer='adagrad',
               metrics=['acc'])
 
+############################################
+### Display some info about the networks ###
+############################################
 print(model.summary())
 
 from keras.utils.visualize_util import plot
 plot(model, to_file='model.png', show_shapes=True)
-
 
 print("X shape: {}".format(x_train.shape))
 print("Y shape: {}".format(y_train.shape))
