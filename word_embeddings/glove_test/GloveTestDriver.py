@@ -126,10 +126,11 @@ from keras import backend as K
 from theano import tensor as T
 
 def max_min_avg_pooling(x):
-    max_arr = MaxPooling1D(EMBEDDING_DIM)(x)
-    min_arr = -K.pool2d(-x, pool_size=(3,1), strides=(3,1),
+    max_arr = MaxPooling1D(MAX_CONTEXTUAL_WORDS)(x)
+    # TODO not sure why the pool size and strides work, but verified manually (through inspecting input and ouput that it produces correct output)
+    min_arr = -K.pool2d(-x, pool_size=(32,1), strides=(32,1),
                           border_mode="valid", dim_ordering="th", pool_mode='max')
-    avg_arr = AveragePooling1D(EMBEDDING_DIM)(x)
+    avg_arr = AveragePooling1D(MAX_CONTEXTUAL_WORDS)(x)
 
     return K.concatenate([max_arr, min_arr, avg_arr], axis=1)
 
@@ -151,9 +152,8 @@ embedding_layer = Embedding(embedding_matrix.shape[0],
 
 main_sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(main_sequence_input)
-main_network = Conv1D(200, 3, border_mode="valid", activation="tanh")(embedded_sequences)
-# main_network = MaxPooling1D(3)(main_network)
-main_network = Lambda(max_min_avg_pooling, output_shape=max_min_avg_output_shape)(main_network)
+main_network = Conv1D(1, 3, border_mode="valid", activation="tanh")(embedded_sequences)
+main_network = MaxPooling1D(3)(main_network)
 main_network = Flatten()(main_network)
 
 
@@ -164,10 +164,10 @@ context_sequence_input = Input(shape=(MAX_CONTEXTUAL_WORDS,), dtype='int32')
 context_embedding_layer = Embedding(embedding_matrix.shape[0],
                                     embedding_matrix.shape[1],
                                     weights=[embedding_matrix],
-                                    input_length=MAX_SEQUENCE_LENGTH,
+                                    input_length=MAX_CONTEXTUAL_WORDS,
                                     trainable=False)
 aux_embedded_sequences = context_embedding_layer(context_sequence_input)
-context_network = Lambda(max_min_avg_pooling, output_shape=max_min_avg_output_shape)(aux_embedded_sequences)
+context_network = Lambda(max_min_avg_pooling, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
 context_network = Flatten()(context_network)
 
 def test_model_func(x_conv_train):
@@ -190,23 +190,37 @@ def test_model_func(x_conv_train):
                   optimizer='adagrad',
                   metrics=['acc'])
 
-    # from keras import backend as K
-    # get_2nd_layer_output = K.function([model.layers[0].input],
-    #                                   [model.layers[1].output])
-    # get_3rd_layer_output = K.function([model.layers[0].input],
-    #                                   [model.layers[2].output])
-    #
-    # print(get_2nd_layer_output([x_conv_train[11:12]]))
-    # print(get_3rd_layer_output([x_conv_train[11:12]]))
+    from keras import backend as K
+    get_2nd_layer_output = K.function([model.layers[0].input],
+                                      [model.layers[1].output])
+    get_3rd_layer_output = K.function([model.layers[0].input],
+                                      [model.layers[2].output])
 
-    # np.set_printoptions(threshold=np.nan)
-    # print(layer_output)
+    np.set_printoptions(threshold=np.nan)
+    print(get_2nd_layer_output([x_conv_train[11:12]]))
+    print(get_3rd_layer_output([x_conv_train[11:12]]))
+
     print(model.summary())
 
     from keras.utils.visualize_util import plot
     plot(model, to_file='model.png', show_shapes=True)
 
-    print(model.predict(x_conv_train[:1]))
+    model.fit(x_conv_train, y_train, validation_data=(x_conv_test, y_test),
+              nb_epoch=10, batch_size=128, verbose=1)
+
+    predicted_probabilities = model.predict( x_conv_test, batch_size=128, verbose=1)
+    predicted_arr = predicted_probabilities.argmax(axis=1)
+
+    actual_arr = y_test.argmax(axis=1)
+
+    from sklearn import metrics
+    print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
+    print(metrics.classification_report(actual_arr, predicted_arr))
+    print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
+
+
+    print(model.predict(x_conv_train[11:12]))
+
 
 
 
@@ -248,7 +262,7 @@ plot(model, to_file='model.png', show_shapes=True)
 # ######################
 #
 model.fit([x_train,  x_conv_train], y_train, validation_data=([x_test, x_conv_test], y_test),
-          nb_epoch=10, batch_size=128, verbose=1)
+          nb_epoch=100, batch_size=128, verbose=1)
 
 predicted_probabilities = model.predict([x_test, x_conv_test], batch_size=128, verbose=1)
 predicted_arr = predicted_probabilities.argmax(axis=1)
