@@ -148,8 +148,8 @@ from keras.preprocessing.sequence import pad_sequences
 
 def generate_glove_embedding_matrix(word_index):
 
-    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove_test/glove/glove.twitter.27B.200d.txt"
-    EMBEDDING_DIM = 200
+    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove_test/glove/glove.twitter.27B.25d.txt"
+    EMBEDDING_DIM = 25
 
     embeddings_index = {}
     f = open(GLOVE_DIR, errors='ignore')
@@ -175,7 +175,7 @@ def generate_glove_embedding_matrix(word_index):
     return embedding_matrix
 
 
-def convert_contextual_tweets_by_idf(contextual_tweets, TOP_N_KEYWORDS = 32):
+def convert_contextual_tweets_by_idf(contextual_tweets, TOP_N_KEYWORDS):
 
     top_keywords = []
 
@@ -198,13 +198,13 @@ def convert_contextual_tweets_by_idf(contextual_tweets, TOP_N_KEYWORDS = 32):
     return top_keywords
 
 
-def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32 ):
+def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32, TOP_N_KEYWORDS=5):
 
     (x_train, y_train, x_conv_train) = load_tsv_dataset(train_dir)
     (x_test, y_test, x_conv_test) = load_tsv_dataset(test_dir)
 
-    x_conv_train = convert_contextual_tweets_by_idf(x_conv_train)
-    x_conv_test = convert_contextual_tweets_by_idf(x_conv_test)
+    x_conv_train = convert_contextual_tweets_by_idf(x_conv_train, TOP_N_KEYWORDS)
+    x_conv_test = convert_contextual_tweets_by_idf(x_conv_test, TOP_N_KEYWORDS)
 
     tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
     tokenizer.fit_on_texts(x_train + x_conv_train)
@@ -218,8 +218,8 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
 
     x_train = pad_sequences(train_sequences, maxlen=MAX_SEQUENCE_LENGTH)
     x_test = pad_sequences(test_sequences, maxlen=MAX_SEQUENCE_LENGTH)
-    x_conv_train = pad_sequences(train_conv_sequences, maxlen=MAX_SEQUENCE_LENGTH)
-    x_conv_test = pad_sequences(test_conv_sequences, maxlen=MAX_SEQUENCE_LENGTH)
+    x_conv_train = pad_sequences(train_conv_sequences, maxlen=TOP_N_KEYWORDS)
+    x_conv_test = pad_sequences(test_conv_sequences, maxlen=TOP_N_KEYWORDS)
 
     y_train = to_categorical(numpy.asarray(y_train))
     y_test = to_categorical(numpy.asarray(y_test))
@@ -242,5 +242,5 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat.npz')
+generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_25d.npz')
 
