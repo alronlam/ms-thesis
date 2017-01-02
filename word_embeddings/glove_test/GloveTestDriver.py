@@ -125,7 +125,17 @@ from keras import backend as K
 
 from theano import tensor as T
 
-def max_min_avg_pooling(x):
+def max_min_avg_pooling_main(x):
+    max_arr = MaxPooling1D(MAX_SEQUENCE_LENGTH-2)(x)
+    # TODO not sure why the pool size and strides work, but verified manually (through inspecting input and ouput that it produces correct output)
+    min_arr = -K.pool2d(-x, pool_size=(MAX_SEQUENCE_LENGTH-2,1), strides=(MAX_SEQUENCE_LENGTH-2,1),
+                          border_mode="valid", dim_ordering="th", pool_mode='max')
+    avg_arr = AveragePooling1D(MAX_SEQUENCE_LENGTH-2)(x)
+
+    return K.concatenate([max_arr, min_arr, avg_arr], axis=1)
+
+
+def max_min_avg_pooling_context(x):
     max_arr = MaxPooling1D(MAX_CONTEXTUAL_WORDS)(x)
     # TODO not sure why the pool size and strides work, but verified manually (through inspecting input and ouput that it produces correct output)
     min_arr = -K.pool2d(-x, pool_size=(32,1), strides=(32,1),
@@ -133,6 +143,7 @@ def max_min_avg_pooling(x):
     avg_arr = AveragePooling1D(MAX_CONTEXTUAL_WORDS)(x)
 
     return K.concatenate([max_arr, min_arr, avg_arr], axis=1)
+
 
 
 def max_min_avg_output_shape(input_shape):
@@ -152,8 +163,9 @@ embedding_layer = Embedding(embedding_matrix.shape[0],
 
 main_sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
 embedded_sequences = embedding_layer(main_sequence_input)
-main_network = Conv1D(1, 3, border_mode="valid", activation="tanh")(embedded_sequences)
-main_network = MaxPooling1D(3)(main_network)
+main_network = Conv1D(200, 3, border_mode="valid", activation="tanh")(embedded_sequences)
+main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
+# main_network = MaxPooling1D(3)(main_network)
 main_network = Flatten()(main_network)
 
 
@@ -167,7 +179,7 @@ context_embedding_layer = Embedding(embedding_matrix.shape[0],
                                     input_length=MAX_CONTEXTUAL_WORDS,
                                     trainable=False)
 aux_embedded_sequences = context_embedding_layer(context_sequence_input)
-context_network = Lambda(max_min_avg_pooling, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
+context_network = Lambda(max_min_avg_pooling_context, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
 context_network = Flatten()(context_network)
 
 def test_model_func(x_conv_train):
@@ -178,7 +190,7 @@ def test_model_func(x_conv_train):
                                         input_length=MAX_CONTEXTUAL_WORDS,
                                         trainable=False)
     aux_embedded_sequences = context_embedding_layer(context_sequence_input)
-    aux_network = Lambda(max_min_avg_pooling, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
+    aux_network = Lambda(max_min_avg_pooling_context, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
     # aux_network = MaxPooling1D(5)(aux_embedded_sequences)
     aux_network = Flatten()(aux_network)
 
