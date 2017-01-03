@@ -26,54 +26,6 @@ EMBEDDING_DIM = 200
 ##########################################
 ##### Functions for loading datasets #####
 ##########################################
-
-def load_news_dataset():
-
-    texts = []  # list of text samples
-    labels_index = {}  # dictionary mapping label name to numeric id
-    labels = []  # list of label ids
-    for name in sorted(os.listdir(TEXT_DATA_DIR)):
-        path = os.path.join(TEXT_DATA_DIR, name)
-        if os.path.isdir(path):
-            label_id = len(labels_index)
-            labels_index[name] = label_id
-            for fname in sorted(os.listdir(path)):
-                if fname.isdigit():
-                    fpath = os.path.join(path, fname)
-                    f = open(fpath)
-                    texts.append(f.read())
-                    f.close()
-                    labels.append(label_id)
-
-    tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
-    tokenizer.fit_on_texts(texts)
-    sequences = tokenizer.texts_to_sequences(texts)
-
-    word_index = tokenizer.word_index
-    print('Found %s unique tokens.' % len(word_index))
-
-    data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
-
-    labels = to_categorical(np.asarray(labels))
-
-    print('Shape of data tensor:', data.shape)
-    print('Shape of label tensor:', labels.shape)
-
-    # split the data into a training set and a validation set
-    indices = np.arange(data.shape[0])
-    np.random.shuffle(indices)
-    data = data[indices]
-    labels = labels[indices]
-    nb_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
-
-    x_train = data[:-nb_validation_samples]
-    y_train = labels[:-nb_validation_samples]
-    x_test = data[-nb_validation_samples:]
-    y_test = labels[-nb_validation_samples:]
-
-    return (x_train, y_train, x_test, y_test, word_index)
-
-
 def load_vanzo_dataset():
     data = np.load("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz")
     x_train = data["x_train"]
@@ -93,23 +45,6 @@ def load_vanzo_dataset():
 
 #########################################################################################################
 
-
-###################################
-##### Actual Training Program #####
-###################################
-
-
-
-#################
-### Load Data ###
-#################
-
-# (x_train, y_train, x_test, y_test, word_index) = load_news_dataset()
-(x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix) = load_vanzo_dataset()
-
-print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
-
-
 ##############################################
 ### Create the Neural Network Architecture ###
 ##############################################
@@ -121,9 +56,6 @@ from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, Averag
 ######################
 
 from keras import backend as K
-# import keras.backend.theano_backend as T
-
-from theano import tensor as T
 
 def max_min_avg_pooling_main(x):
     max_arr = MaxPooling1D(MAX_SEQUENCE_LENGTH-2)(x)
@@ -144,8 +76,6 @@ def max_min_avg_pooling_context(x):
 
     return K.concatenate([max_arr, min_arr, avg_arr], axis=1)
 
-
-
 def max_min_avg_output_shape(input_shape):
     shape = list(input_shape)
     assert len(shape) == 3  # only valid for 2D tensors
@@ -155,34 +85,23 @@ def max_min_avg_output_shape(input_shape):
 ###############################
 ### Create the main network ###
 ###############################
-embedding_layer = Embedding(embedding_matrix.shape[0],
-                            embedding_matrix.shape[1],
-                            weights=[embedding_matrix],
-                            input_length=MAX_SEQUENCE_LENGTH,
-                            trainable=False)
-
-main_sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
-embedded_sequences = embedding_layer(main_sequence_input)
-main_network = Conv1D(200, 3, border_mode="valid", activation="tanh")(embedded_sequences)
-main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
-# main_network = MaxPooling1D(3)(main_network)
-main_network = Flatten()(main_network)
-
+def create_main_sub_network(embedding_matrix):
+    main_sequence_input = Input(shape=(MAX_SEQUENCE_LENGTH,), dtype='int32')
+    embedding_layer = Embedding(embedding_matrix.shape[0],
+                                embedding_matrix.shape[1],
+                                weights=[embedding_matrix],
+                                input_length=MAX_SEQUENCE_LENGTH,
+                                trainable=False)
+    embedded_sequences = embedding_layer(main_sequence_input)
+    main_network = Conv1D(200, 3, border_mode="valid", activation="tanh")(embedded_sequences)
+    main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
+    main_network = Flatten()(main_network)
+    return (main_network, main_sequence_input)
 
 #####################################
 ### Create the contextual network ###
 #####################################
-context_sequence_input = Input(shape=(MAX_CONTEXTUAL_WORDS,), dtype='int32')
-context_embedding_layer = Embedding(embedding_matrix.shape[0],
-                                    embedding_matrix.shape[1],
-                                    weights=[embedding_matrix],
-                                    input_length=MAX_CONTEXTUAL_WORDS,
-                                    trainable=False)
-aux_embedded_sequences = context_embedding_layer(context_sequence_input)
-context_network = Lambda(max_min_avg_pooling_context, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
-context_network = Flatten()(context_network)
-
-def test_model_func(x_conv_train):
+def create_contextual_sub_network(embedding_matrix):
     context_sequence_input = Input(shape=(MAX_CONTEXTUAL_WORDS,), dtype='int32')
     context_embedding_layer = Embedding(embedding_matrix.shape[0],
                                         embedding_matrix.shape[1],
@@ -190,37 +109,18 @@ def test_model_func(x_conv_train):
                                         input_length=MAX_CONTEXTUAL_WORDS,
                                         trainable=False)
     aux_embedded_sequences = context_embedding_layer(context_sequence_input)
-    aux_network = Lambda(max_min_avg_pooling_context, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
-    # aux_network = MaxPooling1D(5)(aux_embedded_sequences)
-    aux_network = Flatten()(aux_network)
+    context_network = Lambda(max_min_avg_pooling_context, output_shape=max_min_avg_output_shape, name="custom_pooling")(aux_embedded_sequences)
+    context_network = Flatten()(context_network)
+    return (context_network, context_sequence_input)
 
-    aux_network = Dense(64, activation='relu')(aux_network)
-    predictions = Dense(3, activation='softmax')(aux_network)
+########################################
+### Training and Evaluation Function ###
+########################################
+def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test):
+    model.fit(x_train_arr, y_train, validation_data=(x_test_arr, y_test),
+              nb_epoch=25, batch_size=128, verbose=1)
 
-    model = Model(input=context_sequence_input, output=predictions)
-    model.compile(loss='categorical_crossentropy',
-                  optimizer='adagrad',
-                  metrics=['acc'])
-
-    from keras import backend as K
-    get_2nd_layer_output = K.function([model.layers[0].input],
-                                      [model.layers[1].output])
-    get_3rd_layer_output = K.function([model.layers[0].input],
-                                      [model.layers[2].output])
-
-    np.set_printoptions(threshold=np.nan)
-    print(get_2nd_layer_output([x_conv_train[11:12]]))
-    print(get_3rd_layer_output([x_conv_train[11:12]]))
-
-    print(model.summary())
-
-    from keras.utils.visualize_util import plot
-    plot(model, to_file='model.png', show_shapes=True)
-
-    model.fit(x_conv_train, y_train, validation_data=(x_conv_test, y_test),
-              nb_epoch=10, batch_size=128, verbose=1)
-
-    predicted_probabilities = model.predict( x_conv_test, batch_size=128, verbose=1)
+    predicted_probabilities = model.predict(x_test_arr, batch_size=128, verbose=1)
     predicted_arr = predicted_probabilities.argmax(axis=1)
 
     actual_arr = y_test.argmax(axis=1)
@@ -231,58 +131,85 @@ def test_model_func(x_conv_train):
     print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
 
 
-    print(model.predict(x_conv_train[11:12]))
+########################################################################################################################
+
+############################################################
+### Function for testing the neural network with context ###
+############################################################
+def test_with_context():
+
+    #################
+    ### Load Data ###
+    #################
+    (x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix) = load_vanzo_dataset()
+    print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
+
+    #################################
+    ### Create the Neural Network ###
+    #################################
+    (main_network, main_sequence_input) = create_main_sub_network(embedding_matrix)
+    (context_network, context_sequence_input) = create_contextual_sub_network(embedding_matrix)
+    main_network = merge([main_network, context_network], mode='concat')
+    main_network = Dense(64, activation='relu')(main_network)
+    predictions = Dense(3, activation='softmax')(main_network)
+
+    model = Model(input=[main_sequence_input, context_sequence_input], output=[predictions])
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adagrad',
+                  metrics=['acc'])
+
+    ############################################
+    ### Display some info about the networks ###
+    ############################################
+    print(model.summary())
+    from keras.utils.visualize_util import plot
+    plot(model, to_file='with_context_model.png', show_shapes=True)
+
+    ######################
+    ### Evaluate Model ###
+    ######################
+    train_and_display_metrics(model, [x_train, x_conv_train], y_train, [x_test, x_conv_test], y_test)
 
 
+###############################################################
+### Function for testing the neural network without context ###
+###############################################################
+def test_without_context():
+
+    #################
+    ### Load Data ###
+    #################
+    (x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix) = load_vanzo_dataset()
+    print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
+
+    #################################
+    ### Create the Neural Network ###
+    #################################
+    (main_network, main_sequence_input) = create_main_sub_network(embedding_matrix)
+    main_network = Dense(64, activation='relu')(main_network)
+    predictions = Dense(3, activation='softmax')(main_network)
+
+    model = Model(input=[main_sequence_input], output=[predictions])
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adagrad',
+                  metrics=['acc'])
+
+    ############################################
+    ### Display some info about the networks ###
+    ############################################
+    print(model.summary())
+    from keras.utils.visualize_util import plot
+    plot(model, to_file='with_context_model.png', show_shapes=True)
+
+    ######################
+    ### Evaluate Model ###
+    ######################
+    train_and_display_metrics(model, [x_train], y_train, [x_test], y_test)
 
 
-    # intermediate_layer_model = Model(input=model.input, output=model.get_layer("custom_pooling").output)
-    # intermediate_output = intermediate_layer_model.predict(x_conv_train, batch_size=128)
-    # print(intermediate_output)
+###################################
+##### Actual Training Program #####
+###################################
 
-
-# test_model_func(x_conv_train)
-
-############################################
-### Merge the main & contextual networks ###
-############################################
-
-main_network = merge([main_network, context_network], mode='concat')
-main_network = Dense(64, activation='relu')(main_network)
-predictions = Dense(3, activation='softmax')(main_network)
-
-model = Model(input=[main_sequence_input, context_sequence_input], output=[predictions])
-model.compile(loss='categorical_crossentropy',
-              optimizer='adagrad',
-              metrics=['acc'])
-#
-# ############################################
-# ### Display some info about the networks ###
-# ############################################
-print(model.summary())
-
-from keras.utils.visualize_util import plot
-plot(model, to_file='model.png', show_shapes=True)
-#
-# # print("X shape: {}".format(x_train.shape))
-# # print("Y shape: {}".format(y_train.shape))
-#
-#
-#
-# ######################
-# ### Evaluate Model ###
-# ######################
-#
-model.fit([x_train,  x_conv_train], y_train, validation_data=([x_test, x_conv_test], y_test),
-          nb_epoch=100, batch_size=128, verbose=1)
-
-predicted_probabilities = model.predict([x_test, x_conv_test], batch_size=128, verbose=1)
-predicted_arr = predicted_probabilities.argmax(axis=1)
-
-actual_arr = y_test.argmax(axis=1)
-
-
-from sklearn import metrics
-print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
-print(metrics.classification_report(actual_arr, predicted_arr))
-print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
+# test_with_context()
+test_without_context()
