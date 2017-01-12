@@ -8,3 +8,4 @@ mongodb/
 sa_training_data/
 **.xml
 **.txt
+**.npz
