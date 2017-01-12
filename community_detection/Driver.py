@@ -2,12 +2,20 @@ from datetime import datetime
 
 from analysis.viz import CommunityViz
 from community_detection.EdgeWeightModifier import *
+
 from community_detection.graph_construction import TweetGraphs
+
+from sentiment_analysis.evaluation import TSVParser
 from twitter_data.database import DBManager
+from twitter_data.parsing.csv_parser import CSVParser
 from twitter_data.parsing.folders import FolderIO
 from twitter_data.parsing.json_parser import JSONParser
 from sentiment_analysis import SentimentClassifier
 
+
+#########################
+### Utility Functions ###
+#########################
 
 def extract_vertices_in_communities(graph, membership):
     dict = {}
@@ -23,6 +31,7 @@ def extract_vertices_in_communities(graph, membership):
 
     return dict
 
+
 def combine_text_for_each_community(community_dict):
     text_dict = {}
     for community_number, vertex_set in community_dict.items():
@@ -32,10 +41,48 @@ def combine_text_for_each_community(community_dict):
 
 
 def combine_text_in_vertex_set(vertex_set):
-    return " ".join([vertex["text"] for vertex in vertex_set ])
+    return " ".join([vertex["text"] for vertex in vertex_set])
+
+
+#################################
+### Dataset Loading Functions ###
+#################################
+
+def load_tweet_ids_from_vanzo_dataset():
+    tsv_files = FolderIO.get_files("D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train", True, '.tsv')
+    tsv_files += FolderIO.get_files("D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test", True, '.tsv')
+
+    conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
+    tweet_ids = [conversation[-1]["tweet_id"] for conversation in conversations]
+
+    return tweet_ids
+
+
+def load_tweet_ids_from_json_files(json_folder_path):
+    tweet_files = FolderIO.get_files(json_folder_path, False, '.json')
+    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
+    # tweet_ids = [tweet["id"] for tweet in tweet_generator]
+    tweet_ids = []
+    for tweet in tweet_generator:
+        try:
+            tweet_ids.append(tweet["id"])
+        except Exception as e:
+            pass
+    return tweet_ids
+
+
+def load_tweet_ids_from_csv_files(csv_folder_path):
+    csv_files = FolderIO.get_files(csv_folder_path, False, '.csv')
+    csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
+    tweet_ids = [csv_row[0] for csv_row in csv_rows]
+    return tweet_ids
+
+
+##########################
+### Generate Functions ###
+##########################
 
 def generate_tweet_network():
-
     # Load tweets
     # use dataset with all election hashtags
     print("Reading data")
@@ -69,28 +116,8 @@ def generate_tweet_network():
         print("{}\n{}".format(index, text))
 
 
-# generate_tweet_network()
-
-def generate_user_network():
-
+def generate_user_network(tweet_ids):
     GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    # GRAPH_PICKLE_FILE_NAME = "user-graph-2016-10-04-22-27-53.pickle"
-     # Load tweets
-    # use dataset with all election hashtags
-    print("Reading data")
-    # csv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/senti_election_data/csv_files/test', False, '.csv')
-    # csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
-    # tweet_ids = [csv_row[0] for csv_row in csv_rows]
-
-    tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/test/', False, '.json')
-    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
-    # tweet_ids = [tweet["id"] for tweet in tweet_generator]
-    tweet_ids = []
-    for tweet in tweet_generator:
-        try:
-            tweet_ids.append(tweet["id"])
-        except Exception as e:
-            pass
 
     # Construct base graph (directed)
     print("Going to construct the graph")
@@ -100,8 +127,9 @@ def generate_user_network():
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
-    # G = SAWeightModifier(SentimentClassifier.LexiconClassifier()).modify_edge_weights(G)
-    # G.save(GRAPH_PICKLE_FILE_NAME)
+    edge_weight_modifiers = [SAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
+    G = modify_edge_weights(G, edge_weight_modifiers)
+    G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Community Detection
     print("Going to determine communities")
@@ -111,14 +139,13 @@ def generate_user_network():
     print("Going to plot the graph")
     CommunityViz.plot_communities(G, "username", community)
 
-    # Word Cloudnew_edges.__len__()
-    # text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
-    # for index, text in text_dict.items():
-    #     if index == 1:
-    #         break
-    #     print("{}\n{}".format(index, text))
 
-generate_user_network()
+
+# Load tweets
+vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
+json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+
+generate_user_network(vanzo_tweet_ids)
 # DBManager.delete_followers_ids(461053984)
 # print(len(DBManager.get_or_add_followers_ids(461053984)))
 # print(len(DBManager.get_or_add_followers_ids(48284511)))

@@ -10,6 +10,7 @@ from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
+# from gensim.models.word2vec import Word2Vec
 from sentiment_analysis.subjectivity import SubjectivityClassifier
 
 
@@ -63,39 +64,38 @@ class SentimentClassifier(object):
         :return: short name describing the classifier
         """
 
-from gensim.models.word2vec import Word2Vec
-class ConversationalContextClassifier(SentimentClassifier):
-
-    def __init__(self, corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name):
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
-                     PreProcessing.RemovePunctuationFromWords()]
-        self.corpus_w2v = Word2Vec.load_word2vec_format(corpus_bin_file_name, binary=True)
-        # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
-        self.classifier = self.load_from_pickle(classifier_pickle_file_name)
-        self.scaler = self.load_from_pickle(scaler_pickle_file_name)
-
-    def classify_sentiment(self, tweet_text, contextual_info_dict):
-        tweet_text = self.preprocess(tweet_text)
-        text_vector = self.buildWordVector(tweet_text, 300)
-        text_vector = self.scaler.transform(text_vector)
-        label = self.classifier.predict(text_vector)
-        return label[0]
-
-    def buildWordVector(self, text, size):
-        vec = numpy.zeros(size).reshape((1, size))
-        count = 0.
-        for word in text:
-            try:
-                vec += self.corpus_w2v[word].reshape((1, size))
-                count += 1.
-            except KeyError:
-                continue
-        if count != 0:
-            vec /= count
-        return vec
-
-    def get_name(self):
-        return "word2vec-svm"
+# class ConversationalContextClassifier(SentimentClassifier):
+#
+#     def __init__(self, corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name):
+#         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+#                      PreProcessing.RemovePunctuationFromWords()]
+#         self.corpus_w2v = Word2Vec.load_word2vec_format(corpus_bin_file_name, binary=True)
+#         # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
+#         self.classifier = self.load_from_pickle(classifier_pickle_file_name)
+#         self.scaler = self.load_from_pickle(scaler_pickle_file_name)
+#
+#     def classify_sentiment(self, tweet_text, contextual_info_dict):
+#         tweet_text = self.preprocess(tweet_text)
+#         text_vector = self.buildWordVector(tweet_text, 300)
+#         text_vector = self.scaler.transform(text_vector)
+#         label = self.classifier.predict(text_vector)
+#         return label[0]
+#
+#     def buildWordVector(self, text, size):
+#         vec = numpy.zeros(size).reshape((1, size))
+#         count = 0.
+#         for word in text:
+#             try:
+#                 vec += self.corpus_w2v[word].reshape((1, size))
+#                 count += 1.
+#             except KeyError:
+#                 continue
+#         if count != 0:
+#             vec /= count
+#         return vec
+#
+#     def get_name(self):
+#         return "word2vec-svm"
 
 class MLClassifier(SentimentClassifier):
     def __init__(self, feature_extractor_path, classifier_pickle_path):

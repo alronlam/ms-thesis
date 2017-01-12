@@ -1,5 +1,4 @@
 import abc
-import sentiment_analysis.SentimentClassifier
 
 class EdgeWeightModifierBase(object):
 
