@@ -148,7 +148,7 @@ def test_with_context():
     (main_network, main_sequence_input) = create_main_sub_network(embedding_matrix)
     (context_network, context_sequence_input) = create_contextual_sub_network(embedding_matrix)
     main_network = merge([main_network, context_network], mode='concat')
-    main_network = Dense(64, activation='relu')(main_network)
+    main_network = Dense(64, activation='tanh')(main_network)
     predictions = Dense(3, activation='softmax')(main_network)
 
     model = Model(input=[main_sequence_input, context_sequence_input], output=[predictions])
@@ -184,7 +184,7 @@ def test_without_context():
     ### Create the Neural Network ###
     #################################
     (main_network, main_sequence_input) = create_main_sub_network(embedding_matrix)
-    main_network = Dense(64, activation='relu')(main_network)
+    main_network = Dense(64, activation='tanh')(main_network)
     predictions = Dense(3, activation='softmax')(main_network)
 
     model = Model(input=[main_sequence_input], output=[predictions])
