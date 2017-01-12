@@ -50,7 +50,7 @@ def generate_tweet_network():
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
 
     # Modify edge weights
-    G = SAWeightModifier(SentimentClassifier.LexiconClassifier()).modify_edge_weights(G)
+    G = SAWeightModifier(SentimentClassifier.WiebeLexiconClassifier()).modify_edge_weights(G)
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
 
     # Community Detection
