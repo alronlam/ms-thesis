@@ -1,5 +1,6 @@
 import os
 import pickle
+from itertools import groupby
 
 from keras.engine import Model, Input, merge
 from keras.preprocessing.sequence import pad_sequences
@@ -38,10 +39,7 @@ def load_vanzo_dataset():
 
     embedding_matrix = data["embedding_matrix"]
 
-    # word_index = pickle.load(open("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz-word_index.pickle", "rb"))
-
     return (x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix)
-
 
 #########################################################################################################
 
@@ -211,5 +209,5 @@ def test_without_context():
 ##### Actual Training Program #####
 ###################################
 
-# test_with_context()
+test_with_context()
 test_without_context()
