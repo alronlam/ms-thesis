@@ -81,13 +81,13 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
             #             if friendship["followed_by"] is True:
             #                 new_edges.add((user_id, other_user_id))
 
-
-            graph.add_edges(list(new_edges))
-            graph.save(pickle_file_name)
-            new_edges = set()
             if verbose:
-                print("Saved {} at tweet index {}".format(pickle_file_name, index))
+                # print("Saved {} at tweet index {}".format(pickle_file_name, index))
                 print("# of edges and vertices after processing {} - {} - {}\n".format(user_id, graph.ecount(), all_user_ids.__len__()))
+
+    graph.add_edges(list(new_edges))
+    graph.save(pickle_file_name)
+        # new_edges = set()
 
 
     # print("Final edges to be added: ")
@@ -108,7 +108,7 @@ def construct_user_hashtag_graph(graph, tweets,  pickle_file_name, start_index=0
         user_id_str = tweet.user.id_str
         user_screen_name = tweet.user.screen_name
 
-        hashtags = [hashtag_dict["text"] for hashtag_dict in tweet.entities.get('hashtags')]
+        hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
 
         ### CREATE VERTICES ###
         add_user_vertex(graph, user_id_str, user_screen_name)

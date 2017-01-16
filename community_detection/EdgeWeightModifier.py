@@ -21,7 +21,7 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
         for tweet in tweets:
             user_id_str = tweet.user.id_str
             sentiment = self.classifier.classify_sentiment(tweet.text, contextual_info_dict)
-            hashtags = [hashtag_dict["text"] for hashtag_dict in tweet.entities.get('hashtags')]
+            hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
 
             for hashtag in hashtags:
                 hashtag_sentiment_set = self.get_or_add_hashtag_sentiment_set(hashtag_sentiment_users_dict, hashtag, sentiment )
@@ -29,11 +29,18 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
 
         for key, user_set in hashtag_sentiment_users_dict.items():
             print("{} - {}".format(key, len(user_set)))
-            for user1 in user_set:
-                for user2 in user_set:
+
+            user_list = list(user_set)
+
+            for index in range(len(user_list)-1):
+                user1 = user_list[index]
+
+                for index2 in range(index, len(user_list)):
+                    user2 = user_list[index2]
+
                     if user1 != user2:
                         try:
-                            edge12 = graph.get_eid(user1, user2)
+                            edge12 = graph.es[graph.get_eid(user1, user2)]
                             edge12["weight"] += 1
                             print("New edge weight of {} to {} is {}".format(user1, user2, edge12["weight"]))
                         except Exception as e:
@@ -41,11 +48,12 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
                             pass
 
                         try:
-                            edge21 = graph.get_eid(user2, user1)
+                            edge21 = graph.es[graph.get_eid(user2, user1)]
                             edge21["weight"] += 1
                             print("New edge weight of {} to {} is {}".format(user2, user1, edge21["weight"]))
                         except:
                             pass
+
 
         return graph
 
