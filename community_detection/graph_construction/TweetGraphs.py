@@ -42,8 +42,6 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
 
         if index >= start_index:
 
-            print("Processing {}/{}".format(found_tweets, index))
-
             found_tweets += 1
             user_id = tweet_object.user.id_str
             username = tweet_object.user.screen_name
@@ -52,7 +50,7 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
 
             # construct directed edges if user A follows user B
             # loop through all vertices and check if they are in following or followers then create appropriate edge
-            all_user_ids = graph.vs["id"]
+            all_user_ids = graph.vs["name"]
 
             # this code is flawed because DBManager.get followers/following should be corrected. it currently has a limit to avoid being stuck with one user
             follower_ids = DBManager.get_or_add_followers_ids(user_id)
@@ -86,6 +84,7 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
                 print("# of edges and vertices after processing {} - {} - {}\n".format(user_id, graph.ecount(), all_user_ids.__len__()))
 
     graph.add_edges(list(new_edges))
+    graph.es["weight"] = 1
     graph.save(pickle_file_name)
         # new_edges = set()
 
@@ -160,7 +159,7 @@ def add_user_vertex(graph, user_id, username):
         new_vertex = graph.add_vertex(str(user_id))
         graph.vs[graph.vcount() - 1]["username"] = username
         graph.vs[graph.vcount() - 1]["display_str"] = username
-        graph.vs[graph.vcount() - 1]["id"] = str(user_id)
+        # graph.vs[graph.vcount() - 1]["id"] = str(user_id)
         graph.vs[graph.vcount() - 1]["name"] = str(user_id)
 
     return graph

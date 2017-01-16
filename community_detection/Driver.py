@@ -118,33 +118,41 @@ def generate_tweet_network():
         print("{}\n{}".format(index, text))
 
 
-def generate_user_network(tweet_ids):
+def generate_user_network(tweet_ids, edge_weight_modifiers, verbose=False):
 
     # Retrieve tweets from the DB
-    tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=True)
+    tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=verbose)
 
     # Construct base graph (directed)
-    GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    print("Going to construct the graph")
+    RUN_FILE_NAME = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    GRAPH_PICKLE_FILE_NAME = "{}.pickle".format(RUN_FILE_NAME)
+
+    if verbose:
+        print("Going to construct the graph")
     # G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=True)
+    G = TweetGraphs.construct_user_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
-
-    edge_weight_modifiers = [UserVerticesSAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
     G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects})
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Community Detection
-    print("Going to determine communities")
-    community = G.community_infomap().membership
-    print("Modularity: {}".format(G.modularity(community)))
+    if verbose:
+        print("Going to determine communities")
+    community = G.community_infomap(edge_weights=G.es["weight"]).membership
+    modularity = G.modularity(community)
+    print("Modularity: {}".format(modularity))
+
+    out_file = open("{}.txt".format(RUN_FILE_NAME+".txt"), "w" )
+    out_file.write("Modularity: {}".format(modularity))
+    out_file.close()
 
     # Plot
-    print("Going to plot the graph")
-    CommunityViz.plot_communities(G, "display_str", community)
+    if verbose:
+        print("Going to plot the graph")
+    CommunityViz.plot_communities(G, "display_str", community, RUN_FILE_NAME)
 
 
 
@@ -152,16 +160,8 @@ def generate_user_network(tweet_ids):
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
 json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 
-generate_user_network(vanzo_tweet_ids[:1000])
-# DBManager.delete_followers_ids(461053984)
-# print(len(DBManager.get_or_add_followers_ids(461053984)))
-# print(len(DBManager.get_or_add_followers_ids(48284511)))
-# print(len(DBManager.get_or_add_following_ids(48284511)))
-#
-# keras_classifier_without_context_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_without_context.h5"
-# keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
-# keras_feature_extractor = EmbeddingExtractor(keras_tokenizer_pickle_path)
-# keras_classifier = SentimentClassifier.KerasClassifier(keras_feature_extractor, keras_classifier_without_context_path)
-#
-# while True:
-#     print(keras_classifier.classify_sentiment(input()))
+user_sa_weight_modifier = UserVerticesSAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())
+
+
+generate_user_network(vanzo_tweet_ids[:4497], [], verbose=True)
+generate_user_network(vanzo_tweet_ids[:4497], [user_sa_weight_modifier], verbose=True)

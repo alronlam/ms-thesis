@@ -5,8 +5,8 @@ from random import randint
 def remove_communities_with_less_than_n(membership, n):
     return [m for m in membership if membership.count(m) > n ]
 
-def plot_communities(g,display_attribute, membership=None):
-    valid_membership = remove_communities_with_less_than_n(membership, 3)
+def plot_communities(g,display_attribute, membership, file_name ):
+    valid_membership = remove_communities_with_less_than_n(membership, 10)
     to_delete_ids = [v.index for v in g.vs if membership[v.index] not in valid_membership]
     g.delete_vertices(to_delete_ids)
 
@@ -14,7 +14,7 @@ def plot_communities(g,display_attribute, membership=None):
     print("Total # of vertices: {}".format(len(g.vs)))
 
     membership = valid_membership
-    
+
     if membership is not None:
         gcopy = g.copy()
         edges = []
@@ -52,4 +52,4 @@ def plot_communities(g,display_attribute, membership=None):
             vertex["color"] = str('#') + colors[membership[vertex.index]]
         visual_style["vertex_color"] = g.vs["color"]
     visual_style["mark_groups"]=True
-    plot(g, 'graph-{}.png'.format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), **visual_style)
+    plot(g, '{}.png'.format(file_name), **visual_style)

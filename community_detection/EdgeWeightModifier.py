@@ -27,33 +27,16 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
                 hashtag_sentiment_set = self.get_or_add_hashtag_sentiment_set(hashtag_sentiment_users_dict, hashtag, sentiment )
                 hashtag_sentiment_set.add(user_id_str)
 
-        for key, user_set in hashtag_sentiment_users_dict.items():
-            print("{} - {}".format(key, len(user_set)))
+        for edge in graph.es:
+            source_vertex_id = edge.source
+            target_vertex_id = edge.target
+            source_vertex_name = graph.vs[source_vertex_id]["name"]
+            target_vertex_name = graph.vs[target_vertex_id]["name"]
 
-            user_list = list(user_set)
-
-            for index in range(len(user_list)-1):
-                user1 = user_list[index]
-
-                for index2 in range(index, len(user_list)):
-                    user2 = user_list[index2]
-
-                    if user1 != user2:
-                        try:
-                            edge12 = graph.es[graph.get_eid(user1, user2)]
-                            edge12["weight"] += 1
-                            print("New edge weight of {} to {} is {}".format(user1, user2, edge12["weight"]))
-                        except Exception as e:
-                            # print(e)
-                            pass
-
-                        try:
-                            edge21 = graph.es[graph.get_eid(user2, user1)]
-                            edge21["weight"] += 1
-                            print("New edge weight of {} to {} is {}".format(user2, user1, edge21["weight"]))
-                        except:
-                            pass
-
+            for key, user_set in hashtag_sentiment_users_dict.items():
+                if source_vertex_name in user_set and target_vertex_name in user_set:
+                    edge["weight"] += 1
+                    # print("New edge weight of {} to {} is {}".format(source_vertex_name, target_vertex_name, edge["weight"]))
 
         return graph
 
