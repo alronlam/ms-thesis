@@ -133,8 +133,8 @@ def generate_user_network(tweet_ids):
 
     # Modify edge weights
 
-    edge_weight_modifiers = [TweetVerticesSAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
-    G = modify_edge_weights(G, edge_weight_modifiers)
+    edge_weight_modifiers = [UserVerticesSAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
+    G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects})
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Community Detection
@@ -152,7 +152,7 @@ def generate_user_network(tweet_ids):
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
 json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 
-generate_user_network(json_tweet_ids)
+generate_user_network(vanzo_tweet_ids[:1000])
 # DBManager.delete_followers_ids(461053984)
 # print(len(DBManager.get_or_add_followers_ids(461053984)))
 # print(len(DBManager.get_or_add_followers_ids(48284511)))

@@ -3,18 +3,71 @@ import abc
 class EdgeWeightModifierBase(object):
 
     @abc.abstractmethod
-    def modify_edge_weights(self, graph):
+    def modify_edge_weights(self, graph, params):
         """
         :param graph: graph object to be modified
         :return: graph with modified edge weights
         """
+
+class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
+    def __init__(self, sentiment_classifier):
+        self.classifier = sentiment_classifier
+
+    def modify_edge_weights(self, graph, params):
+        hashtag_sentiment_users_dict = {}
+        tweets = params["tweets"]
+        contextual_info_dict = params.get("contextual_info")
+
+        for tweet in tweets:
+            user_id_str = tweet.user.id_str
+            sentiment = self.classifier.classify_sentiment(tweet.text, contextual_info_dict)
+            hashtags = [hashtag_dict["text"] for hashtag_dict in tweet.entities.get('hashtags')]
+
+            for hashtag in hashtags:
+                hashtag_sentiment_set = self.get_or_add_hashtag_sentiment_set(hashtag_sentiment_users_dict, hashtag, sentiment )
+                hashtag_sentiment_set.add(user_id_str)
+
+        for key, user_set in hashtag_sentiment_users_dict.items():
+            print("{} - {}".format(key, len(user_set)))
+            for user1 in user_set:
+                for user2 in user_set:
+                    if user1 != user2:
+                        try:
+                            edge12 = graph.get_eid(user1, user2)
+                            edge12["weight"] += 1
+                            print("New edge weight of {} to {} is {}".format(user1, user2, edge12["weight"]))
+                        except Exception as e:
+                            # print(e)
+                            pass
+
+                        try:
+                            edge21 = graph.get_eid(user2, user1)
+                            edge21["weight"] += 1
+                            print("New edge weight of {} to {} is {}".format(user2, user1, edge21["weight"]))
+                        except:
+                            pass
+
+        return graph
+
+    def get_or_add_hashtag_sentiment_set(self, hashtag_sentiment_users_dict, hashtag, sentiment):
+        hashtag_sentiment_set = hashtag_sentiment_users_dict.get((hashtag, sentiment), None)
+        if not hashtag_sentiment_set:
+            hashtag_sentiment_set = set()
+            hashtag_sentiment_users_dict[(hashtag, sentiment)] = hashtag_sentiment_set
+
+        return hashtag_sentiment_set
+
+
+
+
+
 
 class TweetVerticesSAWeightModifier(EdgeWeightModifierBase):
 
     def __init__(self, sentiment_classifier):
         self.classifier = sentiment_classifier
 
-    def modify_edge_weights(self, graph):
+    def modify_edge_weights(self, graph, params):
         sentiment_dict = {}
         for edge in graph.es:
             source_vertex_id = edge.source
@@ -39,7 +92,7 @@ class TweetVerticesSAWeightModifier(EdgeWeightModifierBase):
             # vertex["text"] = "(" + sentiment + ") " + vertex["text"]
         return sentiment
 
-def modify_edge_weights(graph, edge_weight_modifiers):
+def modify_edge_weights(graph, edge_weight_modifiers, params):
     for modifier in edge_weight_modifiers:
-        graph = modifier.modify_edge_weights(graph)
+        graph = modifier.modify_edge_weights(graph, params)
     return graph
