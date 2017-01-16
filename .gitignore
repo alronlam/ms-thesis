@@ -9,3 +9,5 @@ sa_training_data/
 **.xml
 **.txt
 **.npz
+**.h5
+**.json
