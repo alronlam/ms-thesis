@@ -99,7 +99,7 @@ def generate_tweet_network():
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
 
     # Modify edge weights
-    G = SAWeightModifier(SentimentClassifier.WiebeLexiconClassifier()).modify_edge_weights(G)
+    G = TweetVerticesSAWeightModifier(SentimentClassifier.WiebeLexiconClassifier()).modify_edge_weights(G)
     G.save("2016-03-04-tweets-pilipinasdebates.pickle")
 
     # Community Detection
@@ -133,7 +133,7 @@ def generate_user_network(tweet_ids):
 
     # Modify edge weights
 
-    edge_weight_modifiers = [SAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
+    edge_weight_modifiers = [TweetVerticesSAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
     G = modify_edge_weights(G, edge_weight_modifiers)
     G.save(GRAPH_PICKLE_FILE_NAME)
 

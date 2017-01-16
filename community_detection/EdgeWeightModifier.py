@@ -9,7 +9,7 @@ class EdgeWeightModifierBase(object):
         :return: graph with modified edge weights
         """
 
-class SAWeightModifier(EdgeWeightModifierBase):
+class TweetVerticesSAWeightModifier(EdgeWeightModifierBase):
 
     def __init__(self, sentiment_classifier):
         self.classifier = sentiment_classifier
