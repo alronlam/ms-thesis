@@ -123,24 +123,24 @@ def generate_user_network(tweet_ids):
     # Retrieve tweets from the DB
     tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=True)
 
-
     # Construct base graph (directed)
     GRAPH_PICKLE_FILE_NAME = "user-graph-{}.pickle".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
     print("Going to construct the graph")
     # G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_hashtag_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=True)
+    G = TweetGraphs.construct_user_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=True)
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
 
-    # edge_weight_modifiers = [SAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
-    # G = modify_edge_weights(G, edge_weight_modifiers)
-    # G.save(GRAPH_PICKLE_FILE_NAME)
+    edge_weight_modifiers = [SAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
+    G = modify_edge_weights(G, edge_weight_modifiers)
+    G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Community Detection
     print("Going to determine communities")
     community = G.community_infomap().membership
+    print("Modularity: {}".format(G.modularity(community)))
 
     # Plot
     print("Going to plot the graph")
@@ -152,7 +152,7 @@ def generate_user_network(tweet_ids):
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
 json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 
-generate_user_network(vanzo_tweet_ids[:3000])
+generate_user_network(json_tweet_ids)
 # DBManager.delete_followers_ids(461053984)
 # print(len(DBManager.get_or_add_followers_ids(461053984)))
 # print(len(DBManager.get_or_add_followers_ids(48284511)))

@@ -32,67 +32,62 @@ def construct_tweet_graph(graph, tweets, limit=10000, start_index=0):
     return graph
 
 
-def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_index=0):
+def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, start_index=0, verbose=False):
     if graph is None:
         graph = Graph(directed=True)
 
     new_edges = set()
     found_tweets = 0
-    for index, tweet_id in enumerate(tweet_ids):
+    for index, tweet_object in enumerate(tweet_objects):
 
         if index >= start_index:
 
             print("Processing {}/{}".format(found_tweets, index))
 
-            tweet = DBManager.get_or_add_tweet(tweet_id)
+            found_tweets += 1
+            user_id = tweet_object.user.id_str
+            username = tweet_object.user.screen_name
 
-            if tweet is not None:
-                found_tweets += 1
-                user_id = tweet.user.id_str
-                username = tweet.user.screen_name
+            add_user_vertex(graph, user_id, username)
 
-                print("Processing tweet id {} posted by {} with id {}".format(tweet_id, username, user_id))
+            # construct directed edges if user A follows user B
+            # loop through all vertices and check if they are in following or followers then create appropriate edge
+            all_user_ids = graph.vs["id"]
 
-                add_user_vertex(graph, user_id, username)
+            # this code is flawed because DBManager.get followers/following should be corrected. it currently has a limit to avoid being stuck with one user
+            follower_ids = DBManager.get_or_add_followers_ids(user_id)
+            following_ids = DBManager.get_or_add_following_ids(user_id)
 
-                # construct directed edges if user A follows user B
-                # loop through all vertices and check if they are in following or followers then create appropriate edge
-                all_user_ids = graph.vs["id"]
+            for other_user_id in all_user_ids:
+                if follower_ids and other_user_id in follower_ids:
+                    new_edges.add((other_user_id, user_id))
 
-                # this code is flawed because DBManager.get followers/following should be corrected. it currently has a limit to avoid being stuck with one user
-                follower_ids = DBManager.get_or_add_followers_ids(user_id)
-                following_ids = DBManager.get_or_add_following_ids(user_id)
+                if following_ids and other_user_id in following_ids:
+                    new_edges.add((user_id, other_user_id))
 
-                for other_user_id in all_user_ids:
-                    if follower_ids and other_user_id in follower_ids:
-                        new_edges.add((other_user_id, user_id))
-
-                    if following_ids and other_user_id in following_ids:
-                        new_edges.add((user_id, other_user_id))
-
-                # for other_user_id in all_user_ids:
-                #     friendship = DBManager.get_or_add_friendship(user_id, other_user_id)
-                #
-                #     if friendship:
-                #         if user_id < other_user_id:
-                #             if friendship["following"] is True:
-                #                 new_edges.add((user_id, other_user_id))
-                #             if friendship["followed_by"] is True:
-                #                 new_edges.add((other_user_id, user_id))
-                #
-                #         else:
-                #             if friendship["following"] is True:
-                #                 new_edges.add((other_user_id, user_id))
-                #             if friendship["followed_by"] is True:
-                #                 new_edges.add((user_id, other_user_id))
+            # for other_user_id in all_user_ids:
+            #     friendship = DBManager.get_or_add_friendship(user_id, other_user_id)
+            #
+            #     if friendship:
+            #         if user_id < other_user_id:
+            #             if friendship["following"] is True:
+            #                 new_edges.add((user_id, other_user_id))
+            #             if friendship["followed_by"] is True:
+            #                 new_edges.add((other_user_id, user_id))
+            #
+            #         else:
+            #             if friendship["following"] is True:
+            #                 new_edges.add((other_user_id, user_id))
+            #             if friendship["followed_by"] is True:
+            #                 new_edges.add((user_id, other_user_id))
 
 
-                graph.add_edges(list(new_edges))
-                graph.save(pickle_file_name)
-                new_edges = set()
+            graph.add_edges(list(new_edges))
+            graph.save(pickle_file_name)
+            new_edges = set()
+            if verbose:
                 print("Saved {} at tweet index {}".format(pickle_file_name, index))
-                print("# of edges and vertices after processing {} - {} - {}".format(user_id, new_edges.__len__(), all_user_ids.__len__()))
-                print()
+                print("# of edges and vertices after processing {} - {} - {}\n".format(user_id, graph.ecount(), all_user_ids.__len__()))
 
     # print("Final edges to be added: ")
     # print(new_edges)
@@ -104,7 +99,7 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
 def construct_user_hashtag_graph(graph, tweets,  pickle_file_name, start_index=0, verbose=False):
 
     if graph is None:
-        graph = Graph(directed=False)
+        graph = Graph(directed=True)
 
     new_edges = set()
 
