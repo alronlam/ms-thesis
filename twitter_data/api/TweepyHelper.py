@@ -25,11 +25,15 @@ def retrieve_followers_ids(user_id):
     user = retrieve_user(user_id)
     followers_ids = set()
     pages = tweepy.Cursor(api.followers_ids, id=user_id).pages()
+
     while(True):
         try:
             for page in pages:
                 followers_ids.update(page)
                 print("# of followers found: {}".format(followers_ids.__len__()))
+                #TODO temporary page limit for initial testing, but better if there's a smart way of switching between retrieving followers or checking friendship, whichever is more efficient (less API rate limit)
+                if len(followers_ids) > 20000:
+                    break
             return followers_ids
         except tweepy.RateLimitError:
             print("Hit the Twitter API rate limit. Sleeping for 3 minutes.")
@@ -49,14 +53,17 @@ def retrieve_followers_ids(user_id):
 
 def retrieve_following_ids(user_id):
     user = retrieve_user(user_id)
-    followers_ids = set()
+    following_ids = set()
     pages = tweepy.Cursor(api.friends_ids, id=user_id).pages()
     while(True):
         try:
             for page in pages:
-                followers_ids.update(page)
-                print("# of following found: {}".format(followers_ids.__len__()))
-            return followers_ids
+                following_ids.update(page)
+                print("# of following found: {}".format(following_ids.__len__()))
+                #TODO temporary page limit for initial testing, but better if there's a smart way of switching between retrieving followers or checking friendship, whichever is more efficient (less API rate limit)
+                if len(following_ids) > 20000:
+                    break
+            return following_ids
         except tweepy.RateLimitError:
             print("Hit the Twitter API rate limit. Sleeping for 3 minutes.")
             time.sleep(60*3)
