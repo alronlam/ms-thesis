@@ -59,7 +59,7 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
                 # loop through all vertices and check if they are in following or followers then create appropriate edge
                 all_user_ids = graph.vs["id"]
 
-                # this code is flawed because DBManager.get followers/following should be corrected. they do not get all the followers/following due to pagination
+                # this code is flawed because DBManager.get followers/following should be corrected. it currently has a limit to avoid being stuck with one user
                 follower_ids = DBManager.get_or_add_followers_ids(user_id)
                 following_ids = DBManager.get_or_add_following_ids(user_id)
 
@@ -101,10 +101,69 @@ def construct_user_graph(graph, tweet_ids, pickle_file_name, limit=10000, start_
     return graph
 
 
+def construct_user_hashtag_graph(graph, tweets,  pickle_file_name, start_index=0, verbose=False):
+
+    if graph is None:
+        graph = Graph(directed=False)
+
+    new_edges = set()
+
+    for index, tweet in enumerate(tweets):
+        user_id_str = tweet.user.id_str
+        user_screen_name = tweet.user.screen_name
+
+        hashtags = [hashtag_dict["text"] for hashtag_dict in tweet.entities.get('hashtags')]
+
+        ### CREATE VERTICES ###
+        add_user_vertex(graph, user_id_str, user_screen_name)
+        for hashtag in hashtags:
+            add_hashtag_vertex(graph, hashtag)
+
+        ### CREATE EDGES ###
+
+        # USER TO HASHTAG EDGE
+        for hashtag in hashtags:
+            new_edges.add((user_id_str, hashtag))
+
+        # USER TO USER EDGE
+        all_vertex_ids = graph.vs["id"]
+
+        # this code is flawed because DBManager.get followers/following should be corrected. it currently has a limit to avoid being stuck with one user
+        follower_ids = DBManager.get_or_add_followers_ids(user_id_str)
+        following_ids = DBManager.get_or_add_following_ids(user_id_str)
+
+        for other_vertex_id in all_vertex_ids:
+            if not other_vertex_id == user_id_str:
+                if follower_ids and other_vertex_id in follower_ids:
+                    new_edges.add((other_vertex_id, user_id_str))
+
+                if following_ids and other_vertex_id in following_ids:
+                    new_edges.add((user_id_str, other_vertex_id))
+
+        graph.add_edges(list(new_edges))
+        graph.save(pickle_file_name)
+        new_edges = set()
+        print("Saved {} at tweet index {}".format(pickle_file_name, index))
+        print("# of edges and vertices after processing {} - {} - {}".format(user_id_str, graph.ecount(), all_vertex_ids.__len__()))
+        print()
+
+    return graph
+
+
+def add_hashtag_vertex(graph, hashtag_text):
+    if not exists_in_graph(graph, hashtag_text):
+        new_vertex = graph.add_vertex(hashtag_text)
+        graph.vs[graph.vcount()-1]["display_str"] = hashtag_text
+        graph.vs[graph.vcount()-1]["id"] = hashtag_text
+        graph.vs[graph.vcount()-1]["name"] = hashtag_text
+
+    return graph
+
 def add_user_vertex(graph, user_id, username):
     if not exists_in_graph(graph, user_id):
         new_vertex = graph.add_vertex(str(user_id))
         graph.vs[graph.vcount() - 1]["username"] = username
+        graph.vs[graph.vcount() - 1]["display_str"] = username
         graph.vs[graph.vcount() - 1]["id"] = str(user_id)
         graph.vs[graph.vcount() - 1]["name"] = str(user_id)
 
