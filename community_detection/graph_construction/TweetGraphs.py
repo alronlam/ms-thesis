@@ -89,6 +89,7 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
                 print("Saved {} at tweet index {}".format(pickle_file_name, index))
                 print("# of edges and vertices after processing {} - {} - {}\n".format(user_id, graph.ecount(), all_user_ids.__len__()))
 
+
     # print("Final edges to be added: ")
     # print(new_edges)
     # graph.add_edges(list(new_edges))
@@ -99,7 +100,7 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
 def construct_user_hashtag_graph(graph, tweets,  pickle_file_name, start_index=0, verbose=False):
 
     if graph is None:
-        graph = Graph(directed=True)
+        graph = Graph(directed=False)
 
     new_edges = set()
 
