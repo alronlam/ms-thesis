@@ -6,6 +6,7 @@ from community_detection.EdgeWeightModifier import *
 from community_detection.graph_construction import TweetGraphs
 
 from sentiment_analysis.evaluation import TSVParser
+from sentiment_analysis.machine_learning.feature_extraction.EmbeddingExtractor import EmbeddingExtractor
 from twitter_data.database import DBManager
 from twitter_data.parsing.csv_parser import CSVParser
 from twitter_data.parsing.folders import FolderIO
@@ -127,6 +128,7 @@ def generate_user_network(tweet_ids):
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
+
     edge_weight_modifiers = [SAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())]
     G = modify_edge_weights(G, edge_weight_modifiers)
     G.save(GRAPH_PICKLE_FILE_NAME)
@@ -150,3 +152,11 @@ generate_user_network(vanzo_tweet_ids)
 # print(len(DBManager.get_or_add_followers_ids(461053984)))
 # print(len(DBManager.get_or_add_followers_ids(48284511)))
 # print(len(DBManager.get_or_add_following_ids(48284511)))
+#
+# keras_classifier_without_context_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_without_context.h5"
+# keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
+# keras_feature_extractor = EmbeddingExtractor(keras_tokenizer_pickle_path)
+# keras_classifier = SentimentClassifier.KerasClassifier(keras_feature_extractor, keras_classifier_without_context_path)
+#
+# while True:
+#     print(keras_classifier.classify_sentiment(input()))
