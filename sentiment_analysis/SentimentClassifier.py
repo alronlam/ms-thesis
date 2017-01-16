@@ -64,6 +64,7 @@ class SentimentClassifier(object):
         :return: short name describing the classifier
         """
 
+
 # class ConversationalContextClassifier(SentimentClassifier):
 #
 #     def __init__(self, corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name):
@@ -100,7 +101,7 @@ class SentimentClassifier(object):
 class MLClassifier(SentimentClassifier):
     def __init__(self, feature_extractor_path, classifier_pickle_path):
         self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle(feature_extractor_path)
-        self.classifier = self.load_classifier_from_pickle(classifier_pickle_path)
+        self.classifier = pickle.load(open(classifier_pickle_path, 'rb'))
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
                               PreProcessing.RemovePunctuationFromWords()]
 
@@ -108,12 +109,33 @@ class MLClassifier(SentimentClassifier):
         tweet_text = self.preprocess(tweet_text)
         return self.classifier.classify(self.feature_extractor.extract_features(tweet_text))
 
-    def load_classifier_from_pickle(self, pickle_file_name):
-        with open(pickle_file_name, 'rb') as pickle_file:
-            return pickle.load(pickle_file)
-
     def get_name(self):
         return "ML"
+
+
+from keras import models
+
+from keras.engine import Model, Input, merge
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
+from keras.utils.np_utils import to_categorical
+from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, AveragePooling1D, Lambda
+from keras import backend as K
+
+class KerasClassifier(SentimentClassifier):
+    def __init__(self, feature_extractor, classifier_path):
+        self.feature_extractor = feature_extractor
+        self.classifier = models.load_model(classifier_path)
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                              PreProcessing.RemovePunctuationFromWords()]
+
+
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
+        # TODO untested implementation
+        tweet_text = self.preprocess(tweet_text)
+        prediction_probabilities = self.classifier.predict([tweet_text],batch_size=1, verbose=1)
+        prediction = prediction_probabilities.argmax(axis=1)[0]
+        return prediction
 
 
 class WiebeLexiconClassifier(SentimentClassifier):
