@@ -113,17 +113,14 @@ class MLClassifier(SentimentClassifier):
         return "ML"
 
 
-from keras import models
 
-from keras.engine import Model, Input, merge
-from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
-from keras.utils.np_utils import to_categorical
-from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, AveragePooling1D, Lambda
-from keras import backend as K
 
 class KerasClassifier(SentimentClassifier):
+
     def __init__(self, feature_extractor, classifier_path):
+
+        from keras import models
+
         self.feature_extractor = feature_extractor
         self.classifier = models.load_model(classifier_path)
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
