@@ -1,5 +1,8 @@
 import abc
 import string
+
+import re
+
 class PreProcessor(object):
 
     @abc.abstractmethod
@@ -33,10 +36,48 @@ class SplitWordByWhitespace(PreProcessor):
 class RemovePunctuationFromWords(PreProcessor):
 
     def __init__(self):
-        self.translator = str.maketrans({key: None for key in string.punctuation})
+        # Do not remove the special tokens (# - hashtag, @ - username, <> - URL/Username replacement)
+        self.translator = str.maketrans({key: " " for key in string.punctuation if key != "#" and key != "@" and key !="<" and key != ">"})
 
     def preprocess_tweet(self, tweet_words):
         return [word.translate(self.translator) for word in tweet_words ]
+
+class ReplaceUsernameMention(PreProcessor):
+
+    def __init__(self, replacement_token="<USERNAME>"):
+        self.replacement_token = replacement_token
+        self.regex = re.compile(r"@[\S]+")
+
+    def preprocess_text(self, text_words):
+        return [self.regex.sub(self.replacement_token, word) for word in text_words]
+
+class ReplaceURL(PreProcessor):
+
+    def __init__(self, replacement_token="<URL>"):
+        self.replacement_token = replacement_token
+        self.regex = re.compile(r"https?:\/\/\S*")
+
+    def preprocess_text(self, text_words):
+        return [self.regex.sub(self.replacement_token, word) for word in text_words]
+
+class RemoveRT(PreProcessor):
+
+    def __init__(self, replacement_token=""):
+        self.replacement_token = replacement_token
+        self.regex = re.compile(r"\brt\b|\bRT\b")
+
+    def preprocess_text(self, text_words):
+        return [word for word in text_words if not self.regex.match(word)]
+
+class RemoveLetterRepetitions(PreProcessor):
+
+    def preprocess_text(self, text_words):
+        return [re.sub(r"([a-z])\1\1+", r"\1", word) for word in text_words]
+
+class ConcatWordArray(PreProcessor):
+
+    def preprocess_text(self, text_words):
+        return " ".join(text_words)
 
 
 def preprocess_tweets(tweets, preprocessors):
