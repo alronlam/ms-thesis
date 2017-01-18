@@ -1,19 +1,13 @@
 import pickle
 
-import math
-import random
-
 import numpy
-from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sentiment_analysis.evaluation import TSVParser
+from sentiment_analysis.machine_learning.feature_extraction.word_embeddings import GoogleWordEmbedder
 from twitter_data.database import DBManager
 from twitter_data.parsing.folders import FolderIO
-from word_embeddings import GoogleWordEmbedder
-
 
 #TODO: This is not verified to be working correctly
 # def shuffle_dataset_balanced(X, Y, test_percentage):

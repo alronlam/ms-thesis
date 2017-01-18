@@ -155,13 +155,26 @@ def generate_user_network(tweet_ids, edge_weight_modifiers, verbose=False):
     CommunityViz.plot_communities(G, "display_str", community, RUN_FILE_NAME)
 
 
+def collect_following_followers(tweet_ids):
+     # Retrieve tweets from the DB
+    tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=True)
+    for tweet_obj in tweet_objects:
+        user_id_str = tweet_obj.user.id_str
+        follower_ids = DBManager.get_or_add_followers_ids(user_id_str)
+        following_ids = DBManager.get_or_add_following_ids(user_id_str)
+
 
 # Load tweets
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
 json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 
-user_sa_weight_modifier = UserVerticesSAWeightModifier(SentimentClassifier.AFINNLexiconClassifier())
 
+keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
+keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
+keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
+user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path))
 
-generate_user_network(vanzo_tweet_ids[:4497], [], verbose=True)
-generate_user_network(vanzo_tweet_ids[:4497], [user_sa_weight_modifier], verbose=True)
+# collect_following_followers(vanzo_tweet_ids)
+
+# generate_user_network(json_tweet_ids, [], verbose=True)
+generate_user_network(json_tweet_ids, [user_keras_sa_weight_modifier], verbose=True)

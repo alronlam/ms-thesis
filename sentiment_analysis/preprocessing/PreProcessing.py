@@ -6,7 +6,7 @@ import re
 class PreProcessor(object):
 
     @abc.abstractmethod
-    def preprocess_tweet(self, tweet):
+    def preprocess_text(self, tweet):
         """
         :return: pre-process a single tweet
         """
@@ -18,19 +18,19 @@ class WordLengthFilter(PreProcessor):
         self.min_word_length = min_word_length
 
     # expects list of words in tweet
-    def preprocess_tweet(self, tweet_words):
+    def preprocess_text(self, tweet_words):
          return [word for word in tweet_words if len(word) >= self.min_word_length]
 
 class WordToLowercase(PreProcessor):
 
     # expects list of words in tweet
-    def preprocess_tweet(self, tweet_words):
+    def preprocess_text(self, tweet_words):
         return [word.lower() for word in tweet_words]
 
 class SplitWordByWhitespace(PreProcessor):
 
     # expects tweet string
-    def preprocess_tweet(self, tweet):
+    def preprocess_text(self, tweet):
         return tweet.split()
 
 class RemovePunctuationFromWords(PreProcessor):
@@ -39,7 +39,7 @@ class RemovePunctuationFromWords(PreProcessor):
         # Do not remove the special tokens (# - hashtag, @ - username, <> - URL/Username replacement)
         self.translator = str.maketrans({key: " " for key in string.punctuation if key != "#" and key != "@" and key !="<" and key != ">"})
 
-    def preprocess_tweet(self, tweet_words):
+    def preprocess_text(self, tweet_words):
         return [word.translate(self.translator) for word in tweet_words ]
 
 class ReplaceUsernameMention(PreProcessor):
@@ -84,6 +84,6 @@ def preprocess_tweets(tweets, preprocessors):
     preprocessed_tweets = []
     for tweet in tweets:
         for preprocessor in preprocessors:
-            tweet = preprocessor.preprocess_tweet(tweet)
+            tweet = preprocessor.preprocess_text(tweet)
         preprocessed_tweets.append(tweet)
     return preprocessed_tweets

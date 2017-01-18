@@ -7,7 +7,7 @@ class SubjectivityClassifier(object):
 
     def preprocess(self, tweet_text):
         for preprocessor in self.preprocessors:
-            tweet_text = preprocessor.preprocess_tweet(tweet_text)
+            tweet_text = preprocessor.preprocess_text(tweet_text)
         return tweet_text
 
     @abc.abstractmethod

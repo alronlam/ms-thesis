@@ -17,7 +17,8 @@ from sentiment_analysis.subjectivity import SubjectivityClassifier
 class SentimentClassifier(object):
     def preprocess(self, tweet_text):
         for preprocessor in self.preprocessors:
-            tweet_text = preprocessor.preprocess_tweet(tweet_text)
+            tweet_text = preprocessor.preprocess_text(tweet_text)
+            print(tweet_text)
         return tweet_text
 
     def get_sum_based_score(self, tweet_text, lexicon_manager):
@@ -117,22 +118,32 @@ class MLClassifier(SentimentClassifier):
 
 class KerasClassifier(SentimentClassifier):
 
-    def __init__(self, feature_extractor, classifier_path):
+    MAX_SEQUENCE_LENGTH = 32
+    CATEGORIES = ["negative", "neutral", "positive"]
 
-        from keras import models
-
-        self.feature_extractor = feature_extractor
-        self.classifier = models.load_model(classifier_path)
+    def __init__(self, tokenizer_pickle_path, classifier_json_path, classifier_weights_path):
+        from keras.models import model_from_json
+        self.tokenizer = pickle.load(open(tokenizer_pickle_path, "rb"))
+        self.classifier = model_from_json([line for line in open(classifier_json_path, "r")][0])
+        self.classifier.load_weights(classifier_weights_path)
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
-                              PreProcessing.RemovePunctuationFromWords()]
+                              PreProcessing.RemovePunctuationFromWords(), PreProcessing.ConcatWordArray()]
 
+    def convert_to_word_sequence(self, text):
+        from keras.preprocessing.sequence import pad_sequences
+        text_arr = [text]
+        return pad_sequences(self.tokenizer.texts_to_sequences(text_arr), maxlen=self.MAX_SEQUENCE_LENGTH)
+
+    def convert_numerical_category_to_word(self, number):
+        return self.CATEGORIES[number]
 
     def classify_sentiment(self, tweet_text, contextual_info_dict):
-        # TODO untested implementation
         tweet_text = self.preprocess(tweet_text)
-        prediction_probabilities = self.classifier.predict([tweet_text],batch_size=1, verbose=1)
+        tweet_text_sequence = self.convert_to_word_sequence(tweet_text)
+        prediction_probabilities = self.classifier.predict(tweet_text_sequence,batch_size=1, verbose=0)
         prediction = prediction_probabilities.argmax(axis=1)[0]
-        return prediction
+        # print("{}\n{}\n\n".format(tweet_text, self.convert_numerical_category_to_word(prediction)))
+        return self.convert_numerical_category_to_word(prediction)
 
 
 class WiebeLexiconClassifier(SentimentClassifier):
