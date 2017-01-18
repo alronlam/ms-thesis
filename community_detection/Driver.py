@@ -135,7 +135,9 @@ def generate_user_network(tweet_ids, edge_weight_modifiers, verbose=False):
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Modify edge weights
-    G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects})
+    if verbose:
+        print("Going to modify edge weights")
+    G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects}, verbose)
     G.save(GRAPH_PICKLE_FILE_NAME)
 
     # Community Detection
@@ -177,4 +179,4 @@ user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(SentimentClassifier
 # collect_following_followers(vanzo_tweet_ids)
 
 # generate_user_network(json_tweet_ids, [], verbose=True)
-generate_user_network(json_tweet_ids, [user_keras_sa_weight_modifier], verbose=True)
+generate_user_network(vanzo_tweet_ids[:2000], [user_keras_sa_weight_modifier], verbose=True)

@@ -18,7 +18,6 @@ class SentimentClassifier(object):
     def preprocess(self, tweet_text):
         for preprocessor in self.preprocessors:
             tweet_text = preprocessor.preprocess_text(tweet_text)
-            print(tweet_text)
         return tweet_text
 
     def get_sum_based_score(self, tweet_text, lexicon_manager):
