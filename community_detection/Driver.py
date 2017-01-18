@@ -160,10 +160,12 @@ def generate_user_network(tweet_ids, edge_weight_modifiers, verbose=False):
 def collect_following_followers(tweet_ids):
      # Retrieve tweets from the DB
     tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=True)
-    for tweet_obj in tweet_objects:
+    for index, tweet_obj in enumerate(tweet_objects):
         user_id_str = tweet_obj.user.id_str
         follower_ids = DBManager.get_or_add_followers_ids(user_id_str)
         following_ids = DBManager.get_or_add_following_ids(user_id_str)
+
+        print("Collecting following/followers: Processed {}/{} tweets.".format(index+1, len(tweet_objects)))
 
 
 # Load tweets
