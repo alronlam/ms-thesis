@@ -3,6 +3,7 @@ import pickle
 from itertools import groupby
 
 from keras.engine import Model, Input, merge
+from keras.models import load_model, model_from_json
 from keras.preprocessing.sequence import pad_sequences
 from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
@@ -56,6 +57,8 @@ from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, Averag
 from keras import backend as K
 
 def max_min_avg_pooling_main(x):
+    MAX_SEQUENCE_LENGTH = 32
+    from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, AveragePooling1D, Lambda
     max_arr = MaxPooling1D(MAX_SEQUENCE_LENGTH-2)(x)
     # TODO not sure why the pool size and strides work, but verified manually (through inspecting input and ouput that it produces correct output)
     min_arr = -K.pool2d(-x, pool_size=(MAX_SEQUENCE_LENGTH-2,1), strides=(MAX_SEQUENCE_LENGTH-2,1),
@@ -66,6 +69,8 @@ def max_min_avg_pooling_main(x):
 
 
 def max_min_avg_pooling_context(x):
+    MAX_CONTEXTUAL_WORDS = 32
+    from keras.layers import Embedding, Conv1D, MaxPooling1D, Flatten, Dense, AveragePooling1D, Lambda
     max_arr = MaxPooling1D(MAX_CONTEXTUAL_WORDS)(x)
     # TODO not sure why the pool size and strides work, but verified manually (through inspecting input and ouput that it produces correct output)
     min_arr = -K.pool2d(-x, pool_size=(32,1), strides=(32,1),
@@ -91,7 +96,7 @@ def create_main_sub_network(embedding_matrix):
                                 input_length=MAX_SEQUENCE_LENGTH,
                                 trainable=False)
     embedded_sequences = embedding_layer(main_sequence_input)
-    main_network = Conv1D(200, 3, border_mode="valid", activation="tanh")(embedded_sequences)
+    main_network = Conv1D(200, 3, border_mode="same", activation="tanh")(embedded_sequences)
     main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
     main_network = Flatten()(main_network)
     return (main_network, main_sequence_input)
@@ -116,7 +121,7 @@ def create_contextual_sub_network(embedding_matrix):
 ########################################
 def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test):
     model.fit(x_train_arr, y_train, validation_data=(x_test_arr, y_test),
-              nb_epoch=25, batch_size=128, verbose=1)
+              nb_epoch=40, batch_size=128, verbose=1)
 
     predicted_probabilities = model.predict(x_test_arr, batch_size=128, verbose=1)
     predicted_arr = predicted_probabilities.argmax(axis=1)
@@ -168,6 +173,14 @@ def test_with_context():
     ######################
     train_and_display_metrics(model, [x_train, x_conv_train], y_train, [x_test, x_conv_test], y_test)
 
+    ##################
+    ### Save Model ###
+    ##################
+    with open("keras_model_with_context.json", "w") as json_file:
+        json_file.write(model.to_json())
+        json_file.close()
+    model.save_weights("keras_model_with_context_weights.h5")
+
 
 ###############################################################
 ### Function for testing the neural network without context ###
@@ -203,6 +216,14 @@ def test_without_context():
     ### Evaluate Model ###
     ######################
     train_and_display_metrics(model, [x_train], y_train, [x_test], y_test)
+
+    ##################
+    ### Save Model ###
+    ##################
+    with open("keras_model_no_context.json", "w") as json_file:
+        json_file.write(model.to_json())
+        json_file.close()
+    model.save_weights("keras_model_no_context_weights.h5")
 
 
 ###################################
