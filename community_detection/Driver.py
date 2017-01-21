@@ -118,10 +118,7 @@ def generate_tweet_network():
         print("{}\n{}".format(index, text))
 
 
-def generate_user_network(tweet_ids, edge_weight_modifiers, verbose=False):
-
-    # Retrieve tweets from the DB
-    tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=verbose)
+def generate_user_network(tweet_objects, edge_weight_modifiers, verbose=False):
 
     # Construct base graph (directed)
     RUN_FILE_NAME = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
@@ -180,5 +177,7 @@ user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(SentimentClassifier
 
 # collect_following_followers(vanzo_tweet_ids)
 
-# generate_user_network(json_tweet_ids, [], verbose=True)
-generate_user_network(vanzo_tweet_ids[:2000], [user_keras_sa_weight_modifier], verbose=True)
+# Retrieve tweets from the DB
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
+generate_user_network(vanzo_tweet_objects, [], verbose=True)
+generate_user_network(vanzo_tweet_objects, [user_keras_sa_weight_modifier], verbose=True)
