@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 
 from analysis.viz import CommunityViz
@@ -159,7 +160,7 @@ def determine_communities(G, file_name, verbose=False):
 ### Load Tweets ###
 #################
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:500], verbose=True)
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 
 # json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 # json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
@@ -176,21 +177,59 @@ user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
 user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
 tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 
+#############################
+### Construct Base Graphs ###
+#############################
+# file_name = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+generate_user_network("vanzo_user_graph", vanzo_tweet_objects, verbose=True)
+# generate_tweet_hashtag_network("vanzo_tweet_hashtag_graph", vanzo_tweet_objects, keras_classifier, verbose=True)
 
 ################################
 ### User Network Experiments ###
 ################################
-file_name = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-graph = generate_user_network(file_name, vanzo_tweet_objects, verbose=True)
-graph = modify_network_weights(graph, file_name, vanzo_tweet_objects, [user_mention_weight_modifier, user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
-membership = determine_communities(graph, file_name, verbose=True)
-CommunityViz.plot_communities(graph, "display_str", membership, file_name, verbose=True)
+# TODO place output in dir for better organization
+
+# FOLLOWS ONLY
+experiment_run_file_name = "user-graph-follows-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
+graph = modify_network_weights(graph, experiment_run_file_name, vanzo_tweet_objects, [], verbose=True)
+graph.save("{}-modified-weights.pickle".format(experiment_run_file_name))
+membership = determine_communities(graph, experiment_run_file_name, verbose=True)
+CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
+
+# FOLLOWS + MENTIONS
+experiment_run_file_name = "user-graph-follows_mentions-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
+graph = modify_network_weights(graph, experiment_run_file_name, vanzo_tweet_objects, [user_mention_weight_modifier], verbose=True)
+graph.save("{}-modified-weights.pickle".format(experiment_run_file_name))
+membership = determine_communities(graph, experiment_run_file_name, verbose=True)
+CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
+
+# FOLLOWS + MENTIONS + HASHTAGS
+experiment_run_file_name = "user-graph-follows_mentions_hashtags-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
+graph = modify_network_weights(graph, experiment_run_file_name, vanzo_tweet_objects, [user_mention_weight_modifier, user_hashtag_weight_modifier], verbose=True)
+graph.save("{}-modified-weights.pickle".format(experiment_run_file_name))
+membership = determine_communities(graph, experiment_run_file_name, verbose=True)
+CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
+
+# FOLLOWS + MENTIONS + HASHTAGS
+experiment_run_file_name = "user-graph-follows_mentions_hashtags_sa-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
+graph = modify_network_weights(graph, experiment_run_file_name, vanzo_tweet_objects, [user_mention_weight_modifier, user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
+graph.save("{}-modified-weights.pickle".format(experiment_run_file_name))
+membership = determine_communities(graph, experiment_run_file_name, verbose=True)
+CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
+
+
+
 
 #################################
 ### Tweet Network Experiments ###
 #################################
-# file_name = "tweet-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-# graph = generate_tweet_hashtag_network(file_name, vanzo_tweet_objects, keras_classifier, verbose=True)
-# graph = modify_network_weights(graph, file_name, vanzo_tweet_objects, [], verbose=True)
-# membership = determine_communities(graph, file_name, verbose=True)
-# CommunityViz.plot_communities(graph, "display_str", membership, file_name, verbose=True)
+# TODO place output in dir for better organization
+# experiment_run_file_name = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+# graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
+# graph = modify_network_weights(graph, experiment_run_file_name, vanzo_tweet_objects, [], verbose=True)
+# membership = determine_communities(graph, experiment_run_file_name, verbose=True)
+# CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
