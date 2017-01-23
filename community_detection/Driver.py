@@ -1,18 +1,19 @@
 from datetime import datetime
 
 from analysis.viz import CommunityViz
-from community_detection.EdgeWeightModifier import *
-
 from community_detection.graph_construction import TweetGraphs
-
+from community_detection.weight_modification.EdgeWeightModifier import *
+from community_detection.weight_modification.user_graph_weight_modification.UserVerticesHashtagWeightModifier import \
+    UserVerticesHashtagWeightModifier
+from community_detection.weight_modification.user_graph_weight_modification.UserVerticesSAWeightModifier import \
+    UserVerticesSAWeightModifier
+from sentiment_analysis import SentimentClassifier
 from sentiment_analysis.evaluation import TSVParser
 from twitter_data.database import DBManager
+from twitter_data.database import DBUtils
 from twitter_data.parsing.csv_parser import CSVParser
 from twitter_data.parsing.folders import FolderIO
 from twitter_data.parsing.json_parser import JSONParser
-from sentiment_analysis import SentimentClassifier
-
-from twitter_data.database import DBUtils
 
 
 #########################
@@ -45,7 +46,6 @@ def combine_text_for_each_community(community_dict):
 
 def combine_text_in_vertex_set(vertex_set):
     return " ".join([vertex["display_str"] for vertex in vertex_set])
-
 
 #################################
 ### Dataset Loading Functions ###
@@ -173,13 +173,14 @@ keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_
 keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
 keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
 user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier)
-
+user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
 # collect_following_followers(vanzo_tweet_ids)
 
 # Retrieve tweets from the DB
-# vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
-json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids[:10000], verbose=True)
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:500], verbose=True)
+# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
-generate_tweet_network(json_tweet_objects, keras_classifier)
-generate_user_network(json_tweet_objects, [], verbose=True)
-generate_user_network(json_tweet_objects, [user_keras_sa_weight_modifier], verbose=True)
+# generate_tweet_network(vanzo_tweet_objects, keras_classifier)
+# generate_user_network(json_tweet_objects, [], verbose=True)
+generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier], verbose=True)
+generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
