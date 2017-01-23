@@ -8,6 +8,6 @@ def retrieve_all_tweet_objects_from_db(tweet_ids, verbose=False):
             tweet_objects.append(tweet_object)
 
         if verbose:
-            print("Retrieved {} ({} successful) / {} tweets from the database.".format(index+1, len(tweet_objects), len(tweet_ids)))
+            print("Processed {}. Retrieved {} ({} successful) / {} tweets from the database.".format(tweet_id,index+1, len(tweet_objects), len(tweet_ids)))
 
     return tweet_objects
