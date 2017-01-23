@@ -14,7 +14,7 @@ class UserVerticesMentionsWeightModifier(EdgeWeightModifierBase):
             mentioned_user_ids = [user_mention_dict["id_str"] for user_mention_dict in tweet.entities.get('user_mentions')]
 
             for mentioned_user_id in mentioned_user_ids:
-                print(mentioned_user_id)
+
                 try:
                     this_user_v_index = graph.vs.find(name=user_id_str).index
                     other_user_v_index = graph.vs.find(name=mentioned_user_id).index
