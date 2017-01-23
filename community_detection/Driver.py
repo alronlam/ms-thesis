@@ -7,6 +7,8 @@ from community_detection.weight_modification.user_graph_weight_modification.User
     UserVerticesHashtagWeightModifier
 from community_detection.weight_modification.user_graph_weight_modification.UserVerticesSAWeightModifier import \
     UserVerticesSAWeightModifier
+from community_detection.weight_modification.user_graph_weight_modification.UserVerticesMentionsWeightModifier import \
+    UserVerticesMentionsWeightModifier
 from sentiment_analysis import SentimentClassifier
 from sentiment_analysis.evaluation import TSVParser
 from twitter_data.database import DBManager
@@ -165,7 +167,7 @@ def collect_following_followers(tweet_ids):
 
 # Load tweets
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
-json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 
 
 keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
@@ -174,13 +176,16 @@ keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentime
 keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
 user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier)
 user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
+user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
 # collect_following_followers(vanzo_tweet_ids)
 
 # Retrieve tweets from the DB
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:500], verbose=True)
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 # json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
 # generate_tweet_network(vanzo_tweet_objects, keras_classifier)
 # generate_user_network(json_tweet_objects, [], verbose=True)
-generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier], verbose=True)
-generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
+
+generate_user_network(vanzo_tweet_objects, [user_mention_weight_modifier], verbose=True)
+# generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier], verbose=True)
+# generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
