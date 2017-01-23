@@ -37,13 +37,14 @@ def extract_vertices_in_communities(graph, membership):
 def combine_text_for_each_community(community_dict):
     text_dict = {}
     for community_number, vertex_set in community_dict.items():
-        text_dict[community_number] = combine_text_in_vertex_set(vertex_set)
+        if len(vertex_set) > 5:
+            text_dict[community_number] = combine_text_in_vertex_set(vertex_set)
 
     return text_dict
 
 
 def combine_text_in_vertex_set(vertex_set):
-    return " ".join([vertex["text"] for vertex in vertex_set])
+    return " ".join([vertex["display_str"] for vertex in vertex_set])
 
 
 #################################
@@ -84,37 +85,34 @@ def load_tweet_ids_from_csv_files(csv_folder_path):
 ### Generate Functions ###
 ##########################
 
-def generate_tweet_network():
-    # Load tweets
-    # use dataset with all election hashtags
-    print("Reading data")
-    tweet_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/03/elections/', False, '.json')
-    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
-    tweets = [DBManager.get_or_add_tweet_db_given_json(tweet) for tweet in tweet_generator]
+def generate_tweet_network(tweets, sentiment_classifier):
+
+    RUN_FILE_NAME = "tweet-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    GRAPH_PICKLE_FILE_NAME = "{}.pickle".format(RUN_FILE_NAME)
 
     # Construct base graph
     print("Going to construct the graph")
     # G = load("2016-03-04-tweets-pilipinasdebates.pickle")
-    G = TweetGraphs.construct_tweet_graph(None, tweets, 500, 0)
-    G.save("2016-03-04-tweets-pilipinasdebates.pickle")
+    G = TweetGraphs.construct_tweet_hashtag_graph_with_sentiment(None, tweets, GRAPH_PICKLE_FILE_NAME, sentiment_classifier )
 
-    # Modify edge weights
-    G = TweetVerticesSAWeightModifier(SentimentClassifier.WiebeLexiconClassifier()).modify_edge_weights(G)
-    G.save("2016-03-04-tweets-pilipinasdebates.pickle")
-
-    # Community Detection
+   # Community Detection
     print("Going to determine communities")
-    community = G.community_leading_eigenvector(weights="weight").membership
+    # community = G.community_infomap(edge_weights=G.es["weight"]).membership
+    community = G.community_infomap().membership
+    modularity = G.modularity(community)
+    print("Modularity: {}".format(modularity))
+
+    out_file = open("{}.txt".format(RUN_FILE_NAME+".txt"), "w" )
+    out_file.write("Modularity: {}".format(modularity))
+    out_file.close()
 
     # Plot
-    # print("Going to plot the graph")
-    # _plot(G, "text", community)
+    print("Going to plot the graph")
+    CommunityViz.plot_communities(G, "display_str", community, RUN_FILE_NAME)
 
     # Word Cloud
     text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
     for index, text in text_dict.items():
-        if index == 1:
-            break
         print("{}\n{}".format(index, text))
 
 
@@ -173,11 +171,15 @@ json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-
 keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
 keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
 keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
-user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path))
+keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
+user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier)
 
 # collect_following_followers(vanzo_tweet_ids)
 
 # Retrieve tweets from the DB
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
-generate_user_network(vanzo_tweet_objects, [], verbose=True)
-generate_user_network(vanzo_tweet_objects, [user_keras_sa_weight_modifier], verbose=True)
+# vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
+json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids[:10000], verbose=True)
+
+generate_tweet_network(json_tweet_objects, keras_classifier)
+generate_user_network(json_tweet_objects, [], verbose=True)
+generate_user_network(json_tweet_objects, [user_keras_sa_weight_modifier], verbose=True)

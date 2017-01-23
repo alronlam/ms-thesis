@@ -32,6 +32,37 @@ def construct_tweet_graph(graph, tweets, limit=10000, start_index=0):
     return graph
 
 
+def construct_tweet_hashtag_graph_with_sentiment(graph, tweets, pickle_file_name, sentiment_classifier):
+    if graph is None:
+        graph = Graph(directed=False)
+
+    new_edges = set()
+
+    for index, tweet in enumerate(tweets):
+        add_tweet_vertex(graph, tweet)
+        hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
+
+        sentiment = sentiment_classifier.classify_sentiment(tweet.text, {})
+
+        hashtag_sentiment_set = set()
+
+        for hashtag in hashtags:
+            add_hashtag_vertex(graph, hashtag+"-"+sentiment)
+            hashtag_sentiment_set.add(hashtag+"-"+sentiment)
+
+        # edges
+        # USER TO HASHTAG EDGE
+        for hashtag in hashtag_sentiment_set:
+            new_edges.add((str(tweet.id), hashtag))
+
+        print("Constructing base graph: Processed {}/{} tweets.".format(index,len(tweets)))
+
+    graph.add_edges(list(new_edges))
+    graph.save(pickle_file_name)
+
+    return graph
+
+
 def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, start_index=0, verbose=False):
     if graph is None:
         graph = Graph(directed=True)
@@ -164,16 +195,23 @@ def add_user_vertex(graph, user_id, username):
 
     return graph
 
-
-def add_tweet_vertex(graph, tweet_id):
-    if not exists_in_graph(graph, tweet_id):
-        new_vertex = graph.add_vertex(str(tweet_id))
-        new_tweet = DBManager.get_or_add_tweet(tweet_id)
-        if new_tweet is not None:
-            graph.vs[graph.vcount() - 1]["text"] = new_tweet.text
-            graph.vs[graph.vcount() - 1]["tweet_id"] = new_tweet.id
-
+def add_tweet_vertex(graph, tweet):
+    if not exists_in_graph(graph, tweet.id):
+        new_vertex = graph.add_vertex(str(tweet.id))
+        graph.vs[graph.vcount() - 1]["tweet_text"] = tweet.text
+        graph.vs[graph.vcount() - 1]["display_str"] = tweet.text
+        graph.vs[graph.vcount() - 1]["tweet_id"] = tweet.id
     return graph
+
+# def add_tweet_vertex(graph, tweet_id):
+#     if not exists_in_graph(graph, tweet_id):
+#         new_vertex = graph.add_vertex(str(tweet_id))
+#         new_tweet = DBManager.get_or_add_tweet(tweet_id)
+#         if new_tweet is not None:
+#             graph.vs[graph.vcount() - 1]["text"] = new_tweet.text
+#             graph.vs[graph.vcount() - 1]["tweet_id"] = new_tweet.id
+#
+#     return graph
 
 
 def exists_in_graph(graph, id):
