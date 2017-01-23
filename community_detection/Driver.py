@@ -49,6 +49,16 @@ def combine_text_for_each_community(community_dict):
 def combine_text_in_vertex_set(vertex_set):
     return " ".join([vertex["display_str"] for vertex in vertex_set])
 
+def collect_following_followers(tweet_ids):
+     # Retrieve tweets from the DB
+    tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=True)
+    for index, tweet_obj in enumerate(tweet_objects):
+        user_id_str = tweet_obj.user.id_str
+        follower_ids = DBManager.get_or_add_followers_ids(user_id_str)
+        following_ids = DBManager.get_or_add_following_ids(user_id_str)
+
+        print("Collecting following/followers: Processed {}/{} tweets.".format(index+1, len(tweet_objects)))
+
 #################################
 ### Dataset Loading Functions ###
 #################################
@@ -83,93 +93,80 @@ def load_tweet_ids_from_csv_files(csv_folder_path):
     return tweet_ids
 
 
-##########################
-### Generate Functions ###
-##########################
+#########################################
+### Base Graph Construction Functions ###
+#########################################
 
-def generate_tweet_network(tweets, sentiment_classifier):
-
-    RUN_FILE_NAME = "tweet-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    GRAPH_PICKLE_FILE_NAME = "{}.pickle".format(RUN_FILE_NAME)
-
-    # Construct base graph
-    print("Going to construct the graph")
-    # G = load("2016-03-04-tweets-pilipinasdebates.pickle")
-    G = TweetGraphs.construct_tweet_hashtag_graph_with_sentiment(None, tweets, GRAPH_PICKLE_FILE_NAME, sentiment_classifier )
-
-   # Community Detection
-    print("Going to determine communities")
-    # community = G.community_infomap(edge_weights=G.es["weight"]).membership
-    community = G.community_infomap().membership
-    modularity = G.modularity(community)
-    print("Modularity: {}".format(modularity))
-
-    out_file = open("{}.txt".format(RUN_FILE_NAME+".txt"), "w" )
-    out_file.write("Modularity: {}".format(modularity))
-    out_file.close()
-
-    # Plot
-    print("Going to plot the graph")
-    CommunityViz.plot_communities(G, "display_str", community, RUN_FILE_NAME)
-
-    # Word Cloud
-    text_dict = combine_text_for_each_community(extract_vertices_in_communities(G, community))
-    for index, text in text_dict.items():
-        print("{}\n{}".format(index, text))
-
-
-def generate_user_network(tweet_objects, edge_weight_modifiers, verbose=False):
-
-    # Construct base graph (directed)
-    RUN_FILE_NAME = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-    GRAPH_PICKLE_FILE_NAME = "{}.pickle".format(RUN_FILE_NAME)
-
+##############################
+### User Network Functions ###
+##############################
+def generate_user_network(file_name, tweet_objects, verbose=False):
+    GRAPH_PICKLE_FILE_NAME = file_name+".pickle"
     if verbose:
         print("Going to construct the graph")
-    # G = load(GRAPH_PICKLE_FILE_NAME)
     # construct graph based on user objects
     G = TweetGraphs.construct_user_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
     G.save(GRAPH_PICKLE_FILE_NAME)
+    return G
 
+###############################
+### Tweet Network Functions ###
+###############################
+def generate_tweet_hashtag_network(file_name, tweet_objects, sentiment_classifier, verbose=False):
+    GRAPH_PICKLE_FILE_NAME = "{}.pickle".format(file_name)
+
+    # Construct base graph
+    print("Going to construct the graph")
+    G = TweetGraphs.construct_tweet_hashtag_graph_with_sentiment(None, tweet_objects, GRAPH_PICKLE_FILE_NAME, sentiment_classifier)
+    G.save(GRAPH_PICKLE_FILE_NAME)
+    return G
+
+##########################################
+### Edge Weight Modification Functions ###
+##########################################
+def modify_network_weights(G, file_name, tweet_objects, edge_weight_modifiers, verbose=False):
     # Modify edge weights
     if verbose:
         print("Going to modify edge weights")
     G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects}, verbose)
-    G.save(GRAPH_PICKLE_FILE_NAME)
+    G.save(file_name+".pickle")
+    return G
 
+################################################
+### Community Detection & Analysis Functions ###
+################################################
+def determine_communities(G, file_name, verbose=False):
     # Community Detection
     if verbose:
         print("Going to determine communities")
-    community = G.community_infomap(edge_weights=G.es["weight"]).membership
-    modularity = G.modularity(community)
+    membership = G.community_infomap(edge_weights=G.es["weight"]).membership
+
+    # Print metrics
+    modularity = G.modularity(membership)
     print("Modularity: {}".format(modularity))
 
-    out_file = open("{}.txt".format(RUN_FILE_NAME+".txt"), "w" )
+    out_file = open("{}".format(file_name+".txt"), "w" )
     out_file.write("Modularity: {}".format(modularity))
     out_file.close()
 
-    # Plot
-    if verbose:
-        print("Going to plot the graph")
-    CommunityViz.plot_communities(G, "display_str", community, RUN_FILE_NAME)
+    return membership
 
 
-def collect_following_followers(tweet_ids):
-     # Retrieve tweets from the DB
-    tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(tweet_ids, verbose=True)
-    for index, tweet_obj in enumerate(tweet_objects):
-        user_id_str = tweet_obj.user.id_str
-        follower_ids = DBManager.get_or_add_followers_ids(user_id_str)
-        following_ids = DBManager.get_or_add_following_ids(user_id_str)
-
-        print("Collecting following/followers: Processed {}/{} tweets.".format(index+1, len(tweet_objects)))
+##################### MAIN DRIVER CODE ###################
 
 
-# Load tweets
+#################
+### Load Tweets ###
+#################
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:500], verbose=True)
+
 # json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
-
+#################
+### Constants ###
+#################
 keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
 keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
 keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
@@ -177,15 +174,23 @@ keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_pa
 user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier)
 user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
 user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
-# collect_following_followers(vanzo_tweet_ids)
+tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 
-# Retrieve tweets from the DB
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
-# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
-# generate_tweet_network(vanzo_tweet_objects, keras_classifier)
-# generate_user_network(json_tweet_objects, [], verbose=True)
+################################
+### User Network Experiments ###
+################################
+file_name = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+graph = generate_user_network(file_name, vanzo_tweet_objects, verbose=True)
+graph = modify_network_weights(graph, file_name, vanzo_tweet_objects, [user_mention_weight_modifier, user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
+membership = determine_communities(graph, file_name, verbose=True)
+CommunityViz.plot_communities(graph, "display_str", membership, file_name, verbose=True)
 
-generate_user_network(vanzo_tweet_objects, [user_mention_weight_modifier], verbose=True)
-# generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier], verbose=True)
-# generate_user_network(vanzo_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier], verbose=True)
+#################################
+### Tweet Network Experiments ###
+#################################
+# file_name = "tweet-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+# graph = generate_tweet_hashtag_network(file_name, vanzo_tweet_objects, keras_classifier, verbose=True)
+# graph = modify_network_weights(graph, file_name, vanzo_tweet_objects, [], verbose=True)
+# membership = determine_communities(graph, file_name, verbose=True)
+# CommunityViz.plot_communities(graph, "display_str", membership, file_name, verbose=True)

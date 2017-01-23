@@ -58,6 +58,7 @@ def construct_tweet_hashtag_graph_with_sentiment(graph, tweets, pickle_file_name
         print("Constructing base graph: Processed {}/{} tweets.".format(index,len(tweets)))
 
     graph.add_edges(list(new_edges))
+    graph.es["weight"] = 1
     graph.save(pickle_file_name)
 
     return graph
