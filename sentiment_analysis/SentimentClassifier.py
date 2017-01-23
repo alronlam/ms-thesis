@@ -10,13 +10,14 @@ from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
+# from gensim.models.word2vec import Word2Vec
 from sentiment_analysis.subjectivity import SubjectivityClassifier
 
 
 class SentimentClassifier(object):
     def preprocess(self, tweet_text):
         for preprocessor in self.preprocessors:
-            tweet_text = preprocessor.preprocess_tweet(tweet_text)
+            tweet_text = preprocessor.preprocess_text(tweet_text)
         return tweet_text
 
     def get_sum_based_score(self, tweet_text, lexicon_manager):
@@ -63,44 +64,44 @@ class SentimentClassifier(object):
         :return: short name describing the classifier
         """
 
-from gensim.models.word2vec import Word2Vec
-class ConversationalContextClassifier(SentimentClassifier):
 
-    def __init__(self, corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name):
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
-                     PreProcessing.RemovePunctuationFromWords()]
-        self.corpus_w2v = Word2Vec.load_word2vec_format(corpus_bin_file_name, binary=True)
-        # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
-        self.classifier = self.load_from_pickle(classifier_pickle_file_name)
-        self.scaler = self.load_from_pickle(scaler_pickle_file_name)
-
-    def classify_sentiment(self, tweet_text, contextual_info_dict):
-        tweet_text = self.preprocess(tweet_text)
-        text_vector = self.buildWordVector(tweet_text, 300)
-        text_vector = self.scaler.transform(text_vector)
-        label = self.classifier.predict(text_vector)
-        return label[0]
-
-    def buildWordVector(self, text, size):
-        vec = numpy.zeros(size).reshape((1, size))
-        count = 0.
-        for word in text:
-            try:
-                vec += self.corpus_w2v[word].reshape((1, size))
-                count += 1.
-            except KeyError:
-                continue
-        if count != 0:
-            vec /= count
-        return vec
-
-    def get_name(self):
-        return "word2vec-svm"
+# class ConversationalContextClassifier(SentimentClassifier):
+#
+#     def __init__(self, corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name):
+#         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+#                      PreProcessing.RemovePunctuationFromWords()]
+#         self.corpus_w2v = Word2Vec.load_word2vec_format(corpus_bin_file_name, binary=True)
+#         # self.corpus_w2v = self.load_from_pickle(corpus_pickle_file_name)
+#         self.classifier = self.load_from_pickle(classifier_pickle_file_name)
+#         self.scaler = self.load_from_pickle(scaler_pickle_file_name)
+#
+#     def classify_sentiment(self, tweet_text, contextual_info_dict):
+#         tweet_text = self.preprocess(tweet_text)
+#         text_vector = self.buildWordVector(tweet_text, 300)
+#         text_vector = self.scaler.transform(text_vector)
+#         label = self.classifier.predict(text_vector)
+#         return label[0]
+#
+#     def buildWordVector(self, text, size):
+#         vec = numpy.zeros(size).reshape((1, size))
+#         count = 0.
+#         for word in text:
+#             try:
+#                 vec += self.corpus_w2v[word].reshape((1, size))
+#                 count += 1.
+#             except KeyError:
+#                 continue
+#         if count != 0:
+#             vec /= count
+#         return vec
+#
+#     def get_name(self):
+#         return "word2vec-svm"
 
 class MLClassifier(SentimentClassifier):
     def __init__(self, feature_extractor_path, classifier_pickle_path):
         self.feature_extractor = FeatureExtractorBase.load_feature_extractor_from_pickle(feature_extractor_path)
-        self.classifier = self.load_classifier_from_pickle(classifier_pickle_path)
+        self.classifier = pickle.load(open(classifier_pickle_path, 'rb'))
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
                               PreProcessing.RemovePunctuationFromWords()]
 
@@ -108,12 +109,40 @@ class MLClassifier(SentimentClassifier):
         tweet_text = self.preprocess(tweet_text)
         return self.classifier.classify(self.feature_extractor.extract_features(tweet_text))
 
-    def load_classifier_from_pickle(self, pickle_file_name):
-        with open(pickle_file_name, 'rb') as pickle_file:
-            return pickle.load(pickle_file)
-
     def get_name(self):
         return "ML"
+
+
+
+
+class KerasClassifier(SentimentClassifier):
+
+    MAX_SEQUENCE_LENGTH = 32
+    CATEGORIES = ["negative", "neutral", "positive"]
+
+    def __init__(self, tokenizer_pickle_path, classifier_json_path, classifier_weights_path):
+        from keras.models import model_from_json
+        self.tokenizer = pickle.load(open(tokenizer_pickle_path, "rb"))
+        self.classifier = model_from_json([line for line in open(classifier_json_path, "r")][0])
+        self.classifier.load_weights(classifier_weights_path)
+        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+                              PreProcessing.RemovePunctuationFromWords(), PreProcessing.ConcatWordArray()]
+
+    def convert_to_word_sequence(self, text):
+        from keras.preprocessing.sequence import pad_sequences
+        text_arr = [text]
+        return pad_sequences(self.tokenizer.texts_to_sequences(text_arr), maxlen=self.MAX_SEQUENCE_LENGTH)
+
+    def convert_numerical_category_to_word(self, number):
+        return self.CATEGORIES[number]
+
+    def classify_sentiment(self, tweet_text, contextual_info_dict):
+        tweet_text = self.preprocess(tweet_text)
+        tweet_text_sequence = self.convert_to_word_sequence(tweet_text)
+        prediction_probabilities = self.classifier.predict(tweet_text_sequence,batch_size=1, verbose=0)
+        prediction = prediction_probabilities.argmax(axis=1)[0]
+        # print("{}\n{}\n\n".format(tweet_text, self.convert_numerical_category_to_word(prediction)))
+        return self.convert_numerical_category_to_word(prediction)
 
 
 class WiebeLexiconClassifier(SentimentClassifier):

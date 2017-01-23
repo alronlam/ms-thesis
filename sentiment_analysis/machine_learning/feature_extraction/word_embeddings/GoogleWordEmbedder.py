@@ -9,7 +9,7 @@ def clean_text(text):
                      PreProcessing.RemovePunctuationFromWords()]
 
     for preprocessor in preprocessors:
-        text = preprocessor.preprocess_tweet(text)
+        text = preprocessor.preprocess_text(text)
 
     return text
 

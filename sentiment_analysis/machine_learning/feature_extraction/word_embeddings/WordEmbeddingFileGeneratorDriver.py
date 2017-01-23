@@ -1,19 +1,13 @@
 import pickle
 
-import math
-import random
-
 import numpy
-from keras.preprocessing.sequence import pad_sequences
-from keras.preprocessing.text import Tokenizer
 from keras.utils.np_utils import to_categorical
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sentiment_analysis.evaluation import TSVParser
+from sentiment_analysis.machine_learning.feature_extraction.word_embeddings import GoogleWordEmbedder
 from twitter_data.database import DBManager
 from twitter_data.parsing.folders import FolderIO
-from word_embeddings import GoogleWordEmbedder
-
 
 #TODO: This is not verified to be working correctly
 # def shuffle_dataset_balanced(X, Y, test_percentage):
@@ -148,8 +142,8 @@ from keras.preprocessing.sequence import pad_sequences
 
 def generate_glove_embedding_matrix(word_index):
 
-    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove_test/glove/glove.twitter.27B.25d.txt"
-    EMBEDDING_DIM = 25
+    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove/glove.twitter.27B.200d.txt"
+    EMBEDDING_DIM = 200
 
     embeddings_index = {}
     f = open(GLOVE_DIR, errors='ignore')
@@ -198,7 +192,7 @@ def convert_contextual_tweets_by_idf(contextual_tweets, TOP_N_KEYWORDS):
     return top_keywords
 
 
-def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32, TOP_N_KEYWORDS=5):
+def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_WORDS = 20000, MAX_SEQUENCE_LENGTH = 32, TOP_N_KEYWORDS=32):
 
     (x_train, y_train, x_conv_train) = load_tsv_dataset(train_dir)
     (x_test, y_test, x_conv_test) = load_tsv_dataset(test_dir)
@@ -234,7 +228,7 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
 
     print('Train: {} - Test: {} .'.format(len(x_train), len(x_test)))
 
-    # pickle.dump(tokenizer.word_index, open( "{}-word_index.pickle".format(npz_file_name), "wb"))
+    pickle.dump(tokenizer, open("tokenizer-{}.pickle".format(npz_file_name), "wb"))
     embedding_matrix = generate_glove_embedding_matrix(tokenizer.word_index)
     numpy.savez(npz_file_name,
                 x_train=x_train, y_train=y_train, x_conv_train=x_conv_train,
@@ -242,5 +236,5 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_25d.npz')
+generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_200d.npz')
 
