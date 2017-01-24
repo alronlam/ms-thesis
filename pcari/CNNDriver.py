@@ -1,22 +1,16 @@
+from datetime import datetime
+from collections import Counter
+
 import numpy as np
 from keras.engine import Input, Model
 from keras.layers import Embedding, Conv1D, Lambda, Flatten, Dense
+from sklearn.cross_validation import StratifiedKFold
 
 YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/yolanda_nov2013_feb2014.npz"
 
 def load_dataset(dataset_path):
     data = np.load(YOLANDA_NOV2013_FEB2014_NPZ_PATH)
-
-    #TODO update this when there is already a proper partitioning
-    x_train = data["x"]
-    y_train = data["y"]
-
-    x_test = data["x"]
-    y_test = data["y"]
-
-    embedding_matrix = data["embedding_matrix"]
-
-    return (x_train, y_train, x_test, y_test, embedding_matrix)
+    return (data["x"], data["y"], data["embedding_matrix"])
 
 ######################
 ### Custom Pooling ###
@@ -70,7 +64,7 @@ def create_model(embedding_matrix, MAX_SEQUENCE_LENGTH=32):
 ########################################
 ### Training and Evaluation Function ###
 ########################################
-def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test):
+def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test, results_file):
     model.fit(x_train_arr, y_train, validation_data=(x_test_arr, y_test),
               nb_epoch=10, batch_size=128, verbose=1)
 
@@ -80,15 +74,43 @@ def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test):
     actual_arr = y_test.argmax(axis=1)
 
     from sklearn import metrics
-    print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
-    print(metrics.classification_report(actual_arr, predicted_arr))
-    print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
+    print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)), file=results_file)
+    print(metrics.classification_report(actual_arr, predicted_arr), file=results_file)
+    print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr)), file=results_file, flush=True) # ordering is alphabetical order of label names
+    print("", file=results_file)
 
+def display_dataset_statistics(train_labels, test_labels, results_file):
+    print("Train Data Composition({}):".format(len(train_labels)), file=results_file)
+    counter = Counter(train_labels)
+    print(counter.keys(), file=results_file)
+    print(counter.values(), file=results_file)
 
+    print("", file=results_file)
 
-def main_driver():
-    (x_train, y_train, x_test, y_test, embedding_matrix) = load_dataset(YOLANDA_NOV2013_FEB2014_NPZ_PATH)
+    print("Test Data Composition({}):".format(len(test_labels)), file=results_file)
+    counter = Counter(test_labels)
+    print(counter.keys(), file=results_file)
+    print(counter.values(), file=results_file, flush=True)
+    print("", file=results_file)
+
+def main_driver(n_folds=10):
+    results_file = open("results-{}_folds-{}.txt".format(n_folds, datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), "w")
+
+    (data, labels, embedding_matrix) = load_dataset(YOLANDA_NOV2013_FEB2014_NPZ_PATH)
     model = create_model(embedding_matrix)
-    train_and_display_metrics(model, x_train, y_train, x_test, y_test)
+    # train_and_display_metrics(model, x_train, y_train, x_test, y_test)
 
-main_driver()
+    numeric_labels = labels.argmax(axis=1)
+    skf = StratifiedKFold(numeric_labels, n_folds=n_folds, shuffle=True)
+
+    for i, (train, test) in enumerate(skf):
+            print ("***********************\nRunning Fold {} / {}\n".format(i+1, n_folds), file=results_file)
+            display_dataset_statistics(numeric_labels[train], numeric_labels[test], results_file)
+            model = None # Clearing the NN.
+            model = create_model(embedding_matrix)
+            train_and_display_metrics(model, data[train], labels[train], data[test], labels[test], results_file)
+
+main_driver(3)
+main_driver(5)
+main_driver(7)
+main_driver(10)
