@@ -11,3 +11,4 @@ sa_training_data/
 **.npz
 **.h5
 **.json
+**.csv
