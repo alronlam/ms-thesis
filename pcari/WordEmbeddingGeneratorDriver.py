@@ -27,7 +27,7 @@ from keras.preprocessing.sequence import pad_sequences
 
 def generate_glove_embedding_matrix(word_index):
 
-    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove/glove.twitter.27B.200d.txt"
+    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/glove/glove.twitter.27B.200d.txt"
     EMBEDDING_DIM = 200
 
     embeddings_index = {}
@@ -56,9 +56,10 @@ def generate_glove_embedding_matrix(word_index):
 def load_csv_dataset(file_path):
     with open(file_path, "r", encoding="utf8", newline="") as csv_file:
         row_reader = csv.reader(csv_file, delimiter=',')
-        x = [row[0] for row in row_reader]
-        row_reader = csv.reader(csv_file, delimiter=',')
-        y = [row[1] for row in row_reader]
+        dataset = [row for row in row_reader]
+
+    x = [row[0] for row in dataset]
+    y = [row[1] for row in dataset]
     return (x,y)
 
 def generate_npz_word_index_sequence(data_dir, npz_file_name, MAX_NB_WORDS=20000, MAX_SEQUENCE_LENGTH=32):
@@ -67,8 +68,8 @@ def generate_npz_word_index_sequence(data_dir, npz_file_name, MAX_NB_WORDS=20000
     tokenizer = Tokenizer(nb_words=MAX_NB_WORDS)
     tokenizer.fit_on_texts(x)
 
-    x_sequences = tokenizer.texts_to_sequences(x)
-    x_sequences = pad_sequences(x_sequences, maxlen=MAX_SEQUENCE_LENGTH)
+    x = tokenizer.texts_to_sequences(x)
+    x = pad_sequences(x, maxlen=MAX_SEQUENCE_LENGTH)
 
     label_encoder = create_label_encoder(y)
     y = label_encoder.transform(y)
