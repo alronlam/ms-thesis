@@ -7,6 +7,7 @@ class UserVerticesMentionsWeightModifier(EdgeWeightModifierBase):
 
         tweets = params["tweets"]
 
+        count_weight_modification = 0
         total_weight_update = 0
         for index, tweet in enumerate(tweets):
             user_id_str = tweet.user.id_str
@@ -33,6 +34,7 @@ class UserVerticesMentionsWeightModifier(EdgeWeightModifierBase):
             if verbose:
                 print("UserVerticesMentionsWeightModifier: Processed {}/{} tweets".format(index+1, len(tweets)))
 
-        if verbose:
-            print("Total number of edges updated: {}".format(total_weight_update))
+        # if verbose:
+        print("Mentions: Modified edges {} times.".format(total_weight_update))
+
         return graph

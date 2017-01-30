@@ -28,6 +28,7 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
         if verbose:
             print("Going through edges.")
 
+        total_weight_update = 0
         for index, edge in enumerate(graph.es):
             source_vertex_id = edge.source
             target_vertex_id = edge.target
@@ -37,11 +38,13 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
             for key, user_set in hashtag_sentiment_users_dict.items():
                 if source_vertex_name in user_set and target_vertex_name in user_set:
                     edge["weight"] += 1
+                    total_weight_update += 1
                     # print("New edge weight of {} to {} is {}".format(source_vertex_name, target_vertex_name, edge["weight"]))
 
             if verbose:
                 print("SAWeightModifier: Processed {}/{} edges".format(index+1, len(graph.es)))
 
+        print("SA: Modified edges {} times.".format(total_weight_update))
         return graph
 
     def get_or_add_hashtag_sentiment_set(self, hashtag_sentiment_users_dict, hashtag, sentiment):
