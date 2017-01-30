@@ -11,7 +11,7 @@ from analysis.topic_modelling.TopicModeller import TopicModeller
 
 class LDATopicModeller(TopicModeller):
 
-    def __init__(self, num_topics=10, num_words=10):
+    def __init__(self, num_topics=5, num_words=10):
         self.num_topics = num_topics
         self.num_words = num_words
 
@@ -26,7 +26,15 @@ class LDATopicModeller(TopicModeller):
             dictionary = corpora.Dictionary(document_list_cleaned)
             doc_term_matrix = [dictionary.doc2bow(document) for document in document_list_cleaned]
             LDA_model = self.LDA(doc_term_matrix, num_topics=self.num_topics, id2word = dictionary, passes=50)
-            return LDA_model.print_topics(num_topics=self.num_topics, num_words=self.num_words)
+            topic_probability_tuples =  LDA_model.show_topics(num_topics=self.num_topics, num_words=self.num_words, log=False, formatted=False)
+
+            topic_string = []
+            for index, topic_probability_list in topic_probability_tuples:
+                topic_string.append("Topic {}".format(index))
+                for topic, probability in topic_probability_list:
+                    topic_string.append("{} - {}".format(topic, probability))
+                topic_string.append("\n")
+            return "\n".join(topic_string)
         except Exception as e:
             return None
 

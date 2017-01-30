@@ -1,6 +1,7 @@
 import pickle
 from datetime import datetime
 
+from analysis.mutual_following.FPUPC import count_mutual_edges
 from analysis.topic_modelling import TopicModellerFacade
 from analysis.topic_modelling.LDATopicModeller import LDATopicModeller
 from analysis.viz import CommunityViz
@@ -164,7 +165,7 @@ def determine_communities(G, file_name, verbose=False):
 ### Load Tweets ###
 #################
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:100], verbose=True)
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 
 # json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 # json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
@@ -237,21 +238,57 @@ def load_and_construct_topic_models(graph_pickle_file, out_file, min_vertices_pe
 
     for community, topics in community_topics_tuple_list:
         if topics is not None:
-            print("Community {}: {}\n".format(community, topics), file=out_file)
+            print("Community {}:\n{}\n".format(community, topics), file=out_file)
 
-
-
-# follows + mentions + hashtags + sa
-run_file_name="user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40"
-out_file = open(run_file_name+"-topic-models.txt", "w")
-load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
 
 # follows
 run_file_name="user-graph-follows-2017-01-24-02-46-07-modified-weights"
 out_file = open(run_file_name+"-topic-models.txt", "w")
-load_and_construct_topic_models("user-graph-follows-2017-01-24-02-46-07-modified-weights.pickle", out_file)
+load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+
+# follows + mentions
+run_file_name="user-graph-follows_mentions-2017-01-24-02-49-47-modified-weights"
+out_file = open(run_file_name+"-topic-models.txt", "w")
+load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+
+# follows + mentions + hashtags
+run_file_name="user-graph-follows_mentions_hashtags-2017-01-24-02-53-37-modified-weights"
+out_file = open(run_file_name+"-topic-models.txt", "w")
+load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+
+# follows + mentions + hashtags + sa
+run_file_name="user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40-modified-weights"
+out_file = open(run_file_name+"-topic-models.txt", "w")
+load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
 
 
+######### FPUPC ###########
+
+def load_and_count_fpupc(graph_pickle_file, out_file, min_vertices_per_community=20):
+    graph = pickle.load(open(graph_pickle_file, "rb"))
+    membership = determine_communities(graph, None, verbose=True)
+    (graph, membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_vertices_per_community)
+    print("FPUPC:{}".format(count_mutual_edges(graph)), file=out_file)
+
+# follows
+run_file_name="user-graph-follows-2017-01-24-02-46-07-modified-weights"
+out_file = open(run_file_name+"-fpupc.txt", "w")
+load_and_count_fpupc("{}.pickle".format(run_file_name), out_file)
+
+# follows + mentions
+run_file_name="user-graph-follows_mentions-2017-01-24-02-49-47-modified-weights"
+out_file = open(run_file_name+"-fpupc.txt", "w")
+load_and_count_fpupc("{}.pickle".format(run_file_name), out_file)
+
+# follows + mentions + hashtags
+run_file_name="user-graph-follows_mentions_hashtags-2017-01-24-02-53-37-modified-weights"
+out_file = open(run_file_name+"-fpupc.txt", "w")
+load_and_count_fpupc("{}.pickle".format(run_file_name), out_file)
+
+# follows + mentions + hashtags + sa
+run_file_name="user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40-modified-weights"
+out_file = open(run_file_name+"-fpupc.txt", "w")
+load_and_count_fpupc("{}.pickle".format(run_file_name), out_file)
 
 
 #################################
