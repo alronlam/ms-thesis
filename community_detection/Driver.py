@@ -164,7 +164,7 @@ def determine_communities(G, file_name, verbose=False):
 ### Load Tweets ###
 #################
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:100], verbose=True)
 
 # json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 # json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
@@ -229,16 +229,27 @@ keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentime
 ### Construct topic models
 LDA_topic_modeller = LDATopicModeller()
 
-def load_and_construct_topic_models(graph_pickle_file, min_vertices_per_community=20):
+def load_and_construct_topic_models(graph_pickle_file, out_file, min_vertices_per_community=20):
     graph = pickle.load(open(graph_pickle_file, "rb"))
     membership = determine_communities(graph, None, verbose=True)
     (graph, membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_vertices_per_community)
-    TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, vanzo_tweet_objects)
+    community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, vanzo_tweet_objects)
+
+    for community, topics in community_topics_tuple_list:
+        if topics is not None:
+            print("Community {}: {}\n".format(community, topics), file=out_file)
+
+
 
 # follows + mentions + hashtags + sa
-load_and_construct_topic_models("user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40.pickle")
+run_file_name="user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40"
+out_file = open(run_file_name+"-topic-models.txt", "w")
+load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+
 # follows
-load_and_construct_topic_models("user-graph-follows-2017-01-24-02-46-07-modified-weights.pickle")
+run_file_name="user-graph-follows-2017-01-24-02-46-07-modified-weights"
+out_file = open(run_file_name+"-topic-models.txt", "w")
+load_and_construct_topic_models("user-graph-follows-2017-01-24-02-46-07-modified-weights.pickle", out_file)
 
 
 

@@ -28,7 +28,7 @@ class LDATopicModeller(TopicModeller):
             LDA_model = self.LDA(doc_term_matrix, num_topics=self.num_topics, id2word = dictionary, passes=50)
             return LDA_model.print_topics(num_topics=self.num_topics, num_words=self.num_words)
         except Exception as e:
-            return "No topics found."
+            return None
 
 
     def preprocess_document(self, document):
