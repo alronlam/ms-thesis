@@ -6,7 +6,7 @@ from keras.utils.np_utils import to_categorical
 from sklearn import preprocessing
 
 ##### SOME CONSTANTS #####
-YOLANDA_NOV2013_FEB2014_CSV_FILE = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_dataset.csv"
+YOLANDA_NOV2013_FEB2014_CSV_FILE = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_dataset_funds_others.csv"
 
 ##### UTILITY FUNCTIONS #####
 def create_label_encoder(labels):
@@ -82,5 +82,12 @@ def generate_npz_word_index_sequence(data_dir, npz_file_name, MAX_NB_WORDS=20000
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(YOLANDA_NOV2013_FEB2014_CSV_FILE, 'yolanda_nov2013_feb2014.npz')
+generate_npz_word_index_sequence(YOLANDA_NOV2013_FEB2014_CSV_FILE, 'yolanda_nov2013_feb2014_funds_others.npz')
 
+# def load_w2v(glove_path):
+#     import numpy as np
+#     with open("glove.6B.50d.txt", "rb") as lines:
+#         w2v = {line.split()[0]: np.array(map(float, line.split()[1:]))
+#                for line in lines}
+#
+# def generate_word_embeddings():

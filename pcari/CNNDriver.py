@@ -6,7 +6,8 @@ from keras.engine import Input, Model
 from keras.layers import Embedding, Conv1D, Lambda, Flatten, Dense
 from sklearn.cross_validation import StratifiedKFold
 
-YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/yolanda_nov2013_feb2014.npz"
+YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_no_others.npz"
+NUM_CATEGORIES = 5
 
 def load_dataset(dataset_path):
     data = np.load(YOLANDA_NOV2013_FEB2014_NPZ_PATH)
@@ -51,7 +52,7 @@ def create_model(embedding_matrix, MAX_SEQUENCE_LENGTH=32):
     main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
     main_network = Flatten()(main_network)
     main_network = Dense(64, activation='tanh')(main_network)
-    predictions = Dense(6, activation='softmax')(main_network)
+    predictions = Dense(NUM_CATEGORIES, activation='softmax')(main_network)
 
     model = Model(input=[main_sequence_input], output=[predictions])
     model.compile(loss='categorical_crossentropy',
