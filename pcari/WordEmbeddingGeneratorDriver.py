@@ -6,7 +6,11 @@ from keras.utils.np_utils import to_categorical
 from sklearn import preprocessing
 
 ##### SOME CONSTANTS #####
-YOLANDA_NOV2013_FEB2014_CSV_FILE = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_dataset_funds_others.csv"
+from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, WordToLowercase, ReplaceURL, \
+    ConcatWordArray, RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, \
+    preprocess_tweets
+
+YOLANDA_NOV2013_FEB2014_CSV_FILE = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_dataset_no_others.csv"
 
 ##### UTILITY FUNCTIONS #####
 def create_label_encoder(labels):
@@ -75,14 +79,24 @@ def generate_npz_word_index_sequence(data_dir, npz_file_name, MAX_NB_WORDS=20000
     y = label_encoder.transform(y)
     y = to_categorical(numpy.asarray(y))
 
-    pickle.dump(tokenizer, open("tokenizer-{}.pickle".format(npz_file_name), "wb"))
+    pickle.dump(tokenizer, open("{}-tokenizer.pickle".format(npz_file_name), "wb"))
     embedding_matrix = generate_glove_embedding_matrix(tokenizer.word_index)
     numpy.savez(npz_file_name,
                 x=x, y=y,
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(YOLANDA_NOV2013_FEB2014_CSV_FILE, 'yolanda_nov2013_feb2014_funds_others.npz')
+generate_npz_word_index_sequence(YOLANDA_NOV2013_FEB2014_CSV_FILE, 'yolanda_nov2013_feb2014_victim_identification_others.npz')
+
+
+input_root_folder = "data/binary/csv/"
+output_root_folder="data/binary/npz/"
+
+categories = ["victim_identification_assistance", "raising_funds", "accounting_damage", "expressing_appreciation", "celebrification"]
+
+for category in categories:
+    generate_npz_word_index_sequence(input_root_folder+category+".csv", output_root_folder+category+".npz")
+
 
 # def load_w2v(glove_path):
 #     import numpy as np

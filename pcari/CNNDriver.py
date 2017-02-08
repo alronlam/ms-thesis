@@ -7,10 +7,10 @@ from keras.layers import Embedding, Conv1D, Lambda, Flatten, Dense
 from sklearn.cross_validation import StratifiedKFold
 
 YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_no_others.npz"
-NUM_CATEGORIES = 5
+NUM_CATEGORIES = 2
 
 def load_dataset(dataset_path):
-    data = np.load(YOLANDA_NOV2013_FEB2014_NPZ_PATH)
+    data = np.load(dataset_path)
     return (data["x"], data["y"], data["embedding_matrix"])
 
 ######################
@@ -94,10 +94,10 @@ def display_dataset_statistics(train_labels, test_labels, results_file):
     print(counter.values(), file=results_file, flush=True)
     print("", file=results_file)
 
-def main_driver(n_folds=10):
+def main_driver(n_folds, data_dir):
     results_file = open("results-{}_folds-{}.txt".format(n_folds, datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), "w")
 
-    (data, labels, embedding_matrix) = load_dataset(YOLANDA_NOV2013_FEB2014_NPZ_PATH)
+    (data, labels, embedding_matrix) = load_dataset(data_dir)
     model = create_model(embedding_matrix)
     # train_and_display_metrics(model, x_train, y_train, x_test, y_test)
 
@@ -111,7 +111,9 @@ def main_driver(n_folds=10):
             model = create_model(embedding_matrix)
             train_and_display_metrics(model, data[train], labels[train], data[test], labels[test], results_file)
 
-main_driver(3)
-main_driver(5)
-main_driver(7)
-main_driver(10)
+root_folder = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/binary/"
+main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_accounting_damage.csv")
+main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_celebrification.csv")
+main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_expressing_appreciation.csv")
+main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_raising_funds.csv")
+main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_victim_identification_assistance.csv")

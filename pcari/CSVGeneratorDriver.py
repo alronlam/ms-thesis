@@ -1,25 +1,44 @@
 import csv
 import os
 
+from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, WordToLowercase, ReplaceURL, \
+    ConcatWordArray, RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, \
+    preprocess_tweet
 from twitter_data.parsing.folders import FolderIO
 
-data_source_dir ="C:/Users/user/PycharmProjects/ms-thesis/pcari/data/orig_data"
 
-txt_files = FolderIO.get_files(data_source_dir, False, ".txt")
+categories = ["victim_identification_assistance", "raising_funds", "accounting_damage", "expressing_appreciation", "celebrification"]
 
-dataset_arr = []
+for category in categories:
+    data_source_dir ="C:/Users/user/PycharmProjects/ms-thesis/pcari/data/orig_data"
 
-for txt_file in txt_files:
-    label = os.path.splitext(txt_file.name)[0]
-    if "funds" not in label:
-        label = "others"
+    preprocessors = [SplitWordByWhitespace(),
+                     WordToLowercase(),
+                     ReplaceURL(),
+                     ConcatWordArray(),
+                     RemovePunctuationFromWords(),
+                     ReplaceUsernameMention(),
+                     RemoveRT(),
+                     RemoveLetterRepetitions(),
+                     ConcatWordArray()]
 
-    with txt_file.open(encoding="utf8") as input_file:
-        tweet_texts = [line.rstrip() for line in input_file.readlines() if line.rstrip() is not None]
-        dataset_arr.extend([(tweet_text, label)for tweet_text in tweet_texts])
+    txt_files = FolderIO.get_files(data_source_dir, False, ".txt")
+
+    dataset_arr = []
+
+    for txt_file in txt_files:
+        label = os.path.splitext(txt_file.name)[0]
+        if category not in label:
+            label = "others"
+        else:
+            label = category
+
+        with txt_file.open(encoding="utf8") as input_file:
+            tweet_texts = [line.rstrip() for line in input_file.readlines() if line.rstrip() is not None]
+            dataset_arr.extend([(preprocess_tweet(tweet_text, preprocessors), label)for tweet_text in tweet_texts])
 
 
-with open("data/yolanda_nov2013_feb2014_dataset_funds_others.csv", "w", encoding="utf8", newline='') as output_file:
-    csv_writer = csv.writer(output_file)
-    for tuple in dataset_arr:
-        csv_writer.writerow(tuple)
+    with open("data/{}.csv".format(category), "w", encoding="utf8", newline='') as output_file:
+        csv_writer = csv.writer(output_file)
+        for tuple in dataset_arr:
+            csv_writer.writerow(tuple)

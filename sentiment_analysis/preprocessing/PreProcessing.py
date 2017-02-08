@@ -80,10 +80,13 @@ class ConcatWordArray(PreProcessor):
         return " ".join(text_words)
 
 
+def preprocess_tweet(tweet, preprocessors):
+    for preprocessor in preprocessors:
+        tweet = preprocessor.preprocess_text(tweet)
+    return tweet
+
 def preprocess_tweets(tweets, preprocessors):
     preprocessed_tweets = []
     for tweet in tweets:
-        for preprocessor in preprocessors:
-            tweet = preprocessor.preprocess_text(tweet)
-        preprocessed_tweets.append(tweet)
+        preprocessed_tweets.append(preprocess_tweet(tweet, preprocessors))
     return preprocessed_tweets
