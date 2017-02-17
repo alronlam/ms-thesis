@@ -79,6 +79,17 @@ class ConcatWordArray(PreProcessor):
     def preprocess_text(self, text_words):
         return " ".join(text_words)
 
+class RemoveTerm(PreProcessor):
+
+    def __init__(self, term):
+        self.term = term
+
+    def preprocess_text(self, text_words):
+        new_array = []
+        for word in text_words:
+            if self.term not in word.lower():
+                new_array.append(word)
+        return new_array
 
 def preprocess_tweet(tweet, preprocessors):
     for preprocessor in preprocessors:

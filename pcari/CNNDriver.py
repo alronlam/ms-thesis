@@ -2,11 +2,12 @@ from datetime import datetime
 from collections import Counter
 
 import numpy as np
+import sklearn
 from keras.engine import Input, Model
-from keras.layers import Embedding, Conv1D, Lambda, Flatten, Dense
+from keras.layers import Embedding, Conv1D, Lambda, Flatten, Dense, MaxPooling1D
 from sklearn.cross_validation import StratifiedKFold
 
-YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_no_others.npz"
+YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_dataset_relevant_irrelevant_removed_terms2.npz"
 NUM_CATEGORIES = 2
 
 def load_dataset(dataset_path):
@@ -46,10 +47,11 @@ def create_model(embedding_matrix, MAX_SEQUENCE_LENGTH=32):
                                 embedding_matrix.shape[1],
                                 weights=[embedding_matrix],
                                 input_length=MAX_SEQUENCE_LENGTH,
-                                trainable=False)
+                                trainable=True)
     embedded_sequences = embedding_layer(main_sequence_input)
-    main_network = Conv1D(200, 3, border_mode="same", activation="tanh")(embedded_sequences)
-    main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
+    main_network = Conv1D(200, 2, border_mode="same", activation="tanh")(embedded_sequences)
+    main_network = MaxPooling1D(MAX_SEQUENCE_LENGTH)(main_network)
+    # main_network = Lambda(max_min_avg_pooling_main, output_shape=max_min_avg_output_shape)(main_network)
     main_network = Flatten()(main_network)
     main_network = Dense(64, activation='tanh')(main_network)
     predictions = Dense(NUM_CATEGORIES, activation='softmax')(main_network)
@@ -76,9 +78,10 @@ def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test, r
 
     from sklearn import metrics
     print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)), file=results_file)
-    print(metrics.classification_report(actual_arr, predicted_arr), file=results_file)
-    print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr)), file=results_file, flush=True) # ordering is alphabetical order of label names
-    print("", file=results_file)
+    print('Kappa: {}\n'.format(sklearn.metrics.cohen_kappa_score(actual_arr, predicted_arr)), file=results_file)
+    print(metrics.classification_report(actual_arr, predicted_arr, digits=4), file=results_file)
+    print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr)), file=results_file) # ordering is alphabetical order of label names
+    print("", file=results_file, flush=True)
 
 def display_dataset_statistics(train_labels, test_labels, results_file):
     print("Train Data Composition({}):".format(len(train_labels)), file=results_file)
@@ -94,8 +97,8 @@ def display_dataset_statistics(train_labels, test_labels, results_file):
     print(counter.values(), file=results_file, flush=True)
     print("", file=results_file)
 
-def main_driver(n_folds, data_dir):
-    results_file = open("results-{}_folds-{}.txt".format(n_folds, datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), "w")
+def main_driver(n_folds, data_dir, category, output_folder=""):
+    results_file = open(output_folder+"results-{}-{}_folds-{}.txt".format(category, n_folds, datetime.now().strftime("%Y-%m-%d-%H-%M-%S")), "w")
 
     (data, labels, embedding_matrix) = load_dataset(data_dir)
     model = create_model(embedding_matrix)
@@ -111,9 +114,12 @@ def main_driver(n_folds, data_dir):
             model = create_model(embedding_matrix)
             train_and_display_metrics(model, data[train], labels[train], data[test], labels[test], results_file)
 
-root_folder = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/binary/"
-main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_accounting_damage.csv")
-main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_celebrification.csv")
-main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_expressing_appreciation.csv")
-main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_raising_funds.csv")
-main_driver(5, root_folder+"yolanda_nov2013_feb2014_dataset_victim_identification_assistance.csv")
+# input_root_folder = "data/binary/npz/"
+# output_root_folder="results/{}/".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+#
+# categories = ["victim_identification_assistance", "raising_funds", "accounting_damage", "expressing_appreciation", "celebrification"]
+# for category in categories:
+#     main_driver(5, input_root_folder+category+".npz", category, "")
+
+
+main_driver(5, YOLANDA_NOV2013_FEB2014_NPZ_PATH, "relevant_irrelevant_removed_terms2")
