@@ -128,6 +128,38 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
     return graph
 
 
+def construct_user_mention_graph(graph, tweets,  pickle_file_name, start_index=0, verbose=False):
+
+    if graph is None:
+        graph = Graph(directed=False)
+
+    new_edges = set()
+
+    for index, tweet in enumerate(tweets):
+        user_id_str = tweet.user.id_str
+        user_screen_name = tweet.user.screen_name
+
+        mentions_idstr_screenname_tuples = [(mention_dict["id_str"].lower(), mention_dict["screen_name"]) for mention_dict in tweet.entities.get('user_mentions')]
+
+        ### CREATE VERTICES ###
+        add_user_vertex(graph, user_id_str, user_screen_name)
+
+        ### CREATE EDGES ###
+
+        # USER TO USER EDGE
+        for other_user_id_str, other_user_screen_name in mentions_idstr_screenname_tuples:
+            add_user_vertex(graph, other_user_id_str, other_user_screen_name)
+            new_edges.add((user_id_str, other_user_id_str))
+
+        graph.add_edges(list(new_edges))
+        graph.save(pickle_file_name)
+        new_edges = set()
+        print("Saved {} at tweet index {}".format(pickle_file_name, index))
+        print("Constructing base graph: Processed {}/{} tweets.".format(index,len(tweets)))
+        print()
+
+    return graph
+
 def construct_user_hashtag_graph(graph, tweets,  pickle_file_name, start_index=0, verbose=False):
 
     if graph is None:

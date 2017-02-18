@@ -114,6 +114,15 @@ def generate_user_network(file_name, tweet_objects, verbose=False):
     G.save(GRAPH_PICKLE_FILE_NAME)
     return G
 
+def generate_user_mention_network(file_name, tweet_objects, verbose=False):
+    GRAPH_PICKLE_FILE_NAME = file_name+".pickle"
+    if verbose:
+        print("Going to construct the graph")
+    # construct graph based on user objects
+    G = TweetGraphs.construct_user_mention_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
+    G.save(GRAPH_PICKLE_FILE_NAME)
+    return G
+
 ###############################
 ### Tweet Network Functions ###
 ###############################
@@ -165,7 +174,7 @@ def determine_communities(G, file_name, verbose=False):
 ### Load Tweets ###
 #################
 vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
+vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:100], verbose=True)
 
 # json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 # json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
@@ -189,9 +198,13 @@ tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 # generate_user_network("vanzo_user_graph", vanzo_tweet_objects, verbose=True)
 # generate_tweet_hashtag_network("vanzo_tweet_hashtag_graph", vanzo_tweet_objects, keras_classifier, verbose=True)
 
-################################
-### User Network Experiments ###
-################################
+file_name = "user-graph-mention-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+generate_user_mention_network("vanzo_user_mention_graph", vanzo_tweet_objects, verbose=True)
+
+
+##########################################
+### User Network (Follows) Experiments ###
+##########################################
 # TODO place output in dir for better organization
 
 # FOLLOWS ONLY
