@@ -166,18 +166,26 @@ def determine_communities(G, file_name, verbose=False):
 
     return membership
 
+##############################
+### Some Utility Functions ###
+##############################
+def count_mentions(tweet_objects):
+    count = 0
+    for tweet_object in tweet_objects:
+        count += tweet_object.entities.get('user_mentions')
+    return count
 
 ##################### MAIN DRIVER CODE ###################
 
 
-#################
+###################
 ### Load Tweets ###
-#################
-vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
-vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids[:100], verbose=True)
+###################
+# vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
+# vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 
-# json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
-# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
 #################
 ### Constants ###
@@ -197,11 +205,14 @@ tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 # file_name = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 # generate_user_network("vanzo_user_graph", vanzo_tweet_objects, verbose=True)
 # generate_tweet_hashtag_network("vanzo_tweet_hashtag_graph", vanzo_tweet_objects, keras_classifier, verbose=True)
-
-file_name = "user-graph-mention-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 generate_user_mention_network("vanzo_user_mention_graph", vanzo_tweet_objects, verbose=True)
+experiment_run_file_name = "user-graph-mention-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+graph = pickle.load(open("vanzo_user_mention_graph.pickle", "rb"))
+membership = determine_communities(graph, experiment_run_file_name, verbose=True)
+CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
 
 
+# graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
 ##########################################
 ### User Network (Follows) Experiments ###
 ##########################################
@@ -239,7 +250,9 @@ generate_user_mention_network("vanzo_user_mention_graph", vanzo_tweet_objects, v
 # membership = determine_communities(graph, experiment_run_file_name, verbose=True)
 # CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
 
-### Construct topic models
+###################################
+### Topic Modelling Experiments ###
+###################################
 LDA_topic_modeller = LDATopicModeller()
 
 def load_and_construct_topic_models(graph_pickle_file, out_file, min_vertices_per_community=20):

@@ -151,12 +151,12 @@ def construct_user_mention_graph(graph, tweets,  pickle_file_name, start_index=0
             add_user_vertex(graph, other_user_id_str, other_user_screen_name)
             new_edges.add((user_id_str, other_user_id_str))
 
-        graph.add_edges(list(new_edges))
-        graph.save(pickle_file_name)
-        new_edges = set()
-        print("Saved {} at tweet index {}".format(pickle_file_name, index))
         print("Constructing base graph: Processed {}/{} tweets.".format(index,len(tweets)))
         print()
+
+    graph.add_edges(list(new_edges))
+    graph.es["weight"] = 1
+    graph.save(pickle_file_name)
 
     return graph
 
