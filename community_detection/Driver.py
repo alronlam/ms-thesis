@@ -16,6 +16,7 @@ from community_detection.weight_modification.user_graph_weight_modification.User
     UserVerticesMentionsWeightModifier
 from sentiment_analysis import SentimentClassifier
 from sentiment_analysis.evaluation import TSVParser
+from twitter_data.Tweet import SentiTweetAdapter
 from twitter_data.database import DBManager
 from twitter_data.database import DBUtils
 from twitter_data.parsing.csv_parser import CSVParser
@@ -91,12 +92,17 @@ def load_tweet_ids_from_json_files(json_folder_path):
     return tweet_ids
 
 
-def load_tweet_ids_from_csv_files(csv_folder_path):
+def load_tweet_objects_from_senti_csv_files(csv_folder_path):
+
+    USER_CSV_COL_INDEX = 1
+    TEXT_CSV_COL_INDEX = 2
+
     csv_files = FolderIO.get_files(csv_folder_path, False, '.csv')
     csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
-    tweet_ids = [csv_row[0] for csv_row in csv_rows]
-    return tweet_ids
+    senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows]
+    return senti_tweet_objects
 
+print(load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')[:10])
 
 #########################################
 ### Base Graph Construction Functions ###
@@ -172,7 +178,7 @@ def determine_communities(G, file_name, verbose=False):
 def count_mentions(tweet_objects):
     count = 0
     for tweet_object in tweet_objects:
-        count += tweet_object.entities.get('user_mentions')
+        count += len(tweet_object.entities.get('user_mentions'))
     return count
 
 ##################### MAIN DRIVER CODE ###################
@@ -184,8 +190,9 @@ def count_mentions(tweet_objects):
 # vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
 # vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 
-json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
-json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+# json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+# print(count_mentions(json_tweet_objects))
 
 #################
 ### Constants ###
@@ -205,14 +212,9 @@ tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 # file_name = "user-graph-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
 # generate_user_network("vanzo_user_graph", vanzo_tweet_objects, verbose=True)
 # generate_tweet_hashtag_network("vanzo_tweet_hashtag_graph", vanzo_tweet_objects, keras_classifier, verbose=True)
-generate_user_mention_network("vanzo_user_mention_graph", vanzo_tweet_objects, verbose=True)
-experiment_run_file_name = "user-graph-mention-{}".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
-graph = pickle.load(open("vanzo_user_mention_graph.pickle", "rb"))
-membership = determine_communities(graph, experiment_run_file_name, verbose=True)
-CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
+# generate_user_mention_network("vanzo_user_mention_graph", vanzo_tweet_objects, verbose=True)
 
 
-# graph = pickle.load(open("vanzo_user_graph.pickle", "rb"))
 ##########################################
 ### User Network (Follows) Experiments ###
 ##########################################
