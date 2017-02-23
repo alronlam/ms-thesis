@@ -102,8 +102,6 @@ def load_tweet_objects_from_senti_csv_files(csv_folder_path):
     senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows]
     return senti_tweet_objects
 
-print(load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')[:10])
-
 #########################################
 ### Base Graph Construction Functions ###
 #########################################
@@ -183,7 +181,6 @@ def count_mentions(tweet_objects):
 
 ##################### MAIN DRIVER CODE ###################
 
-
 ###################
 ### Load Tweets ###
 ###################
@@ -192,7 +189,8 @@ def count_mentions(tweet_objects):
 
 # json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 # json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
-# print(count_mentions(json_tweet_objects))
+
+# senti_tweet_objects = load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
 
 #################
 ### Constants ###
