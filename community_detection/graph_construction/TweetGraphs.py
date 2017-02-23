@@ -131,7 +131,7 @@ def construct_user_graph(graph, tweet_objects, pickle_file_name, limit=10000, st
 def construct_user_mention_graph(graph, tweets,  pickle_file_name, start_index=0, verbose=False):
 
     if graph is None:
-        graph = Graph(directed=False)
+        graph = Graph(directed=True)
 
     new_edges = set()
 
@@ -151,8 +151,7 @@ def construct_user_mention_graph(graph, tweets,  pickle_file_name, start_index=0
             add_user_vertex(graph, other_user_id_str, other_user_screen_name)
             new_edges.add((user_id_str, other_user_id_str))
 
-        print("Constructing base graph: Processed {}/{} tweets.".format(index,len(tweets)))
-        print()
+        print("Constructing base mention graph: Processed {}/{} tweets.".format(index,len(tweets)))
 
     graph.add_edges(list(new_edges))
     graph.es["weight"] = 1
