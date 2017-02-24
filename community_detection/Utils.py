@@ -4,7 +4,7 @@ def remove_communities_with_less_than_n(membership, n):
 
 def construct_graph_with_filtered_communities(g, membership, min_vertices_per_community):
     g = g.copy()
-    valid_membership = remove_communities_with_less_than_n(membership, 10)
+    valid_membership = remove_communities_with_less_than_n(membership, min_vertices_per_community)
     to_delete_ids = [v.index for v in g.vs if membership[v.index] not in valid_membership]
     g.delete_vertices(to_delete_ids)
 
