@@ -7,14 +7,6 @@ from community_detection.Utils import construct_graph_with_filtered_communities
 
 def plot_communities(g,display_attribute, membership, file_name, verbose=False):
 
-    (g, valid_membership) = construct_graph_with_filtered_communities(g, membership, 10)
-
-    if verbose:
-        print("Number of valid communities : {}/{}".format(len(set(valid_membership)), len(set(membership))))
-        print("Total # of vertices: {}".format(len(g.vs)))
-
-    membership = valid_membership
-
     if len(membership) == 0:
         return
 
