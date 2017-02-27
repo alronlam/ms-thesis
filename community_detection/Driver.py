@@ -188,8 +188,8 @@ def count_mentions(tweet_objects):
 # vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
 # vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 
-# json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
-# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+json_tweet_ids = load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 #
 # senti_tweet_objects = load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')[:1000]
 # print(count_mentions(senti_tweet_objects))
@@ -216,27 +216,6 @@ tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 
 # generate_user_mention_network("brexit_user_mention_graph", json_tweet_objects, verbose=True)
 # generate_user_network("brexit_user_graph", json_tweet_objects, verbose=True)
-
-print("BREXIT")
-experiment_run_file_name = "brexit_mention_graph"
-# generate_user_mention_network(experiment_run_file_name, json_tweet_objects, verbose=True)
-graph = pickle.load(open("{}.pickle".format(experiment_run_file_name), "rb"))
-print("LOADED")
-membership = determine_communities(graph, experiment_run_file_name, verbose=True)
-print("DETERMINED COMMUNITIES")
-(graph, valid_membership) = construct_graph_with_filtered_communities(graph, membership, 5000)
-print("Number of valid communities : {}/{}".format(len(set(valid_membership)), len(set(membership))))
-print("Total # of vertices: {}".format(len(graph.vs)))
-CommunityViz.plot_communities(graph, "display_str", valid_membership, experiment_run_file_name, verbose=True)
-print("PLOTTED COMMUNITIES")
-
-# print("PILIPINAS DEBATES")
-# experiment_run_file_name = "senti_pilipinas_debates_mention_graph"
-# # generate_user_mention_network(experiment_run_file_name, senti_tweet_objects, verbose=True)
-# graph = pickle.load(open("{}.pickle".format(experiment_run_file_name), "rb"))
-# membership = determine_communities(graph, experiment_run_file_name, verbose=True)
-# CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
-
 
 ##########################################
 ### User Network (Follows) Experiments ###
@@ -280,36 +259,62 @@ print("PLOTTED COMMUNITIES")
 ###################################
 LDA_topic_modeller = LDATopicModeller()
 
-def load_and_construct_topic_models(graph_pickle_file, out_file, min_vertices_per_community=20):
+def load_and_construct_topic_models(graph_pickle_file, out_file, tweet_objects, min_vertices_per_community=20):
     graph = pickle.load(open(graph_pickle_file, "rb"))
     membership = determine_communities(graph, None, verbose=True)
     (graph, membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_vertices_per_community)
-    community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, vanzo_tweet_objects)
+    community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects)
 
     for community, topics in community_topics_tuple_list:
         if topics is not None:
             print("Community {}:\n{}\n".format(community, topics), file=out_file)
 
 
+
+# print("PILIPINAS DEBATES")
+# experiment_run_file_name = "senti_pilipinas_debates_mention_graph"
+# graph = pickle.load(open("{}.pickle".format(experiment_run_file_name), "rb"))
+# membership = pickle.load(open("{}_500.membership".format(experiment_run_file_name), "rb"))
+#
+# out_file = open("{}-topic-models.txt".format(experiment_run_file_name), "w")
+# community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, senti_tweet_objects)
+#
+# for community, topics in community_topics_tuple_list:
+#     if topics is not None:
+#         print("Community {}:\n{}\n".format(community, topics), file=out_file)
+
+print("BREXIT")
+experiment_run_file_name = "brexit_mention_graph"
+graph = pickle.load(open("{}.pickle".format(experiment_run_file_name), "rb"))
+membership = pickle.load(open("{}_500.membership".format(experiment_run_file_name), "rb"))
+
+out_file = open("{}-topic-models.txt".format(experiment_run_file_name), "w", encoding="utf-8")
+community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, json_tweet_objects)
+
+for community, topics in community_topics_tuple_list:
+    if topics is not None:
+        print("Community {}:\n{}\n".format(community, topics), file=out_file)
+
+
 # follows
-run_file_name="user-graph-follows-2017-01-24-02-46-07-modified-weights"
-out_file = open(run_file_name+"-topic-models.txt", "w")
-load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
-
-# follows + mentions
-run_file_name="user-graph-follows_mentions-2017-01-24-02-49-47-modified-weights"
-out_file = open(run_file_name+"-topic-models.txt", "w")
-load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
-
-# follows + mentions + hashtags
-run_file_name="user-graph-follows_mentions_hashtags-2017-01-24-02-53-37-modified-weights"
-out_file = open(run_file_name+"-topic-models.txt", "w")
-load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
-
-# follows + mentions + hashtags + sa
-run_file_name="user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40-modified-weights"
-out_file = open(run_file_name+"-topic-models.txt", "w")
-load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+# run_file_name="user-graph-follows-2017-01-24-02-46-07-modified-weights"
+# out_file = open(run_file_name+"-topic-models.txt", "w")
+# load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+#
+# # follows + mentions
+# run_file_name="user-graph-follows_mentions-2017-01-24-02-49-47-modified-weights"
+# out_file = open(run_file_name+"-topic-models.txt", "w")
+# load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+#
+# # follows + mentions + hashtags
+# run_file_name="user-graph-follows_mentions_hashtags-2017-01-24-02-53-37-modified-weights"
+# out_file = open(run_file_name+"-topic-models.txt", "w")
+# load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
+#
+# # follows + mentions + hashtags + sa
+# run_file_name="user-graph-follows_mentions_hashtags_sa-2017-01-24-02-56-40-modified-weights"
+# out_file = open(run_file_name+"-topic-models.txt", "w")
+# load_and_construct_topic_models("{}.pickle".format(run_file_name), out_file)
 
 
 ######### FPUPC ###########
