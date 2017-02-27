@@ -1,4 +1,7 @@
+
+import os
 import pickle
+from datetime import datetime
 
 from analysis.mutual_following.FPUPC import count_mutual_edges
 from analysis.topic_modelling import TopicModellerFacade
@@ -12,6 +15,7 @@ from community_detection.weight_modification.user_graph_weight_modification.User
 from community_detection.weight_modification.user_graph_weight_modification.UserVerticesMentionsWeightModifier import \
     UserVerticesMentionsWeightModifier
 from sentiment_analysis import SentimentClassifier
+from analysis.viz import CommunityViz
 from twitter_data.database import DBUtils
 
 
@@ -23,9 +27,9 @@ from twitter_data.database import DBUtils
 keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
 keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
 keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
-# keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
-# user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier)
-# user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
+keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
+user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier)
+user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
 # user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
 # tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 
@@ -33,13 +37,13 @@ keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentime
 ###################
 ### Load Tweets ###
 ###################
-# vanzo_tweet_ids = load_tweet_ids_from_vanzo_dataset()
+# vanzo_tweet_ids = Utils.load_tweet_ids_from_vanzo_dataset()
 # vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
 
-json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
-json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
-
-# senti_tweet_objects = load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')[:1000]
+# json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+#
+# senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
 
 #############################
 ### Construct Base Graphs ###
@@ -51,6 +55,71 @@ json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, 
 
 # generate_user_mention_network("brexit_user_mention_graph", json_tweet_objects, verbose=True)
 # generate_user_network("brexit_user_graph", json_tweet_objects, verbose=True)
+
+# Utils.generate_user_mention_network("senti_pilipinas_debates_mention_graph", senti_tweet_objects, verbose=True)
+
+###########################################
+### User Network (Mentions) Experiments ###
+###########################################
+def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers):
+    print("Running: "+run_name)
+
+    # Create Output Folder
+    dir_name = "{}-{}".format(run_name, datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
+    if not os.path.exists(dir_name):
+        os.makedirs(dir_name)
+
+    general_out_file = open(dir_name+"/"+run_name+".txt", "w")
+
+    print("Graph has {} vertices and {} edges\n".format(len(graph.vs), len(graph.es)), file=general_out_file)
+
+    # Edge Weight Modification
+    graph = Utils.modify_network_weights(graph, run_name, tweet_objects, edge_weight_modifiers, verbose=False)
+    graph.save(dir_name +"/" + run_name + "_modified_weights.pickle")
+
+    # Community Detection
+    membership = Utils.determine_communities(graph, general_out_file, verbose=True)
+    pickle.dump(membership, open(dir_name +"/" + run_name + ".membership", "wb"))
+    general_out_file.flush()
+
+    # Filter
+    (graph, filtered_membership) = Utils.construct_graph_with_filtered_communities(graph, membership, 500)
+    print("Filtered communities: {}/{}. Graph now has {} vertices and {} edges".format(len(filtered_membership), len(membership), len(graph.vs), len(graph.es)), file=general_out_file)
+    membership = filtered_membership
+    general_out_file.flush()
+
+    # Topic Modelling
+    print("Modelling topics")
+    LDA_topic_modeller = LDATopicModeller()
+    out_file = open("{}/{}-topic-models.txt".format(dir_name, run_name), "w", encoding="utf-8")
+    community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects)
+    for community, topics in community_topics_tuple_list:
+        if topics is not None:
+            print("Community {}:\n{}\n".format(community, topics), file=out_file)
+
+    # Plot
+    print("Plotting")
+    CommunityViz.plot_communities(graph, "display_str", membership, dir_name+"/"+run_name, verbose=True)
+
+    general_out_file.close()
+
+senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
+
+base_graph_name = "senti_pilipinas_debates_mention_graph"
+graph = pickle.load(open(base_graph_name+".pickle", "rb"))
+run_one_cycle(base_graph_name, graph, senti_tweet_objects, []) # mentions only
+run_one_cycle(base_graph_name+"_with_hashtags", graph, senti_tweet_objects, [user_hashtag_weight_modifier])
+run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, senti_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
+
+
+json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+
+base_graph_name = "brexit_mention_graph"
+graph = pickle.load(open(base_graph_name+".pickle", "rb"))
+run_one_cycle(base_graph_name, graph, json_tweet_objects, []) # mentions only
+run_one_cycle(base_graph_name+"_with_hashtags", graph, json_tweet_objects, [user_hashtag_weight_modifier])
+run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, json_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
 
 ##########################################
 ### User Network (Follows) Experiments ###
@@ -89,10 +158,12 @@ json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, 
 # membership = determine_communities(graph, experiment_run_file_name, verbose=True)
 # CommunityViz.plot_communities(graph, "display_str", membership, experiment_run_file_name, verbose=True)
 
+
+
 ###################################
 ### Topic Modelling Experiments ###
 ###################################
-LDA_topic_modeller = LDATopicModeller()
+# LDA_topic_modeller = LDATopicModeller()
 
 def load_and_construct_topic_models(graph_pickle_file, out_file, tweet_objects, min_vertices_per_community=20):
     graph = pickle.load(open(graph_pickle_file, "rb"))
@@ -118,17 +189,17 @@ def load_and_construct_topic_models(graph_pickle_file, out_file, tweet_objects, 
 #     if topics is not None:
 #         print("Community {}:\n{}\n".format(community, topics), file=out_file)
 
-print("BREXIT")
-experiment_run_file_name = "brexit_mention_graph"
-graph = pickle.load(open("{}.pickle".format(experiment_run_file_name), "rb"))
-membership = pickle.load(open("{}_500.membership".format(experiment_run_file_name), "rb"))
-
-out_file = open("{}-topic-models.txt".format(experiment_run_file_name), "w", encoding="utf-8")
-community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, json_tweet_objects)
-
-for community, topics in community_topics_tuple_list:
-    if topics is not None:
-        print("Community {}:\n{}\n".format(community, topics), file=out_file)
+# print("BREXIT")
+# experiment_run_file_name = "brexit_mention_graph"
+# graph = pickle.load(open("{}.pickle".format(experiment_run_file_name), "rb"))
+# membership = pickle.load(open("{}_500.membership".format(experiment_run_file_name), "rb"))
+#
+# out_file = open("{}-topic-models.txt".format(experiment_run_file_name), "w", encoding="utf-8")
+# community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, json_tweet_objects)
+#
+# for community, topics in community_topics_tuple_list:
+#     if topics is not None:
+#         print("Community {}:\n{}\n".format(community, topics), file=out_file)
 
 
 # follows

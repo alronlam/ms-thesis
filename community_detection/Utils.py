@@ -1,7 +1,7 @@
 from community_detection.graph_construction import TweetGraphs
 from community_detection.weight_modification.EdgeWeightModifier import *
 from sentiment_analysis.evaluation import TSVParser
-from twitter_data.Tweet import SentiTweetAdapter
+from twitter_data.SentiTweets import SentiTweetAdapter
 from twitter_data.database import DBManager
 from twitter_data.database import DBUtils
 from twitter_data.parsing.csv_parser import CSVParser
@@ -54,13 +54,12 @@ def modify_network_weights(G, file_name, tweet_objects, edge_weight_modifiers, v
     if verbose:
         print("Going to modify edge weights")
     G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects}, verbose)
-    G.save(file_name+".pickle")
     return G
 
 ################################################
 ### Community Detection & Analysis Functions ###
 ################################################
-def determine_communities(G, file_name, verbose=False):
+def determine_communities(G, out_file, verbose=False):
     # Community Detection
     if verbose:
         print("Going to determine communities")
@@ -68,12 +67,7 @@ def determine_communities(G, file_name, verbose=False):
 
     # Print metrics
     modularity = G.modularity(membership)
-    print("Modularity: {}".format(modularity))
-
-    if file_name:
-        out_file = open("{}".format(file_name+".txt"), "w" )
-        out_file.write("Modularity: {}".format(modularity))
-        out_file.close()
+    print("Modularity: {}".format(modularity), file=out_file)
 
     return membership
 
