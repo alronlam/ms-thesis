@@ -33,11 +33,11 @@ class SentiTweetAdapterUser(object):
 #TODO double check if this has to have # or not
 def get_hashtags_from_tweet_text(text):
     words = text.split()
-    hashtags = [word for word in words if re.match("#\w+", word)]
+    hashtags = [word[1:] for word in words if re.match("#\w+", word)]
     return hashtags
 
 #TODO double check if this has to have @ or not
 def get_mentions_from_tweet_text(text):
     words = text.split()
-    mentions = [word for word in words if re.match("@\w+", word)]
+    mentions = [word[1:] for word in words if re.match("@\w+", word)]
     return mentions
