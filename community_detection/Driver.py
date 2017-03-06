@@ -16,6 +16,7 @@ from community_detection.weight_modification.user_graph_weight_modification.User
     UserVerticesMentionsWeightModifier
 from sentiment_analysis import SentimentClassifier
 from analysis.viz import CommunityViz
+from sentiment_analysis.preprocessing import PreProcessing
 from twitter_data.database import DBUtils
 
 
@@ -62,7 +63,7 @@ user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
 ###########################################
 ### User Network (Mentions) Experiments ###
 ###########################################
-def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers):
+def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers, text_preprocessors=[]):
     print("Running: "+run_name)
 
     # Create Output Folder
@@ -93,8 +94,8 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers):
     print("Modelling topics")
     LDA_topic_modeller = LDATopicModeller()
     out_file = open("{}/{}-topic-models.txt".format(dir_name, run_name), "w", encoding="utf-8")
-    #TODO pass a copy of preprocessed tweet objects
-    community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects)
+
+    community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects, preprocessors=text_preprocessors)
     for community, topics in community_topics_tuple_list:
         if topics is not None:
             print("Community {}:\n{}\n".format(community, topics), file=out_file)
@@ -105,12 +106,15 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers):
 
     general_out_file.close()
 
+
 senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
 base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
 Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, keras_classifier, verbose=True)
 graph = pickle.load(open(base_graph_name+".pickle", "rb"))
 run_one_cycle(base_graph_name, graph, senti_tweet_objects, []) # mentions only
 
+
+preprocessors = []
 
 json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
