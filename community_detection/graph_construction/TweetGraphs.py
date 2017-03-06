@@ -139,7 +139,7 @@ def construct_user_mention_graph(graph, tweets,  pickle_file_name, start_index=0
         user_id_str = tweet.user.id_str
         user_screen_name = tweet.user.screen_name
 
-        mentions_idstr_screenname_tuples = [(mention_dict["id_str"].lower(), mention_dict["screen_name"]) for mention_dict in tweet.entities.get('user_mentions')]
+        mentions_idstr_screenname_tuples = [(mention_dict["id_str"], mention_dict["screen_name"]) for mention_dict in tweet.entities.get('user_mentions')]
 
         ### CREATE VERTICES ###
         add_user_vertex(graph, user_id_str, user_screen_name)
