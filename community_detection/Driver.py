@@ -56,7 +56,8 @@ user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
 # generate_user_mention_network("brexit_user_mention_graph", json_tweet_objects, verbose=True)
 # generate_user_network("brexit_user_graph", json_tweet_objects, verbose=True)
 
-# Utils.generate_user_mention_network("senti_pilipinas_debates_mention_graph", senti_tweet_objects, verbose=True)
+# Utils.generate_user_mention_hashtag_sa_network("senti_pilipinas_debates_mention_hashtag_sa_graph", senti_tweet_objects, keras_classifier, verbose=True)
+
 
 ###########################################
 ### User Network (Mentions) Experiments ###
@@ -92,6 +93,7 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers):
     print("Modelling topics")
     LDA_topic_modeller = LDATopicModeller()
     out_file = open("{}/{}-topic-models.txt".format(dir_name, run_name), "w", encoding="utf-8")
+    #TODO pass a copy of preprocessed tweet objects
     community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects)
     for community, topics in community_topics_tuple_list:
         if topics is not None:
@@ -104,22 +106,41 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers):
     general_out_file.close()
 
 senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
-
-base_graph_name = "senti_pilipinas_debates_mention_graph"
+base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
+Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, keras_classifier, verbose=True)
 graph = pickle.load(open(base_graph_name+".pickle", "rb"))
 run_one_cycle(base_graph_name, graph, senti_tweet_objects, []) # mentions only
-run_one_cycle(base_graph_name+"_with_hashtags", graph, senti_tweet_objects, [user_hashtag_weight_modifier])
-run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, senti_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
 
 
 json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
-
-base_graph_name = "brexit_mention_graph"
+base_graph_name = "brexit_mention_hashtag_sa_graph"
+Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier, verbose=True)
 graph = pickle.load(open(base_graph_name+".pickle", "rb"))
 run_one_cycle(base_graph_name, graph, json_tweet_objects, []) # mentions only
-run_one_cycle(base_graph_name+"_with_hashtags", graph, json_tweet_objects, [user_hashtag_weight_modifier])
-run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, json_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
+
+# run_one_cycle(base_graph_name+"_with_hashtags", graph, senti_tweet_objects, [user_hashtag_weight_modifier])
+# run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, senti_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
+#
+#
+# json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+#
+# base_graph_name = "brexit_mention_graph"
+# graph = pickle.load(open(base_graph_name+".pickle", "rb"))
+# run_one_cycle(base_graph_name, graph, json_tweet_objects, []) # mentions only
+# run_one_cycle(base_graph_name+"_with_hashtags", graph, json_tweet_objects, [user_hashtag_weight_modifier])
+# run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, json_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
+
+# vanzo_tweet_ids = Utils.load_tweet_ids_from_vanzo_dataset()
+# vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
+# base_graph_name = "vanzo_mention_graph"
+# graph = pickle.load(open(base_graph_name+".pickle", "rb"))
+# run_one_cycle(base_graph_name, graph, vanzo_tweet_objects, []) # mentions only
+# run_one_cycle(base_graph_name+"_with_hashtags", graph, vanzo_tweet_objects, [user_hashtag_weight_modifier])
+# run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, vanzo_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
+
+
 
 ##########################################
 ### User Network (Follows) Experiments ###

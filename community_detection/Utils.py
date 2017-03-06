@@ -1,4 +1,5 @@
 from community_detection.graph_construction import TweetGraphs
+from community_detection.graph_construction import MentionGraphs
 from community_detection.weight_modification.EdgeWeightModifier import *
 from sentiment_analysis.evaluation import TSVParser
 from twitter_data.SentiTweets import SentiTweetAdapter
@@ -16,21 +17,28 @@ from twitter_data.parsing.json_parser import JSONParser
 ##############################
 ### User Network Functions ###
 ##############################
-def generate_user_network(file_name, tweet_objects, verbose=False):
+
+def generate_network(file_name, tweet_objects, generation_func, verbose=False):
     GRAPH_PICKLE_FILE_NAME = file_name+".pickle"
     if verbose:
         print("Going to construct the graph")
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
+    G = generation_func(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
     G.save(GRAPH_PICKLE_FILE_NAME)
     return G
 
+def generate_user_network(file_name, tweet_objects, verbose=False):
+    return generate_network(file_name, tweet_objects,TweetGraphs.construct_user_graph, verbose )
+
 def generate_user_mention_network(file_name, tweet_objects, verbose=False):
+    return generate_network(file_name, tweet_objects,TweetGraphs.construct_user_mention_graph, verbose )
+
+def generate_user_mention_hashtag_sa_network(file_name, tweet_objects, classifier, verbose=False):
     GRAPH_PICKLE_FILE_NAME = file_name+".pickle"
     if verbose:
         print("Going to construct the graph")
     # construct graph based on user objects
-    G = TweetGraphs.construct_user_mention_graph(None, tweet_objects, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
+    G = MentionGraphs.construct_user_mention_hashtag_sa_graph(None, tweet_objects, classifier, pickle_file_name=GRAPH_PICKLE_FILE_NAME, start_index=0, verbose=verbose)
     G.save(GRAPH_PICKLE_FILE_NAME)
     return G
 
