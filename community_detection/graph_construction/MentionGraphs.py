@@ -25,7 +25,7 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
     ### CREATE EDGES ###
     if verbose:
         print("Constructing mention scores")
-    mention_scores = score_mentions(tweets)
+    mention_scores = score_mentions(tweets, graph)
     if verbose:
         print("Mention scores length: {}".format(len(mention_scores)))
 
@@ -48,18 +48,17 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         print("Finalize scores length: {}".format(len(final_scores)))
     # print(Counter([score for key, score in final_scores.items()]))
 
-    # if verbose:
-    #     print("Normalizing scores")
-    # final_scores = normalize(final_scores)
-    # print(Counter([score for key, score in final_scores.items()]))
+    if verbose:
+        print("Normalizing scores")
+    final_scores = normalize(final_scores)
 
-    graph.save("{}-without-edges".format(pickle_file_name))
-    pickle.dump(final_scores, open("{}.finalscores".format(pickle_file_name), "rb"))
+    graph.save("without-edges-{}".format(pickle_file_name))
+    pickle.dump(final_scores, open("{}.finalscores".format(pickle_file_name), "wb"))
 
-    THRESHOLD = 3
+    THRESHOLD = 0.5
 
     if verbose:
-        print("Adding edges based on threshold score")
+        print("Creating list of edges based on threshold score")
 
     count = 0
     for tuple, score in final_scores.items():
@@ -83,7 +82,7 @@ def construct_ordered_tuple(a, b):
         return (a,b)
     return construct_ordered_tuple(b,a)
 
-def score_mentions(tweets):
+def score_mentions(tweets, graph):
     score_dict = {}
 
     for index, tweet in enumerate(tweets):
@@ -91,60 +90,95 @@ def score_mentions(tweets):
 
         mentions_idstr_screenname_tuples = [(mention_dict["id_str"], mention_dict["screen_name"]) for mention_dict in tweet.entities.get('user_mentions')]
         for other_user_id_str, other_user_screen_name in mentions_idstr_screenname_tuples:
+            add_user_vertex(graph, other_user_id_str, other_user_screen_name)
             ordered_tuple = construct_ordered_tuple(user_id_str, other_user_id_str)
             score_dict[ordered_tuple] = score_dict.get(ordered_tuple, 0) + 1
 
     return score_dict
 
-def score_hashtags(tweets):
+def score_hashtags(tweets, unique_hashtags=None):
 
-    # group users according to hashtag
-    hashtag_users_dict = {}
+    if not unique_hashtags:
+        unique_hashtags = get_unique_hashtags(tweets)
 
-    for index, tweet in enumerate(tweets):
-        user_id_str = tweet.user.id_str
-        hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
-
-        for hashtag in hashtags:
-            hashtag_user_set = hashtag_users_dict.get(hashtag, set())
-            hashtag_user_set.add(user_id_str)
-            hashtag_users_dict[hashtag] = hashtag_user_set
-
-    # construct score dict
     score_dict = {}
-    for hashtag, user_set in hashtag_users_dict.items():
-        user_list = list(user_set)
-        for index, user in enumerate(user_list):
-            for other_user in user_list[index+1:]:
-                ordered_tuple = construct_ordered_tuple(user, other_user)
-                score_dict[ordered_tuple] = score_dict.get(ordered_tuple, 0) + 1
 
+    for hashtag in unique_hashtags:
+        user_set = set()
+        for tweet in tweets:
+            curr_user = tweet.user.id_str
+            if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
+                for other_user in user_set:
+                    tuple = construct_ordered_tuple(curr_user, other_user)
+                    score_dict[tuple] = score_dict.get(tuple, 0) + 1
+                user_set.add(curr_user)
+        del user_set
     return score_dict
 
-def score_sa(tweets, classifier):
-    # group users according to hashtag
-    hashtag_users_dict = {}
+def score_sa(tweets, classifier, unique_hashtags=None):
 
-    for index, tweet in enumerate(tweets):
-        user_id_str = tweet.user.id_str
-        hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
-        sentiment = classifier.classify_sentiment(tweet.text, {})
+    if not unique_hashtags:
+        unique_hashtags = get_unique_hashtags(tweets)
 
-        for hashtag in hashtags:
-            hashtag_user_set = hashtag_users_dict.get((hashtag,sentiment), set())
-            hashtag_user_set.add(user_id_str)
-            hashtag_users_dict[(hashtag,sentiment)] = hashtag_user_set
-
-    # construct score dict
     score_dict = {}
-    for (hashtag, sentiment), user_set in hashtag_users_dict.items():
-        user_list = list(user_set)
-        for index, user in enumerate(user_list):
-            for other_user in user_list[index+1:]:
-                ordered_tuple = construct_ordered_tuple(user, other_user)
-                score_dict[ordered_tuple] = score_dict.get(ordered_tuple, 0) + 1
 
+    for hashtag in unique_hashtags:
+        positive_user_set = set()
+        negative_user_set = set()
+        for tweet in tweets:
+            curr_user = tweet.user.id_str
+            if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
+
+                sentiment = classifier.classify_sentiment(tweet.text, {})
+
+                user_set = None
+                if sentiment == 'positive':
+                    user_set = positive_user_set
+                elif sentiment == 'negative':
+                    user_set = negative_user_set
+
+                if user_set:
+                    for other_user in user_set:
+                        tuple = construct_ordered_tuple(curr_user, other_user)
+                        score_dict[tuple] = score_dict.get(tuple, 0) + 1
+                    user_set.add(curr_user)
+
+        del positive_user_set
+        del negative_user_set
     return score_dict
+
+def get_unique_hashtags(tweets):
+    unique_hashtags = set()
+    for tweet in tweets:
+        tweet_hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
+        for tweet_hashtag in tweet_hashtags:
+            unique_hashtags.add(tweet_hashtag)
+    return unique_hashtags
+
+# def score_sa(tweets, classifier):
+#     # group users according to hashtag
+#     hashtag_users_dict = {}
+#
+#     for index, tweet in enumerate(tweets):
+#         user_id_str = tweet.user.id_str
+#         hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
+#         sentiment = classifier.classify_sentiment(tweet.text, {})
+#
+#         for hashtag in hashtags:
+#             hashtag_user_set = hashtag_users_dict.get((hashtag,sentiment), set())
+#             hashtag_user_set.add(user_id_str)
+#             hashtag_users_dict[(hashtag,sentiment)] = hashtag_user_set
+#
+#     # construct score dict
+#     score_dict = {}
+#     for (hashtag, sentiment), user_set in hashtag_users_dict.items():
+#         user_list = list(user_set)
+#         for index, user in enumerate(user_list):
+#             for other_user in user_list[index+1:]:
+#                 ordered_tuple = construct_ordered_tuple(user, other_user)
+#                 score_dict[ordered_tuple] = score_dict.get(ordered_tuple, 0) + 1
+#
+#     return score_dict
 
 def consolidate(score_dict_list):
     final_dict = {}
