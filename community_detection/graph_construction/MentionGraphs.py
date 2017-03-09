@@ -1,3 +1,5 @@
+from collections import Counter
+
 from igraph import Graph
 
 from community_detection.graph_construction.TweetGraphs import add_user_vertex
@@ -16,22 +18,55 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
 
         ### CREATE VERTICES ###
         add_user_vertex(graph, user_id_str, user_screen_name)
+        if verbose:
+            print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index, len(tweets)))
 
     ### CREATE EDGES ###
-
+    if verbose:
+        print("Constructing mention scores")
     mention_scores = score_mentions(tweets)
+    if verbose:
+        print("Mention scores length: {}".format(len(mention_scores)))
+
+    if verbose:
+        print("Constructing hashtag scores")
     hashtag_scores = score_hashtags(tweets)
+    if verbose:
+        print("Hashtag scores length: {}".format(len(hashtag_scores)))
+
+    if verbose:
+        print("Constructing sa scores")
     sa_scores = score_sa(tweets, classifier)
+    if verbose:
+        print("SA scores length: {}".format(len(sa_scores)))
 
+    if verbose:
+        print("Consolidating scores")
     final_scores = consolidate([mention_scores, hashtag_scores, sa_scores])
-    final_scores = normalize(final_scores)
+    if verbose:
+        print("Finalize scores length: {}".format(len(final_scores)))
+    # print(Counter([score for key, score in final_scores.items()]))
 
-    THRESHOLD = 0.05
+    # if verbose:
+    #     print("Normalizing scores")
+    # final_scores = normalize(final_scores)
+    # print(Counter([score for key, score in final_scores.items()]))
 
+    THRESHOLD = 3
+
+    if verbose:
+        print("Adding edges based on threshold score")
+
+    count = 0
     for tuple, score in final_scores.items():
         if score >= THRESHOLD:
             new_edges.add(tuple)
 
+        count += 1
+        # print("Adding edge: Processed {}/{} scores.".format(count, len(final_scores.items())))
+
+    if verbose:
+        print("Adding {} edges".format(len(new_edges)))
     graph.add_edges(list(new_edges))
     graph.es["weight"] = 1
     graph.save(pickle_file_name)
@@ -120,7 +155,10 @@ def normalize(score_dict):
     for tuple, score in score_dict.items():
         score_dict[tuple] = score/total_score
 
+    print("Mention graph normalization total score: {}".format(total_score))
+
     return score_dict
 
 def calculate_total_score(score_dict):
     return sum([score for tuple, score in score_dict.items()])
+
