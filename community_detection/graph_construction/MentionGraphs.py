@@ -1,3 +1,4 @@
+import pickle
 from collections import Counter
 
 from igraph import Graph
@@ -51,6 +52,9 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
     #     print("Normalizing scores")
     # final_scores = normalize(final_scores)
     # print(Counter([score for key, score in final_scores.items()]))
+
+    graph.save("{}-without-edges".format(pickle_file_name))
+    pickle.dump(final_scores, open("{}.finalscores".format(pickle_file_name), "rb"))
 
     THRESHOLD = 3
 
@@ -151,13 +155,16 @@ def consolidate(score_dict_list):
     return final_dict
 
 def normalize(score_dict):
-    total_score = calculate_total_score(score_dict)
+    max_score = get_max_score(score_dict)
     for tuple, score in score_dict.items():
-        score_dict[tuple] = score/total_score
+        score_dict[tuple] = score/max_score
 
-    print("Mention graph normalization total score: {}".format(total_score))
+    print("Mention graph normalization max score: {}".format(max_score))
 
     return score_dict
+
+def get_max_score(score_dict):
+    return max([score for tuple, score in score_dict.items()])
 
 def calculate_total_score(score_dict):
     return sum([score for tuple, score in score_dict.items()])
