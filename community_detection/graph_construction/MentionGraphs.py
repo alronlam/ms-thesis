@@ -20,7 +20,8 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         ### CREATE VERTICES ###
         add_user_vertex(graph, user_id_str, user_screen_name)
         if verbose:
-            print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index, len(tweets)))
+            if index % 1000 == 0 or index == len(tweets)-1:
+                print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index+1, len(tweets)))
 
     ### CREATE EDGES ###
     if verbose:
@@ -70,7 +71,7 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         print("Adding {} edges".format(len(new_edges)))
     graph.add_edges(list(new_edges))
     graph.es["weight"] = 1
-    graph.save(pickle_file_name)
+    graph.save("threshold-{}-{}".format(THRESHOLD, pickle_file_name))
 
     return graph
 

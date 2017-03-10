@@ -82,13 +82,17 @@ class ConcatWordArray(PreProcessor):
 
 class RemoveTerm(PreProcessor):
 
-    def __init__(self, term):
-        self.term = term
+    def __init__(self, term, ignore_case=True):
+        self.ignore_case=ignore_case
+        if self.ignore_case:
+            self.term = term.lower()
 
     def preprocess_text(self, text_words):
         new_array = []
         for word in text_words:
-            if self.term not in word.lower():
+            if self.ignore_case:
+                word = word.lower()
+            if self.term not in word:
                 new_array.append(word)
         return new_array
 
