@@ -18,7 +18,7 @@ from sentiment_analysis import SentimentClassifier
 from analysis.viz import CommunityViz
 from sentiment_analysis.preprocessing import PreProcessing
 from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, ReplaceURL, ConcatWordArray, \
-    RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, RemoveTerm
+    RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, RemoveTerm, RemoveExactTerms
 from sentiment_analysis.preprocessing.PreProcessing import WordToLowercase
 from twitter_data.database import DBUtils
 
@@ -119,6 +119,8 @@ brexit_topic_modelling_preprocessors = [SplitWordByWhitespace(),
                  RemoveRT(),
                  RemoveLetterRepetitions(),
                  RemoveTerm("brexit"),
+                 RemoveExactTerms("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt"),
+                 RemoveExactTerms("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt"),
                  ConcatWordArray()]
 
 brexit_hashtag_preprocessors = [SplitWordByWhitespace(),

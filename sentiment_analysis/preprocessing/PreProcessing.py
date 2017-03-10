@@ -92,6 +92,21 @@ class RemoveTerm(PreProcessor):
                 new_array.append(word)
         return new_array
 
+class RemoveExactTerms(PreProcessor):
+    def __init__self(self, terms, ignore_case=True):
+        self.ignore_case = ignore_case
+        if self.ignore_case:
+            terms = [term.lower() for term in terms]
+
+    def preprocess_text(self, text_words):
+        new_array = []
+        for word in text_words:
+            if self.ignore_case:
+                word = word.lower()
+            if word not in self.terms:
+                new_array.append(word)
+        return new_array
+
 def preprocess_strings(strings, preprocessors):
     preprocessed_tweets = []
     for tweet in strings:
@@ -106,3 +121,8 @@ def preprocess_tweets(tweets, preprocessors):
         for preprocessor in preprocessors:
             tweet.text = preprocessor.preprocess_text(tweet.text)
     return tweets_copy
+
+def load_function_words(path):
+    with open(path, "r") as function_words_file:
+        words = [word.strip() for word in function_words_file.readlines()]
+    return words
