@@ -1,4 +1,5 @@
 import abc
+import copy
 import string
 
 import re
@@ -91,10 +92,17 @@ class RemoveTerm(PreProcessor):
                 new_array.append(word)
         return new_array
 
-def preprocess_tweets(tweets, preprocessors):
+def preprocess_strings(strings, preprocessors):
     preprocessed_tweets = []
-    for tweet in tweets:
+    for tweet in strings:
         for preprocessor in preprocessors:
             tweet = preprocessor.preprocess_text(tweet)
         preprocessed_tweets.append(tweet)
     return preprocessed_tweets
+
+def preprocess_tweets(tweets, preprocessors):
+    tweets_copy = copy.deepcopy(tweets)
+    for tweet in tweets_copy:
+        for preprocessor in preprocessors:
+            tweet.text = preprocessor.preprocess_text(tweet.text)
+    return tweets_copy

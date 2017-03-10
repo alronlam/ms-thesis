@@ -12,7 +12,7 @@ def construct_topic_models_for_communities(topic_modeller, graph, membership, tw
     for community_num, vertex_ids in enumerate(vertex_ids_per_community):
         user_ids_str = get_user_ids_from_vertex_ids(graph, vertex_ids)
         tweet_texts = filter_tweets_belonging_to_user_ids(tweet_objects, user_ids_str)
-        tweet_texts = PreProcessing.preprocess_tweets(tweet_texts, preprocessors)
+        tweet_texts = PreProcessing.preprocess_strings(tweet_texts, preprocessors)
         community_topics_tuple_list.append((community_num, topic_modeller.model_topics(tweet_texts)))
 
     return community_topics_tuple_list

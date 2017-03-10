@@ -4,9 +4,9 @@ from collections import Counter
 from igraph import Graph
 
 from community_detection.graph_construction.TweetGraphs import add_user_vertex
+from sentiment_analysis.preprocessing import PreProcessing
 
-
-def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_file_name, start_index=0, verbose=False):
+def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_file_name, hashtag_preprocessors=[], sa_preprocessors=[], verbose=False):
 
     if graph is None:
         graph = Graph(directed=False)
@@ -32,17 +32,23 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
 
     if verbose:
         print("Constructing hashtag scores")
-    unique_hashtags = get_unique_hashtags(tweets)
-    mention_hashtag_scores = score_hashtags_optimized(tweets, mention_scores, unique_hashtags)
+
+    preprocessed_tweets_for_hashtags = PreProcessing.preprocess_tweets(tweets, hashtag_preprocessors)
+    #extracting this after preprocessing to remove the universal hashtag(s)
+    unique_hashtags = get_unique_hashtags(preprocessed_tweets_for_hashtags)
+
+    mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores, unique_hashtags)
 
     if verbose:
         print("Constructing sa scores")
-    mention_hashtag_sa_scores = score_sa_optimized(tweets, classifier, mention_hashtag_scores, unique_hashtags)
-    # print(Counter([score for key, score in final_scores.items()]))
+    preprocessed_tweets_for_sa = PreProcessing.preprocess_tweets(tweets, sa_preprocessors)
+    mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores, unique_hashtags)
 
     if verbose:
         print("Normalizing scores")
     final_scores = normalize(mention_hashtag_sa_scores)
+    if verbose:
+        print(Counter([score for key, score in final_scores.items()]))
 
     graph.save("without-edges-{}".format(pickle_file_name))
     pickle.dump(final_scores, open("{}.finalscores".format(pickle_file_name), "wb"))

@@ -61,8 +61,8 @@ def train_subj_classifier_with_nltk():
 
     # pre-process tweets
     TWEET_PREPROCESSORS = [SplitWordByWhitespace(), WordLengthFilter(3), RemovePunctuationFromWords(), WordToLowercase()]
-    X_train = preprocess_tweets(X_train, TWEET_PREPROCESSORS)
-    X_test = preprocess_tweets(X_test, TWEET_PREPROCESSORS)
+    X_train = preprocess_strings(X_train, TWEET_PREPROCESSORS)
+    X_test = preprocess_strings(X_test, TWEET_PREPROCESSORS)
     print("FINISHED PREPROCESSING")
 
     # construct labeled tweets to be run with the classifiers
