@@ -29,28 +29,20 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
     if verbose:
         print("Mention scores length: {}".format(len(mention_scores)))
 
+
     if verbose:
         print("Constructing hashtag scores")
-    hashtag_scores = score_hashtags(tweets)
-    if verbose:
-        print("Hashtag scores length: {}".format(len(hashtag_scores)))
+    unique_hashtags = get_unique_hashtags(tweets)
+    mention_hashtag_scores = score_hashtags_optimized(tweets, mention_scores, unique_hashtags)
 
     if verbose:
         print("Constructing sa scores")
-    sa_scores = score_sa(tweets, classifier)
-    if verbose:
-        print("SA scores length: {}".format(len(sa_scores)))
-
-    if verbose:
-        print("Consolidating scores")
-    final_scores = consolidate([mention_scores, hashtag_scores, sa_scores])
-    if verbose:
-        print("Finalize scores length: {}".format(len(final_scores)))
+    mention_hashtag_sa_scores = score_sa_optimized(tweets, classifier, mention_hashtag_scores, unique_hashtags)
     # print(Counter([score for key, score in final_scores.items()]))
 
     if verbose:
         print("Normalizing scores")
-    final_scores = normalize(final_scores)
+    final_scores = normalize(mention_hashtag_sa_scores)
 
     graph.save("without-edges-{}".format(pickle_file_name))
     pickle.dump(final_scores, open("{}.finalscores".format(pickle_file_name), "wb"))
@@ -96,6 +88,23 @@ def score_mentions(tweets, graph):
 
     return score_dict
 
+def score_hashtags_optimized(tweets, score_dict, unique_hashtags):
+    if not unique_hashtags:
+        unique_hashtags = get_unique_hashtags(tweets)
+
+    for hashtag in unique_hashtags:
+        user_set = set()
+        for tweet in tweets:
+            curr_user = tweet.user.id_str
+            if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
+                for other_user in user_set:
+                    tuple = construct_ordered_tuple(curr_user, other_user)
+                    if tuple in score_dict: # only consider those entries already present in the score dict
+                        score_dict[tuple] += 1
+                user_set.add(curr_user)
+        del user_set
+    return score_dict
+
 def score_hashtags(tweets, unique_hashtags=None):
 
     if not unique_hashtags:
@@ -113,6 +122,34 @@ def score_hashtags(tweets, unique_hashtags=None):
                     score_dict[tuple] = score_dict.get(tuple, 0) + 1
                 user_set.add(curr_user)
         del user_set
+    return score_dict
+
+
+def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
+    for hashtag in unique_hashtags:
+        positive_user_set = set()
+        negative_user_set = set()
+        for tweet in tweets:
+            curr_user = tweet.user.id_str
+            if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
+
+                sentiment = classifier.classify_sentiment(tweet.text, {})
+
+                user_set = None
+                if sentiment == 'positive':
+                    user_set = positive_user_set
+                elif sentiment == 'negative':
+                    user_set = negative_user_set
+
+                if user_set:
+                    for other_user in user_set:
+                        tuple = construct_ordered_tuple(curr_user, other_user)
+                        if tuple in score_dict:
+                            score_dict[tuple] += 1
+                    user_set.add(curr_user)
+
+        del positive_user_set
+        del negative_user_set
     return score_dict
 
 def score_sa(tweets, classifier, unique_hashtags=None):
