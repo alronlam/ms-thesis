@@ -195,3 +195,7 @@ def count_mentions(tweet_objects):
         count += len(tweet_object.entities.get('user_mentions'))
     return count
 
+def load_function_words(path):
+    with open(path, "r") as function_words_file:
+        words = [word.strip() for word in function_words_file.readlines()]
+    return words

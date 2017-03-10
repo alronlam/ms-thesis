@@ -119,8 +119,8 @@ brexit_topic_modelling_preprocessors = [SplitWordByWhitespace(),
                  RemoveRT(),
                  RemoveLetterRepetitions(),
                  RemoveTerm("brexit"),
-                 RemoveExactTerms("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt"),
-                 RemoveExactTerms("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt"),
+                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
+                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt")),
                  ConcatWordArray()]
 
 brexit_hashtag_preprocessors = [SplitWordByWhitespace(),

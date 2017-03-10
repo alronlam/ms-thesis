@@ -93,7 +93,7 @@ class RemoveTerm(PreProcessor):
         return new_array
 
 class RemoveExactTerms(PreProcessor):
-    def __init__self(self, terms, ignore_case=True):
+    def __init__(self, terms, ignore_case=True):
         self.ignore_case = ignore_case
         if self.ignore_case:
             terms = [term.lower() for term in terms]
@@ -122,7 +122,3 @@ def preprocess_tweets(tweets, preprocessors):
             tweet.text = preprocessor.preprocess_text(tweet.text)
     return tweets_copy
 
-def load_function_words(path):
-    with open(path, "r") as function_words_file:
-        words = [word.strip() for word in function_words_file.readlines()]
-    return words
