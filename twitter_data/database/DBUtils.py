@@ -13,13 +13,12 @@ def retrieve_all_tweet_objects_from_db(tweet_ids, verbose=False):
 
     return tweet_objects
 
-def retrieve_conversational_tweets(tweet_id, curr_list=[]):
-    tweet = DBManager.get_or_add_tweet(tweet_id)
-    contextual_tweet = DBManager.get_or_add_tweet(tweet.in_reply_to_status_id_str)
+def retrieve_full_conversation(tweet_id, curr_list):
 
-    if not contextual_tweet:
+    tweet = DBManager.get_or_add_tweet(tweet_id)
+
+    if not tweet:
         return curr_list
 
-    curr_list.append(contextual_tweet)
-    return retrieve_conversational_tweets(tweet.in_reply_to_status_id_str, curr_list)
-
+    curr_list.append(tweet)
+    return retrieve_full_conversation(tweet.in_reply_to_status_id, curr_list)
