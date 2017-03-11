@@ -4,8 +4,13 @@ import numpy
 from keras.utils.np_utils import to_categorical
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from community_detection import Utils
 from sentiment_analysis.evaluation import TSVParser
 from sentiment_analysis.machine_learning.feature_extraction.word_embeddings import GoogleWordEmbedder
+from sentiment_analysis.preprocessing import PreProcessing
+from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, ReplaceURL, RemovePunctuationFromWords, \
+    ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, ConcatWordArray, RemoveExactTerms
+from sentiment_analysis.preprocessing.PreProcessing import WordToLowercase
 from twitter_data.database import DBManager
 from twitter_data.parsing.folders import FolderIO
 
@@ -142,7 +147,7 @@ from keras.preprocessing.sequence import pad_sequences
 
 def generate_glove_embedding_matrix(word_index):
 
-    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/glove/glove.twitter.27B.200d.txt"
+    GLOVE_DIR = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/glove/glove.twitter.27B.200d.txt"
     EMBEDDING_DIM = 200
 
     embeddings_index = {}
@@ -197,6 +202,35 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
     (x_train, y_train, x_conv_train) = load_tsv_dataset(train_dir)
     (x_test, y_test, x_conv_test) = load_tsv_dataset(test_dir)
 
+    # Pre-process text
+    target_tweet_preprocessors = [SplitWordByWhitespace(),
+                 WordToLowercase(),
+                 ReplaceURL(),
+                 RemovePunctuationFromWords(),
+                 ReplaceUsernameMention(),
+                 RemoveRT(),
+                 RemoveLetterRepetitions(),
+                 ConcatWordArray()]
+
+    conv_context_preprocessors = [SplitWordByWhitespace(),
+                 WordToLowercase(),
+                 ReplaceURL(),
+                 RemovePunctuationFromWords(),
+                 ReplaceUsernameMention(),
+                 RemoveRT(),
+                 RemoveLetterRepetitions(),
+                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
+                 ConcatWordArray()]
+
+    x_train = PreProcessing.preprocess_strings(x_train, target_tweet_preprocessors)
+    x_test = PreProcessing.preprocess_strings(x_test, target_tweet_preprocessors)
+
+    for index, conv_context in enumerate(x_conv_train):
+        x_conv_train[index] = PreProcessing.preprocess_strings(conv_context, conv_context_preprocessors)
+    for index, conv_context in enumerate(x_conv_test):
+        x_conv_test[index] = PreProcessing.preprocess_strings(conv_context, conv_context_preprocessors)
+
+
     x_conv_train = convert_contextual_tweets_by_idf(x_conv_train, TOP_N_KEYWORDS)
     x_conv_test = convert_contextual_tweets_by_idf(x_conv_test, TOP_N_KEYWORDS)
 
@@ -236,5 +270,5 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_200d.npz')
+generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_200d-preprocessed.npz')
 
