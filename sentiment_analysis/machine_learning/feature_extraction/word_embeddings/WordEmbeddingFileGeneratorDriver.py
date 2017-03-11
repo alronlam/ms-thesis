@@ -270,5 +270,5 @@ def generate_npz_word_index_sequence(train_dir, test_dir, npz_file_name, MAX_NB_
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_200d-preprocessed.npz')
+generate_npz_word_index_sequence(VANZO_TRAIN_DIR, VANZO_TEST_DIR, 'vanzo_word_sequence_concat_glove_200d_preprocessed.npz')
 

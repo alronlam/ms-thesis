@@ -29,7 +29,7 @@ EMBEDDING_DIM = 200
 ##### Functions for loading datasets #####
 ##########################################
 def load_vanzo_dataset():
-    data = np.load("C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_word_sequence_concat.npz")
+    data = np.load("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/vanzo_word_sequence_concat_glove_200d_preprocessed.npz")
     x_train = data["x_train"]
     y_train = data["y_train"]
     x_conv_train = data["x_conv_train"]
