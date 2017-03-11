@@ -79,7 +79,7 @@ svm_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/Pycharm
 # test_vanzo_eng_dataset(wiebe_lexicon_classifier, None)
 # test_vanzo_eng_dataset(globe_ml_classifier, None)
 # test_vanzo_eng_dataset(nb_unigram_classifier, None)
-test_vanzo_eng_dataset(svm_unigram_classifier, None)
+# test_vanzo_eng_dataset(svm_unigram_classifier, None)
 
 
 # test_vanzo_eng_dataset(afinn_classifier, subjectivity_classifier)
@@ -87,17 +87,22 @@ test_vanzo_eng_dataset(svm_unigram_classifier, None)
 # test_vanzo_eng_dataset(wiebe_lexicon_classifier, subjectivity_classifier)
 # test_vanzo_eng_dataset(globe_ml_classifier, subjectivity_classifier)
 # test_vanzo_eng_dataset(nb_unigram_classifier, subjectivity_classifier)
-test_vanzo_eng_dataset(svm_unigram_classifier, subjectivity_classifier)
+# test_vanzo_eng_dataset(svm_unigram_classifier, subjectivity_classifier)
 
 # corpus_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/vanzo_corpus_w2v.pickle'
-corpus_bin_file_name = 'D:/DLSU/Masters/MS Thesis/Resources/GoogleNews-vectors-negative300.bin'
-classifier_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_classifier.pickle'
-scaler_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_scaler.pickle'
+# corpus_bin_file_name = 'D:/DLSU/Masters/MS Thesis/Resources/GoogleNews-vectors-negative300.bin'
+# classifier_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_classifier.pickle'
+# scaler_pickle_file_name = 'C:/Users/user/PycharmProjects/ms-thesis/word_embeddings/svm_scaler.pickle'
 
 # print("Initializing classifier")
 # conversational_context_clasifier = SentimentClassifier.ConversationalContextClassifier(corpus_bin_file_name, classifier_pickle_file_name, scaler_pickle_file_name)
 # print("Finished loading classifier")
 # test_vanzo_eng_dataset(conversational_context_clasifier, subjectivity_classifier)
+
+keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
+keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
+keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
+keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
 
 
 def test_classify(classifier):
@@ -106,4 +111,4 @@ def test_classify(classifier):
         text = input()
         print(classifier.classify_sentiment(text, {}))
 
-# test_classify(conversational_context_clasifier)
+test_classify(keras_classifier)

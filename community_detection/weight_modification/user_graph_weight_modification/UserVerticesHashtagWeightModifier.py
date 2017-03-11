@@ -7,7 +7,6 @@ class UserVerticesHashtagWeightModifier(EdgeWeightModifierBase):
         hashtag_users_dict = {}
 
         tweets = params["tweets"]
-        contextual_info_dict = params.get("contextual_info")
 
         if verbose:
             print("Constructing (hashtag, sentiment) -> user dictionary.")

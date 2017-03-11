@@ -11,7 +11,7 @@ from analysis.topic_modelling.TopicModeller import TopicModeller
 
 class LDATopicModeller(TopicModeller):
 
-    def __init__(self, num_topics=5, num_words=10):
+    def __init__(self, num_topics=5, num_words=20):
         self.num_topics = num_topics
         self.num_words = num_words
 

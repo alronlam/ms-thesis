@@ -1,4 +1,5 @@
 import abc
+import copy
 import string
 
 import re
@@ -79,11 +80,49 @@ class ConcatWordArray(PreProcessor):
     def preprocess_text(self, text_words):
         return " ".join(text_words)
 
+class RemoveTerm(PreProcessor):
 
-def preprocess_tweets(tweets, preprocessors):
+    def __init__(self, term, ignore_case=True):
+        self.ignore_case=ignore_case
+        if self.ignore_case:
+            self.term = term.lower()
+
+    def preprocess_text(self, text_words):
+        new_array = []
+        for word in text_words:
+            if self.ignore_case:
+                word = word.lower()
+            if self.term not in word:
+                new_array.append(word)
+        return new_array
+
+class RemoveExactTerms(PreProcessor):
+    def __init__(self, terms, ignore_case=True):
+        self.ignore_case = ignore_case
+        if self.ignore_case:
+            terms = [term.lower() for term in terms]
+
+    def preprocess_text(self, text_words):
+        new_array = []
+        for word in text_words:
+            if self.ignore_case:
+                word = word.lower()
+            if word not in self.terms:
+                new_array.append(word)
+        return new_array
+
+def preprocess_strings(strings, preprocessors):
     preprocessed_tweets = []
-    for tweet in tweets:
+    for tweet in strings:
         for preprocessor in preprocessors:
             tweet = preprocessor.preprocess_text(tweet)
         preprocessed_tweets.append(tweet)
     return preprocessed_tweets
+
+def preprocess_tweets(tweets, preprocessors):
+    tweets_copy = copy.deepcopy(tweets)
+    for tweet in tweets_copy:
+        for preprocessor in preprocessors:
+            tweet.text = preprocessor.preprocess_text(tweet.text)
+    return tweets_copy
+

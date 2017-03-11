@@ -1,5 +1,6 @@
 import json
 import sys
+from traceback import print_tb
 
 from bson.json_util import dumps
 from pymongo import MongoClient
@@ -148,5 +149,8 @@ def add_or_update_db(id, collection, retrieve_func):
     return from_api
 
 def add_or_update_db_given_json(json, collection, obj_constructor):
-    collection.update({"id":json["id"]}, json, True)
-    return obj_constructor(TweepyHelper.api, json)
+    try:
+        collection.update({"id":json["id"]}, json, True)
+        return obj_constructor(TweepyHelper.api, json)
+    except Exception as e:
+        print("Exception in add_or_update_db_given_json: {}".format(e))
