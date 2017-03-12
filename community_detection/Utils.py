@@ -33,12 +33,12 @@ def generate_user_network(file_name, tweet_objects, verbose=False):
 def generate_user_mention_network(file_name, tweet_objects, verbose=False):
     return generate_network(file_name, tweet_objects,TweetGraphs.construct_user_mention_graph, verbose )
 
-def generate_user_mention_hashtag_sa_network(file_name, tweet_objects, classifier, hashtag_preprocessors=[], sa_preprocessors=[], verbose=False):
+def generate_user_mention_hashtag_sa_network(file_name, tweet_objects, classifier, THRESHOLD, hashtag_preprocessors=[], sa_preprocessors=[], verbose=False, load_mode=False):
     GRAPH_PICKLE_FILE_NAME = file_name+".pickle"
     if verbose:
         print("Going to construct the graph")
     # construct graph based on user objects
-    G = MentionGraphs.construct_user_mention_hashtag_sa_graph(None, tweet_objects, classifier, GRAPH_PICKLE_FILE_NAME, hashtag_preprocessors=hashtag_preprocessors, sa_preprocessors=sa_preprocessors, verbose=verbose)
+    G = MentionGraphs.construct_user_mention_hashtag_sa_graph(None, tweet_objects, classifier, GRAPH_PICKLE_FILE_NAME, THRESHOLD=THRESHOLD, hashtag_preprocessors=hashtag_preprocessors, sa_preprocessors=sa_preprocessors, verbose=verbose, load_mode=load_mode)
     G.save(GRAPH_PICKLE_FILE_NAME)
     return G
 

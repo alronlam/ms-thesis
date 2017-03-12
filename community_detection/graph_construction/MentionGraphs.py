@@ -5,60 +5,63 @@ from igraph import Graph
 
 from community_detection.graph_construction.TweetGraphs import add_user_vertex
 from sentiment_analysis.preprocessing import PreProcessing
+from twitter_data.database import DBUtils
 
-def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_file_name, hashtag_preprocessors=[], sa_preprocessors=[], verbose=False):
 
-    if graph is None:
-        graph = Graph(directed=False)
+def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_file_name, THRESHOLD=0.5, hashtag_preprocessors=[], sa_preprocessors=[], verbose=False, load_mode=False):
 
-    new_edges = set()
+    if load_mode:
+        graph = pickle.load(open("without-edges-{}".format(pickle_file_name), "rb"))
+        final_scores = pickle.load(open("final-scores-{}".format(pickle_file_name), "rb"))
+    else:
+        if graph is None:
+            graph = Graph(directed=False)
 
-    for index, tweet in enumerate(tweets):
-        user_id_str = tweet.user.id_str
-        user_screen_name = tweet.user.screen_name
+        for index, tweet in enumerate(tweets):
+            user_id_str = tweet.user.id_str
+            user_screen_name = tweet.user.screen_name
 
-        ### CREATE VERTICES ###
-        add_user_vertex(graph, user_id_str, user_screen_name)
+            ### CREATE VERTICES ###
+            add_user_vertex(graph, user_id_str, user_screen_name)
+            if verbose:
+                if index % 1000 == 0 or index == len(tweets)-1:
+                    print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index+1, len(tweets)))
+
+        ### CREATE EDGES ###
         if verbose:
-            if index % 1000 == 0 or index == len(tweets)-1:
-                print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index+1, len(tweets)))
-
-    ### CREATE EDGES ###
-    if verbose:
-        print("Constructing mention scores")
-    mention_scores = score_mentions(tweets, graph)
-    if verbose:
-        print("Mention scores length: {}".format(len(mention_scores)))
+            print("Constructing mention scores")
+        mention_scores = score_mentions(tweets, graph)
+        if verbose:
+            print("Mention scores length: {}".format(len(mention_scores)))
 
 
-    if verbose:
-        print("Constructing hashtag scores")
+        if verbose:
+            print("Constructing hashtag scores")
 
-    preprocessed_tweets_for_hashtags = PreProcessing.preprocess_tweets(tweets, hashtag_preprocessors)
-    #extracting this after preprocessing to remove the universal hashtag(s)
-    unique_hashtags = get_unique_hashtags(preprocessed_tweets_for_hashtags)
+        preprocessed_tweets_for_hashtags = PreProcessing.preprocess_tweets(tweets, hashtag_preprocessors)
+        #extracting this after preprocessing to remove the universal hashtag(s)
+        unique_hashtags = get_unique_hashtags(preprocessed_tweets_for_hashtags)
 
-    mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores, unique_hashtags)
+        mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores, unique_hashtags)
 
-    if verbose:
-        print("Constructing sa scores")
-    preprocessed_tweets_for_sa = PreProcessing.preprocess_tweets(tweets, sa_preprocessors)
-    mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores, unique_hashtags)
+        if verbose:
+            print("Constructing sa scores")
+        preprocessed_tweets_for_sa = PreProcessing.preprocess_tweets(tweets, sa_preprocessors)
+        mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores, unique_hashtags)
 
-    if verbose:
-        print("Normalizing scores")
-    final_scores = normalize(mention_hashtag_sa_scores)
-    if verbose:
-        print(Counter([score for key, score in final_scores.items()]))
+        if verbose:
+            print("Normalizing scores")
+        final_scores = normalize(mention_hashtag_sa_scores)
+        if verbose:
+            print(Counter([score for key, score in final_scores.items()]))
 
-    graph.save("without-edges-{}".format(pickle_file_name))
-    pickle.dump(final_scores, open("{}.finalscores".format(pickle_file_name), "wb"))
-
-    THRESHOLD = 0.5
+        graph.save("without-edges-{}".format(pickle_file_name))
+        pickle.dump(final_scores, open("final-scores-{}".format(pickle_file_name), "wb"))
 
     if verbose:
         print("Creating list of edges based on threshold score")
 
+    new_edges = set()
     count = 0
     for tuple, score in final_scores.items():
         if score >= THRESHOLD:
@@ -140,7 +143,7 @@ def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
             curr_user = tweet.user.id_str
             if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
 
-                sentiment = classifier.classify_sentiment(tweet.text, {})
+                sentiment = classifier.classify_sentiment(tweet.text, DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, []))
 
                 user_set = None
                 if sentiment == 'positive':

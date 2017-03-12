@@ -134,37 +134,45 @@ brexit_sa_preprocessors = brexit_hashtag_preprocessors
 
 json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
-base_graph_name = "brexit_mention_hashtag_sa_graph"
-Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True)
-graph = pickle.load(open(base_graph_name+".pickle", "rb"))
-run_one_cycle(base_graph_name, graph, json_tweet_objects, [], topic_modelling_preprocessors=brexit_topic_modelling_preprocessors, min_membership=500)
+# base_graph_name = "brexit_mention_hashtag_sa_graph"
+# Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True)
+# graph = pickle.load(open(base_graph_name+".pickle", "rb"))
+# run_one_cycle(base_graph_name, graph, json_tweet_objects, [], topic_modelling_preprocessors=brexit_topic_modelling_preprocessors, min_membership=500)
 
-pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
-                 WordToLowercase(),
-                 ReplaceURL(),
-                 RemovePunctuationFromWords(),
-                 ReplaceUsernameMention(),
-                 RemoveRT(),
-                 RemoveLetterRepetitions(),
-                 RemoveTerm("#pilipinasdebates2016"),
-                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
-                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt")),
-                 ConcatWordArray()]
+thresholds_to_try = [0.2, 0.15, 0.1]
 
-pilipinasdebates_hashtag_preprocessors = [SplitWordByWhitespace(),
-                                WordToLowercase(),
-                                RemoveTerm("#pilipinasdebates2016"),
-                                ConcatWordArray()]
+for threshold in thresholds_to_try:
+    base_graph_name = "brexit_mention_hashtag_sa_graph".format(threshold)
+    graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier, threshold, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True)
+    run_one_cycle(base_graph_name, graph, json_tweet_objects, [], topic_modelling_preprocessors=brexit_topic_modelling_preprocessors, min_membership=500)
 
-#TODO double check preprocessors used for SA training
-#need to remove universal hashtag(s) for sa as well
-pilipinasdebates_sa_preprocessors = pilipinasdebates_hashtag_preprocessors
 
-senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
-base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
-Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, keras_classifier, hashtag_preprocessors=pilipinasdebates_hashtag_preprocessors, sa_preprocessors=pilipinasdebates_sa_preprocessors, verbose=True)
-graph = pickle.load(open(base_graph_name+".pickle", "rb"))
-run_one_cycle(base_graph_name, graph, senti_tweet_objects, [], topic_modelling_preprocessors=pilipinasdebates_topic_modelling_preprocessors) # mentions only
+# pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
+#                  WordToLowercase(),
+#                  ReplaceURL(),
+#                  RemovePunctuationFromWords(),
+#                  ReplaceUsernameMention(),
+#                  RemoveRT(),
+#                  RemoveLetterRepetitions(),
+#                  RemoveTerm("#pilipinasdebates2016"),
+#                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
+#                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt")),
+#                  ConcatWordArray()]
+#
+# pilipinasdebates_hashtag_preprocessors = [SplitWordByWhitespace(),
+#                                 WordToLowercase(),
+#                                 RemoveTerm("#pilipinasdebates2016"),
+#                                 ConcatWordArray()]
+#
+# #TODO double check preprocessors used for SA training
+# #need to remove universal hashtag(s) for sa as well
+# pilipinasdebates_sa_preprocessors = pilipinasdebates_hashtag_preprocessors
+#
+# senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
+# base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
+# Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, keras_classifier, hashtag_preprocessors=pilipinasdebates_hashtag_preprocessors, sa_preprocessors=pilipinasdebates_sa_preprocessors, verbose=True)
+# graph = pickle.load(open(base_graph_name+".pickle", "rb"))
+# run_one_cycle(base_graph_name, graph, senti_tweet_objects, [], topic_modelling_preprocessors=pilipinasdebates_topic_modelling_preprocessors) # mentions only
 
 
 # run_one_cycle(base_graph_name+"_with_hashtags", graph, senti_tweet_objects, [user_hashtag_weight_modifier])
