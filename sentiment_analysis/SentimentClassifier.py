@@ -159,12 +159,19 @@ class KerasClassifier(SentimentClassifier):
             top_feature_string = " ".join(top_features)
             top_keywords.append(top_feature_string)
 
+        top_keywords = [keyword.strip() for keyword in top_keywords if keyword.strip()]
+
         return top_keywords
+
+    def convert_contextual_tweets_to_word_sequence(self, contextual_tweets):
+        top_keywords = self.convert_contextual_tweets_by_idf(contextual_tweets)
+        from keras.preprocessing.sequence import pad_sequences
+        return numpy.reshape(pad_sequences([self.tokenizer.texts_to_sequences(top_keywords)], maxlen=self.MAX_SEQUENCE_LENGTH), (1,32))
 
     def classify_sentiment(self, tweet_text, contextual_info_dict):
         tweet_text = self.preprocess(tweet_text)
         tweet_text_sequence = self.convert_to_word_sequence(tweet_text)
-        conv_text_sequence = self.convert_contextual_tweets_by_idf(contextual_info_dict["conv_context"])
+        conv_text_sequence = self.convert_contextual_tweets_to_word_sequence(contextual_info_dict["conv_context"])
 
         if self.with_context:
             prediction_probabilities = self.classifier.predict([tweet_text_sequence, conv_text_sequence], batch_size=1, verbose=0)
