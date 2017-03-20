@@ -101,12 +101,13 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers, topic_m
     # Topic Modelling
     print("Modelling topics")
     LDA_topic_modeller = LDATopicModeller()
-    out_file = open("{}/{}-topic-models.txt".format(dir_name, run_name), "w", encoding="utf-8")
+    topic_modelling_out_file = open("{}/{}-topic-models.txt".format(dir_name, run_name), "w", encoding="utf-8")
 
     community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects, preprocessors=topic_modelling_preprocessors)
     for community, topics in community_topics_tuple_list:
         if topics is not None:
-            print("Community {}:\n{}\n".format(community, topics), file=out_file)
+            print("Community {}:\n{}\n".format(community, topics), file=topic_modelling_out_file)
+    topic_modelling_out_file.close()
 
     # Plot
     print("Plotting")
@@ -143,7 +144,6 @@ json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, 
 # json_tweet_objects=[]
 
 
-
 base_graph_name = "brexit_mention_hashtag_sa_graph"
 graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.04)
 
@@ -154,17 +154,17 @@ graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_twe
 
 # run_one_cycle(base_graph_name, graph, json_tweet_objects, [], topic_modelling_preprocessors=brexit_topic_modelling_preprocessors, min_membership=500)
 
-configurations = [(0.04, 100) ]
+configurations = [(0.04, 100, "brexit_mention_hashtag_sa_graph"),
+                  (0.05, 100, "brexit_mention_hashtag_contextualsa_graph"),
+                  (0.04, 100, "brexit_mention_hashtag_contextualsa_graph")]
 
-
-for (threshold, min_membership) in configurations:
-# while(True):
+def run_threshold_cycle(threshold, min_membership, graph_to_load):
     try:
         # threshold = float(input("Threshold?"))
         # min_membership = int(input("Min vertices in community?"))
 
         # load graph
-        base_graph_name = "threshold-{}-brexit_mention_hashtag_contextualsa_graph.pickle".format(threshold)
+        base_graph_name = "threshold-{}-{}.pickle".format(threshold, graph_to_load)
         run_name = "{}-{}".format(min_membership, base_graph_name)
         graph = pickle.load(open(base_graph_name, "rb"))
 
@@ -191,50 +191,21 @@ for (threshold, min_membership) in configurations:
         for community, topics in community_topics_tuple_list:
             if topics is not None:
                 print("Community {}:\n{}\n".format(community, topics), file=out_file)
-        out_file.flush()
+        out_file.close()
 
     except Exception as e:
         print(e)
 
+
+for (threshold, min_membership, graph_to_load) in configurations:
+    run_threshold_cycle(threshold, min_membership, graph_to_load)
 
 
 while(True):
-    try:
-        threshold = float(input("Threshold?"))
-        min_membership = int(input("Min vertices in community?"))
-
-        # load graph
-        base_graph_name = "threshold-{}-brexit_mention_hashtag_contextualsa_graph.pickle".format(threshold)
-        run_name = "{}-{}".format(min_membership, base_graph_name)
-        graph = pickle.load(open(base_graph_name, "rb"))
-
-        # load membership
-        try:
-            membership = pickle.load(open(base_graph_name+".membership", "rb"))
-        except Exception as e:
-            membership = Utils.determine_communities(graph, None, verbose=True)
-            pickle.dump(membership, open(base_graph_name+".membership", "wb"))
-
-        (graph, filtered_membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_membership)
-        print("Filtered communities: {}/{}. Graph now has {} vertices and {} edges".format(len(filtered_membership), len(membership), len(graph.vs), len(graph.es)))
-        membership = filtered_membership
-
-        # plot
-        print("Plotting")
-        CommunityViz.plot_communities(graph, "display_str", membership, run_name+".png", verbose=True)
-
-        # topic modelling
-        print("Modelling topics")
-        LDA_topic_modeller = LDATopicModeller()
-        out_file = open("{}-topic-models.txt".format(run_name), "w", encoding="utf-8")
-        community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, json_tweet_objects, preprocessors=brexit_topic_modelling_preprocessors)
-        for community, topics in community_topics_tuple_list:
-            if topics is not None:
-                print("Community {}:\n{}\n".format(community, topics), file=out_file)
-        out_file.flush()
-
-    except Exception as e:
-        print(e)
+    threshold = float(input("Threshold?"))
+    min_membership = int(input("Min vertices in community?"))
+    graph_to_load = input("Graph to load?")
+    run_threshold_cycle(threshold, min_membership, graph_to_load)
 
 # pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
 #                  WordToLowercase(),
