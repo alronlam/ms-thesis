@@ -153,7 +153,7 @@ class KerasClassifier(SentimentClassifier):
 
             return top_feature_string
         except Exception as e: # probably trying to vectorize empty list
-            print(e)
+            print("Keras Classifier converting contextual tweets by idf exception: {}".format(e))
             return ""
 
 
@@ -179,7 +179,6 @@ class KerasClassifier(SentimentClassifier):
         prediction = prediction_probabilities.argmax(axis=1)[0]
         # print("{}\n{}\n\n".format(tweet_text, self.convert_numerical_category_to_word(prediction)))
         return self.convert_numerical_category_to_word(prediction)
-
 
 class WiebeLexiconClassifier(SentimentClassifier):
     def __init__(self):

@@ -121,7 +121,7 @@ def create_contextual_sub_network(embedding_matrix):
 ########################################
 def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test):
     model.fit(x_train_arr, y_train, validation_data=(x_test_arr, y_test),
-              nb_epoch=40, batch_size=128, verbose=1)
+              nb_epoch=10, batch_size=128, verbose=1)
 
     predicted_probabilities = model.predict(x_test_arr, batch_size=128, verbose=1)
     predicted_arr = predicted_probabilities.argmax(axis=1)
@@ -230,5 +230,6 @@ def test_without_context():
 ##### Actual Training Program #####
 ###################################
 
-test_with_context()
+
 test_without_context()
+test_with_context()

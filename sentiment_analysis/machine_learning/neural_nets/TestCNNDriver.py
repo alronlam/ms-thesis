@@ -1,15 +1,16 @@
 # load models
 import numpy
 
+from community_detection import Utils
 from sentiment_analysis import SentimentClassifier
 from sentiment_analysis.evaluation import TSVParser
 from twitter_data.database import DBManager
 from twitter_data.parsing.folders import FolderIO
 
-keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d_preprocessed.npz.pickle"
-keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_with_context.json"
-keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_with_context_weights.h5"
-keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path, with_context=True)
+# keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d_preprocessed.npz.pickle"
+# keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
+# keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
+# keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path, with_context=False)
 
 def convert_sentiment_class_to_number(sentiment_class):
     sentiment_class = sentiment_class.lower()
@@ -42,6 +43,7 @@ def load_tsv_dataset(path):
     tsv_files = FolderIO.get_files(path, True, '.tsv')
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
     for index, conversation in enumerate(conversations):
+
         # actual tweet
         target_tweet = conversation[-1]
         tweet_object = DBManager.get_or_add_tweet(target_tweet["tweet_id"])
@@ -66,26 +68,60 @@ def load_tsv_dataset(path):
 
     return (texts, labels, contextual_tweets)
 
-VANZO_TRAIN_DIR = 'D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train'
-(texts, labels, contextual_tweets) = load_tsv_dataset(VANZO_TRAIN_DIR)
-print("{} - {} - {}".format(len(texts), len(labels), len(contextual_tweets)))
+# VANZO_TRAIN_DIR = 'D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train'
+# (texts, labels, contextual_tweets) = load_tsv_dataset(VANZO_TRAIN_DIR)
+# print("{} - {} - {}".format(len(texts), len(labels), len(contextual_tweets)))
+#
+# # call predict, passing both target words and conversational words
+#
+# predicted_arr = []
+# for index in range(len(texts)):
+#     text = texts[index]
+#     contextual_tweet_thread = contextual_tweets[index]
+#
+#     print(index)
+#     try:
+#         predicted_arr.append(convert_sentiment_class_to_number(keras_classifier.classify_sentiment(text, {"conv_context":contextual_tweet_thread})))
+#     except Exception as e:
+#         predicted_arr.append(convert_sentiment_class_to_number(keras_classifier.classify_sentiment(text, {"conv_context":contextual_tweet_thread})))
+#
+#
+# (x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix) = load_vanzo_dataset()
+#
+# actual_arr = y_train.argmax(axis=1)
+#
+# from sklearn import metrics
+# print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
+# print(metrics.classification_report(actual_arr, predicted_arr))
+# print(numpy.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
 
-# call predict, passing both target words and conversational words
 
-predicted_arr = []
-for index in range(len(texts)):
-    text = texts[index]
-    contextual_tweet_thread = contextual_tweets[index]
-
-    print(index)
-    predicted_arr.append(convert_sentiment_class_to_number(keras_classifier.classify_sentiment(text, {"conv_context":contextual_tweet_thread})))
+from twitter_data.database import DBUtils
 
 
-(x_train, y_train, x_conv_train, x_test, y_test, x_conv_test, embedding_matrix) = load_vanzo_dataset()
 
-actual_arr = y_train.argmax(axis=1)
+keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d_preprocessed.npz.pickle"
+keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
+keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
+keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path, with_context=False)
 
-from sklearn import metrics
-print('Accuracy: {}\n'.format(metrics.accuracy_score(actual_arr, predicted_arr)))
-print(metrics.classification_report(actual_arr, predicted_arr))
-print(numpy.array_str(metrics.confusion_matrix(actual_arr, predicted_arr))) # ordering is alphabetical order of label names
+
+json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")[:100]
+json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+# json_tweet_objects=[]
+
+for index, tweet in enumerate(json_tweet_objects):
+    if tweet.in_reply_to_status_id:
+        context = DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])
+        context = [tweet.text for tweet in context]
+        try:
+            print("{}-{}".format(index, len(context)))
+            sentiment = keras_classifier.classify_sentiment(tweet.text, {"conv_context": context})
+        except Exception as e:
+            print(tweet)
+            print(context)
+            # print(e)
+            print(index)
+            sentiment = keras_classifier.classify_sentiment(tweet.text, {"conv_context": context})
+    else:
+        print("{}-{}".format(index, 0))

@@ -8,8 +8,9 @@ from sentiment_analysis.preprocessing import PreProcessing
 from twitter_data.database import DBUtils
 
 
-def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_file_name, THRESHOLD=0.5, hashtag_preprocessors=[], sa_preprocessors=[], verbose=False, load_mode=False):
-
+def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_file_name, THRESHOLD=0.5,
+                                            hashtag_preprocessors=[], sa_preprocessors=[], verbose=False,
+                                            load_mode=False):
     if load_mode:
         graph = pickle.load(open("without-edges-{}".format(pickle_file_name), "rb"))
         final_scores = pickle.load(open("final-scores-{}".format(pickle_file_name), "rb"))
@@ -24,8 +25,9 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
             ### CREATE VERTICES ###
             add_user_vertex(graph, user_id_str, user_screen_name)
             if verbose:
-                if index % 1000 == 0 or index == len(tweets)-1:
-                    print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index+1, len(tweets)))
+                if index % 1000 == 0 or index == len(tweets) - 1:
+                    print("Constructing user mention hashtag SA graph: processed {}/{} tweets".format(index + 1,
+                                                                                                      len(tweets)))
 
         ### CREATE EDGES ###
         if verbose:
@@ -34,20 +36,21 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         if verbose:
             print("Mention scores length: {}".format(len(mention_scores)))
 
-
         if verbose:
             print("Constructing hashtag scores")
 
         preprocessed_tweets_for_hashtags = PreProcessing.preprocess_tweets(tweets, hashtag_preprocessors)
-        #extracting this after preprocessing to remove the universal hashtag(s)
+        # extracting this after preprocessing to remove the universal hashtag(s)
         unique_hashtags = get_unique_hashtags(preprocessed_tweets_for_hashtags)
 
-        mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores, unique_hashtags)
+        mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores,
+                                                          unique_hashtags)
 
         if verbose:
             print("Constructing sa scores")
         preprocessed_tweets_for_sa = PreProcessing.preprocess_tweets(tweets, sa_preprocessors)
-        mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores, unique_hashtags)
+        mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores,
+                                                       unique_hashtags)
 
         if verbose:
             print("Normalizing scores")
@@ -78,11 +81,13 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
 
     return graph
 
+
 # {(a,b): }
 def construct_ordered_tuple(a, b):
     if a <= b:
-        return (a,b)
-    return construct_ordered_tuple(b,a)
+        return (a, b)
+    return construct_ordered_tuple(b, a)
+
 
 def score_mentions(tweets, graph):
     score_dict = {}
@@ -90,13 +95,15 @@ def score_mentions(tweets, graph):
     for index, tweet in enumerate(tweets):
         user_id_str = tweet.user.id_str
 
-        mentions_idstr_screenname_tuples = [(mention_dict["id_str"], mention_dict["screen_name"]) for mention_dict in tweet.entities.get('user_mentions')]
+        mentions_idstr_screenname_tuples = [(mention_dict["id_str"], mention_dict["screen_name"]) for mention_dict in
+                                            tweet.entities.get('user_mentions')]
         for other_user_id_str, other_user_screen_name in mentions_idstr_screenname_tuples:
             add_user_vertex(graph, other_user_id_str, other_user_screen_name)
             ordered_tuple = construct_ordered_tuple(user_id_str, other_user_id_str)
             score_dict[ordered_tuple] = score_dict.get(ordered_tuple, 0) + 1
 
     return score_dict
+
 
 def score_hashtags_optimized(tweets, score_dict, unique_hashtags):
     if not unique_hashtags:
@@ -109,14 +116,14 @@ def score_hashtags_optimized(tweets, score_dict, unique_hashtags):
             if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
                 for other_user in user_set:
                     tuple = construct_ordered_tuple(curr_user, other_user)
-                    if tuple in score_dict: # only consider those entries already present in the score dict
+                    if tuple in score_dict:  # only consider those entries already present in the score dict
                         score_dict[tuple] += 1
                 user_set.add(curr_user)
         del user_set
     return score_dict
 
-def score_hashtags(tweets, unique_hashtags=None):
 
+def score_hashtags(tweets, unique_hashtags=None):
     if not unique_hashtags:
         unique_hashtags = get_unique_hashtags(tweets)
 
@@ -139,11 +146,15 @@ def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
     for hashtag in unique_hashtags:
         positive_user_set = set()
         negative_user_set = set()
-        for tweet in tweets:
+
+        for index, tweet in enumerate(tweets):
+
             curr_user = tweet.user.id_str
             if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
 
-                sentiment = classifier.classify_sentiment(tweet.text, DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, []))
+                conv_context = DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])
+                conv_context = [tweet.text for tweet in conv_context]
+                sentiment = classifier.classify_sentiment(tweet.text, {"conv_context":conv_context})
 
                 user_set = None
                 if sentiment == 'positive':
@@ -162,8 +173,8 @@ def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
         del negative_user_set
     return score_dict
 
-def score_sa(tweets, classifier, unique_hashtags=None):
 
+def score_sa(tweets, classifier, unique_hashtags=None):
     if not unique_hashtags:
         unique_hashtags = get_unique_hashtags(tweets)
 
@@ -194,6 +205,7 @@ def score_sa(tweets, classifier, unique_hashtags=None):
         del negative_user_set
     return score_dict
 
+
 def get_unique_hashtags(tweets):
     unique_hashtags = set()
     for tweet in tweets:
@@ -201,6 +213,7 @@ def get_unique_hashtags(tweets):
         for tweet_hashtag in tweet_hashtags:
             unique_hashtags.add(tweet_hashtag)
     return unique_hashtags
+
 
 # def score_sa(tweets, classifier):
 #     # group users according to hashtag
@@ -235,18 +248,20 @@ def consolidate(score_dict_list):
 
     return final_dict
 
+
 def normalize(score_dict):
     max_score = get_max_score(score_dict)
     for tuple, score in score_dict.items():
-        score_dict[tuple] = score/max_score
+        score_dict[tuple] = score / max_score
 
     print("Mention graph normalization max score: {}".format(max_score))
 
     return score_dict
 
+
 def get_max_score(score_dict):
     return max([score for tuple, score in score_dict.items()])
 
+
 def calculate_total_score(score_dict):
     return sum([score for tuple, score in score_dict.items()])
-
