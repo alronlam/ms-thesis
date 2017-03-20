@@ -141,35 +141,40 @@ class KerasClassifier(SentimentClassifier):
 
     def convert_contextual_tweets_by_idf(self, contextual_tweets, TOP_N_KEYWORDS=32):
         tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
-        if len(contextual_tweets) == 0:
+
+        try:
+            tfidf_vectorizer.fit_transform(contextual_tweets)
+
+            indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
+            features = tfidf_vectorizer.get_feature_names()
+            top_features = [features[i] for i in indices[:TOP_N_KEYWORDS]]
+            top_features = [feature.strip() for feature in top_features if feature.strip()]
+            top_feature_string = " ".join(top_features)
+
+            return top_feature_string
+        except Exception as e: # probably trying to vectorize empty list
+            print(e)
             return ""
-        tfidf_vectorizer.fit_transform(contextual_tweets)
 
-        indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
-        features = tfidf_vectorizer.get_feature_names()
-        top_features = [features[i] for i in indices[:TOP_N_KEYWORDS]]
-        top_features = [feature.strip() for feature in top_features if feature.strip()]
-        top_feature_string = " ".join(top_features)
 
-        return top_feature_string
 
     def convert_contextual_tweets_to_word_sequence(self, contextual_tweets):
         top_keywords = self.convert_contextual_tweets_by_idf(contextual_tweets)
         from keras.preprocessing.sequence import pad_sequences
         word_sequences = self.tokenizer.texts_to_sequences([top_keywords])
         padded_sequences = pad_sequences(word_sequences, maxlen=self.MAX_SEQUENCE_LENGTH)
-        padded_sequences = numpy.reshape(padded_sequences, (1,32))
+        # padded_sequences = numpy.reshape(padded_sequences, (1,32))
         return padded_sequences
 
     def classify_sentiment(self, tweet_text, contextual_info_dict):
         tweet_text = self.preprocess(tweet_text)
         tweet_text_sequence = self.convert_to_word_sequence(tweet_text)
         conv_text_sequence = self.convert_contextual_tweets_to_word_sequence(contextual_info_dict["conv_context"])
-        
+
         if self.with_context:
-            prediction_probabilities = self.classifier.predict([tweet_text_sequence, conv_text_sequence], batch_size=1, verbose=0)
+            prediction_probabilities = self.classifier.predict_on_batch([tweet_text_sequence, conv_text_sequence])
         else:
-            prediction_probabilities = self.classifier.predict(tweet_text_sequence,batch_size=1, verbose=0)
+            prediction_probabilities = self.classifier.predict_on_batch(tweet_text_sequence)
 
         prediction = prediction_probabilities.argmax(axis=1)[0]
         # print("{}\n{}\n\n".format(tweet_text, self.convert_numerical_category_to_word(prediction)))
