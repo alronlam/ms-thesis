@@ -140,39 +140,32 @@ class KerasClassifier(SentimentClassifier):
 
 
     def convert_contextual_tweets_by_idf(self, contextual_tweets, TOP_N_KEYWORDS=32):
+        tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
+        if len(contextual_tweets) == 0:
+            return ""
+        tfidf_vectorizer.fit_transform(contextual_tweets)
 
-        top_keywords = []
+        indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
+        features = tfidf_vectorizer.get_feature_names()
+        top_features = [features[i] for i in indices[:TOP_N_KEYWORDS]]
+        top_features = [feature.strip() for feature in top_features if feature.strip()]
+        top_feature_string = " ".join(top_features)
 
-        for curr_contextual_tweets in contextual_tweets:
-            try:
-                tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
-                tfidf_vectorizer.fit_transform(curr_contextual_tweets)
-
-                indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
-                features = tfidf_vectorizer.get_feature_names()
-                top_features = [features[i] for i in indices[:TOP_N_KEYWORDS]]
-                print(top_features)
-            except Exception as e:
-                print(e)
-                top_features = []
-
-            top_feature_string = " ".join(top_features)
-            top_keywords.append(top_feature_string)
-
-        top_keywords = [keyword.strip() for keyword in top_keywords if keyword.strip()]
-
-        return top_keywords
+        return top_feature_string
 
     def convert_contextual_tweets_to_word_sequence(self, contextual_tweets):
         top_keywords = self.convert_contextual_tweets_by_idf(contextual_tweets)
         from keras.preprocessing.sequence import pad_sequences
-        return numpy.reshape(pad_sequences([self.tokenizer.texts_to_sequences(top_keywords)], maxlen=self.MAX_SEQUENCE_LENGTH), (1,32))
+        word_sequences = self.tokenizer.texts_to_sequences([top_keywords])
+        padded_sequences = pad_sequences(word_sequences, maxlen=self.MAX_SEQUENCE_LENGTH)
+        padded_sequences = numpy.reshape(padded_sequences, (1,32))
+        return padded_sequences
 
     def classify_sentiment(self, tweet_text, contextual_info_dict):
         tweet_text = self.preprocess(tweet_text)
         tweet_text_sequence = self.convert_to_word_sequence(tweet_text)
         conv_text_sequence = self.convert_contextual_tweets_to_word_sequence(contextual_info_dict["conv_context"])
-
+        
         if self.with_context:
             prediction_probabilities = self.classifier.predict([tweet_text_sequence, conv_text_sequence], batch_size=1, verbose=0)
         else:
