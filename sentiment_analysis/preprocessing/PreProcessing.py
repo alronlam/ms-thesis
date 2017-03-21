@@ -100,7 +100,7 @@ class RemoveExactTerms(PreProcessor):
     def __init__(self, terms, ignore_case=True):
         self.ignore_case = ignore_case
         if self.ignore_case:
-            terms = [term.lower() for term in terms]
+            self.terms = [term.lower() for term in terms]
 
     def preprocess_text(self, text_words):
         new_array = []

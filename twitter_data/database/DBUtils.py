@@ -12,3 +12,14 @@ def retrieve_all_tweet_objects_from_db(tweet_ids, verbose=False):
                 print("Processed {}. Retrieved {} ({} successful) / {} tweets from the database.".format(tweet_id,index+1, len(tweet_objects), len(tweet_ids)))
 
     return tweet_objects
+
+
+def retrieve_full_conversation(tweet_id, curr_list):
+
+    tweet = DBManager.get_or_add_tweet(tweet_id)
+
+    if not tweet:
+        return curr_list
+
+    curr_list.append(tweet)
+    return retrieve_full_conversation(tweet.in_reply_to_status_id, curr_list)

@@ -1,16 +1,21 @@
 import abc
 import pickle
 import numpy
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 from sklearn.preprocessing import scale
 from afinn import Afinn
 
+from community_detection import Utils
 from sentiment_analysis.lexicon.simple.database import LexiconManager
 from sentiment_analysis.lexicon.anew.database import ANEWLexiconManager
 from sentiment_analysis.machine_learning.feature_extraction import FeatureExtractorBase
 from sentiment_analysis.preprocessing import PreProcessing
 
 # from gensim.models.word2vec import Word2Vec
+from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, WordToLowercase, \
+    RemovePunctuationFromWords, ReplaceURL, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, ConcatWordArray, \
+    RemoveExactTerms
 from sentiment_analysis.subjectivity import SubjectivityClassifier
 
 
@@ -120,13 +125,33 @@ class KerasClassifier(SentimentClassifier):
     MAX_SEQUENCE_LENGTH = 32
     CATEGORIES = ["negative", "neutral", "positive"]
 
-    def __init__(self, tokenizer_pickle_path, classifier_json_path, classifier_weights_path):
+    def __init__(self, tokenizer_pickle_path, classifier_json_path, classifier_weights_path, with_context=False):
         from keras.models import model_from_json
         self.tokenizer = pickle.load(open(tokenizer_pickle_path, "rb"))
         self.classifier = model_from_json([line for line in open(classifier_json_path, "r")][0])
         self.classifier.load_weights(classifier_weights_path)
-        self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
-                              PreProcessing.RemovePunctuationFromWords(), PreProcessing.ConcatWordArray()]
+        # self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
+        #                       PreProcessing.RemovePunctuationFromWords(), PreProcessing.ConcatWordArray()]
+        self.with_context = with_context
+
+        self.preprocessors = [SplitWordByWhitespace(),
+                 WordToLowercase(),
+                 ReplaceURL(),
+                 RemovePunctuationFromWords(),
+                 ReplaceUsernameMention(),
+                 RemoveRT(),
+                 RemoveLetterRepetitions(),
+                 ConcatWordArray()]
+
+        self.conv_context_preprocessors = [SplitWordByWhitespace(),
+                 WordToLowercase(),
+                 ReplaceURL(),
+                 RemovePunctuationFromWords(),
+                 ReplaceUsernameMention(),
+                 RemoveRT(),
+                 RemoveLetterRepetitions(),
+                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
+                 ConcatWordArray()]
 
     def convert_to_word_sequence(self, text):
         from keras.preprocessing.sequence import pad_sequences
@@ -136,14 +161,50 @@ class KerasClassifier(SentimentClassifier):
     def convert_numerical_category_to_word(self, number):
         return self.CATEGORIES[number]
 
+
+    def convert_contextual_tweets_by_idf(self, contextual_tweets, TOP_N_KEYWORDS=32):
+        tfidf_vectorizer = TfidfVectorizer(stop_words='english', lowercase=True)
+
+        try:
+            tfidf_vectorizer.fit_transform(contextual_tweets)
+
+            indices = numpy.argsort(tfidf_vectorizer.idf_)[::-1]
+            features = tfidf_vectorizer.get_feature_names()
+            top_features = [features[i] for i in indices[:TOP_N_KEYWORDS]]
+            top_features = [feature.strip() for feature in top_features if feature.strip()]
+            top_feature_string = " ".join(top_features)
+
+            return top_feature_string
+        except Exception as e: # probably trying to vectorize empty list
+            print("Keras Classifier converting contextual tweets by idf exception: {}".format(e))
+            return ""
+
+    def convert_contextual_tweets_to_word_sequence(self, contextual_tweets):
+        top_keywords = self.convert_contextual_tweets_by_idf(contextual_tweets)
+        from keras.preprocessing.sequence import pad_sequences
+        word_sequences = self.tokenizer.texts_to_sequences([top_keywords])
+        padded_sequences = pad_sequences(word_sequences, maxlen=self.MAX_SEQUENCE_LENGTH)
+        # padded_sequences = numpy.reshape(padded_sequences, (1,32))
+        return padded_sequences
+
+    def preprocess_conv_context(self, conv_context_string):
+        for preprocessor in self.conv_context_preprocessors:
+            conv_context_string = preprocessor.preprocess_text(conv_context_string)
+        return conv_context_string
+
     def classify_sentiment(self, tweet_text, contextual_info_dict):
         tweet_text = self.preprocess(tweet_text)
         tweet_text_sequence = self.convert_to_word_sequence(tweet_text)
-        prediction_probabilities = self.classifier.predict(tweet_text_sequence,batch_size=1, verbose=0)
+        conv_text_sequence = self.convert_contextual_tweets_to_word_sequence(contextual_info_dict["conv_context"])
+
+        if self.with_context:
+            prediction_probabilities = self.classifier.predict_on_batch([tweet_text_sequence, conv_text_sequence])
+        else:
+            prediction_probabilities = self.classifier.predict_on_batch(tweet_text_sequence)
+
         prediction = prediction_probabilities.argmax(axis=1)[0]
         # print("{}\n{}\n\n".format(tweet_text, self.convert_numerical_category_to_word(prediction)))
         return self.convert_numerical_category_to_word(prediction)
-
 
 class WiebeLexiconClassifier(SentimentClassifier):
     def __init__(self):
