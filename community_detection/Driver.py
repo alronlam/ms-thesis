@@ -154,6 +154,9 @@ def run_threshold_cycle(threshold, min_membership, graph_to_load):
 
         general_out_file.close()
 
+        # tf-idf
+
+
     except Exception as e:
         print(e)
 
@@ -181,30 +184,20 @@ brexit_hashtag_preprocessors = [SplitWordByWhitespace(),
 #need to remove universal hashtag(s) for sa as well
 brexit_sa_preprocessors = [] # not needed anymore as pre-processing is done inside the KerasClassifier
 
+json_tweet_objects=[]
+
+# base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
+# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
+# base_graph_name = "brexit_mention_hashtag_sa_graph"
+# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
+
 json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
-# json_tweet_objects=[]
 
-
-base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
-graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.05)
-run_threshold_cycle(0.05, 100, base_graph_name)
-
-graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.04)
-run_threshold_cycle(0.04, 100, base_graph_name)
-
-base_graph_name = "brexit_mention_hashtag_sa_graph"
-graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.04)
-run_threshold_cycle(0.04, 100, base_graph_name)
-
-
-# run_one_cycle(base_graph_name, graph, json_tweet_objects, [], topic_modelling_preprocessors=brexit_topic_modelling_preprocessors, min_membership=500)
-
-# configurations = [(0.05, 100, "brexit_mention_hashtag_contextualsa_graph"),
-#                   (0.04, 100, "brexit_mention_hashtag_contextualsa_graph"),
-#                   (0.04, 100, "brexit_mention_hashtag_sa_graph"),]
-# for (threshold, min_membership, graph_to_load) in configurations:
-#     run_threshold_cycle(threshold, min_membership, graph_to_load)
+configurations = [(0.04, 100, "brexit_mention_hashtag_contextualsa_graph"),
+                  (0.04, 100, "brexit_mention_hashtag_sa_graph"),]
+for (threshold, min_membership, graph_to_load) in configurations:
+    run_threshold_cycle(threshold, min_membership, graph_to_load)
 
 
 while(True):

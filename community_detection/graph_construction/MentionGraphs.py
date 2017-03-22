@@ -36,6 +36,8 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         if verbose:
             print("Mention scores length: {}".format(len(mention_scores)))
 
+        pickle.dump(mention_scores, open("mention-scores-{}".format(pickle_file_name), "wb"))
+
         if verbose:
             print("Constructing hashtag scores")
 
@@ -45,12 +47,17 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
 
         mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores,
                                                           unique_hashtags)
+        pickle.dump(mention_hashtag_scores, open("mention-hashtag-scores-{}".format(pickle_file_name), "wb"))
+
+
 
         if verbose:
             print("Constructing sa scores")
         preprocessed_tweets_for_sa = PreProcessing.preprocess_tweets(tweets, sa_preprocessors)
         mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores,
                                                        unique_hashtags)
+        pickle.dump(mention_hashtag_scores, open("mention-hashtag-sa-scores-{}".format(pickle_file_name), "wb"))
+
 
         if verbose:
             print("Normalizing scores")
@@ -65,12 +72,12 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         print("Creating list of edges based on threshold score")
 
     new_edges = set()
-    count = 0
+    # count = 0
     for tuple, score in final_scores.items():
         if score >= THRESHOLD:
             new_edges.add(tuple)
 
-        count += 1
+        # count += 1
         # print("Adding edge: Processed {}/{} scores.".format(count, len(final_scores.items())))
 
     if verbose:

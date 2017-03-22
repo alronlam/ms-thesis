@@ -106,7 +106,7 @@ def get_vertex_ids_in_each_community(graph, membership):
 def get_user_ids_from_vertex_ids(graph, vertex_ids):
     return [vertex["name"] for vertex in graph.vs if vertex.index in vertex_ids]
 
-def filter_tweets_belonging_to_user_ids(tweet_objects, user_ids_str):
+def get_tweet_texts_belonging_to_user_ids(tweet_objects, user_ids_str):
     return [tweet.text for tweet in tweet_objects if tweet.user.id_str in user_ids_str]
 
 
