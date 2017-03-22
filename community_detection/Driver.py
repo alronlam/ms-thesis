@@ -6,6 +6,7 @@ from datetime import datetime
 from analysis.mutual_following.FPUPC import count_mutual_edges
 from analysis.topic_modelling import TopicModellerFacade
 from analysis.topic_modelling.LDATopicModeller import LDATopicModeller
+from analysis.word_cloud.WordCloudDriver import generate_word_cloud_per_community, get_texts_per_community
 from community_detection import Utils
 from community_detection.weight_modification.EdgeWeightModifier import *
 from community_detection.weight_modification.user_graph_weight_modification.UserVerticesHashtagWeightModifier import \
@@ -137,6 +138,8 @@ def run_threshold_cycle(threshold, min_membership, graph_to_load):
         (graph, filtered_membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_membership)
         print("Filtered communities: {}/{}. Graph now has {} vertices and {} edges".format(len(filtered_membership), len(membership), len(graph.vs), len(graph.es)))
         membership = filtered_membership
+        pickle.dump(graph, open(run_name))
+        pickle.dump(membership, open("{}.membership".format(run_name)))
 
         # plot
         print("Plotting")
@@ -194,17 +197,62 @@ json_tweet_objects=[]
 json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
-configurations = [(0.04, 100, "brexit_mention_hashtag_contextualsa_graph"),
-                  (0.04, 100, "brexit_mention_hashtag_sa_graph"),]
-for (threshold, min_membership, graph_to_load) in configurations:
-    run_threshold_cycle(threshold, min_membership, graph_to_load)
 
+base_name = "100-threshold-0.04-brexit_mention_hashtag_contextualsa_graph.pickle"
+graph = pickle.load(open(base_name, "rb"))
+membership = pickle.load(open("{}.membership".format(base_name), "rb"))
 
-while(True):
-    threshold = float(input("Threshold?"))
-    min_membership = int(input("Min vertices in community?"))
-    graph_to_load = input("Graph to load?")
-    run_threshold_cycle(threshold, min_membership, graph_to_load)
+texts_per_community = get_texts_per_community(
+    graph,
+    membership,
+    json_tweet_objects,
+    preprocessors = brexit_topic_modelling_preprocessors
+    )
+
+for index, texts in enumerate(texts_per_community):
+    out_file = open("test_texts/{}-text-{}.txt".format(base_name, index), "w", encoding="utf8")
+    out_file.write("\n".join(texts))
+    out_file.close()
+
+generate_word_cloud_per_community(graph,
+                                  membership,
+                                  json_tweet_objects,
+                                  base_name,
+                                  preprocessors=brexit_topic_modelling_preprocessors)
+
+base_name = "100-threshold-0.05-brexit_mention_hashtag_contextualsa_graph.pickle"
+graph = pickle.load(open(base_name, "rb"))
+membership = pickle.load(open("{}.membership".format(base_name), "rb"))
+
+texts_per_community = get_texts_per_community(
+    graph,
+    membership,
+    json_tweet_objects,
+    preprocessors = brexit_topic_modelling_preprocessors
+    )
+
+for index, texts in enumerate(texts_per_community):
+    out_file = open("test_texts/{}-text-{}.txt".format(base_name, index), "w", encoding="utf8")
+    out_file.write("\n".join(texts))
+    out_file.close()
+
+generate_word_cloud_per_community(graph,
+                                  membership,
+                                  json_tweet_objects,
+                                  base_name,
+                                  preprocessors=brexit_topic_modelling_preprocessors)
+
+# configurations = [(0.04, 100, "brexit_mention_hashtag_contextualsa_graph"),
+#                   (0.04, 100, "brexit_mention_hashtag_sa_graph"),]
+# for (threshold, min_membership, graph_to_load) in configurations:
+#     run_threshold_cycle(threshold, min_membership, graph_to_load)
+#
+#
+# while(True):
+#     threshold = float(input("Threshold?"))
+#     min_membership = int(input("Min vertices in community?"))
+#     graph_to_load = input("Graph to load?")
+#     run_threshold_cycle(threshold, min_membership, graph_to_load)
 
 # pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
 #                  WordToLowercase(),
