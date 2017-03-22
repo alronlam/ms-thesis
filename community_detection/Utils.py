@@ -80,7 +80,7 @@ def determine_communities(G, out_file, verbose=False):
     return membership
 
 def remove_communities_with_less_than_n(membership, n):
-    return [m for m in membership if membership.count(m) > n ]
+    return [m for m in membership if membership.count(m) >= n ]
 
 def construct_graph_with_filtered_communities(g, membership, min_vertices_per_community):
     g = g.copy()
@@ -101,6 +101,15 @@ def get_vertex_ids_in_each_community(graph, membership):
     community_vertices = []
     for index, community in enumerate(communities):
         community_vertices.append(get_vertex_ids_in_community(graph, membership, index))
+    return community_vertices
+
+def get_vertex_ids_in_each_community_optimized(graph, membership, verbose=False):
+    communities = range(max(membership)+1)
+    community_vertices = [[] for x in communities]
+    for vertex_id, community_num in enumerate(membership):
+        community_vertices[community_num].append(vertex_id)
+        if verbose:
+            print("Grouping vertex IDs by community: {}/{}".format(vertex_id, len(membership)))
     return community_vertices
 
 def get_user_ids_from_vertex_ids(graph, vertex_ids):
