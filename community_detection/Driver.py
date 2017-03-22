@@ -6,6 +6,7 @@ from datetime import datetime
 from analysis.mutual_following.FPUPC import count_mutual_edges
 from analysis.topic_modelling import TopicModellerFacade
 from analysis.topic_modelling.LDATopicModeller import LDATopicModeller
+from analysis.word_cloud import WordCloudDriver
 from analysis.word_cloud.WordCloudDriver import generate_word_cloud_per_community, get_texts_per_community
 from community_detection import Utils
 from community_detection.weight_modification.EdgeWeightModifier import *
@@ -19,7 +20,8 @@ from sentiment_analysis import SentimentClassifier
 from analysis.viz import CommunityViz
 from sentiment_analysis.preprocessing import PreProcessing
 from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, ReplaceURL, ConcatWordArray, \
-    RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, RemoveTerm, RemoveExactTerms
+    RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, RemoveTerm, RemoveExactTerms, \
+    WordLengthFilter
 from sentiment_analysis.preprocessing.PreProcessing import WordToLowercase
 from twitter_data.database import DBUtils
 
@@ -117,29 +119,52 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers, topic_m
     general_out_file.close()
 
 
-def run_threshold_cycle(threshold, min_membership, graph_to_load):
+def run_threshold_cycle(threshold, min_membership, graph_to_load, tweet_objects, analysis_preprocessors=[]):
     try:
-        # load graph
+
         base_graph_name = "threshold-{}-{}.pickle".format(threshold, graph_to_load)
         run_name = "{}-{}".format(min_membership, base_graph_name)
-        graph = pickle.load(open(base_graph_name, "rb"))
-
         general_out_file = open("{}-general-info.txt".format(run_name), "w")
 
-        # load membership
-        try:
-            membership = pickle.load(open(base_graph_name+".membership", "rb"))
-            modularity = graph.modularity(membership)
-            print("Modularity: {}\n".format(modularity), file=general_out_file)
-        except Exception as e:
-            membership = Utils.determine_communities(graph, general_out_file, verbose=True)
-            pickle.dump(membership, open(base_graph_name+".membership", "wb"))
 
-        (graph, filtered_membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_membership)
-        print("Filtered communities: {}/{}. Graph now has {} vertices and {} edges".format(len(filtered_membership), len(membership), len(graph.vs), len(graph.es)))
-        membership = filtered_membership
-        pickle.dump(graph, open(run_name))
-        pickle.dump(membership, open("{}.membership".format(run_name)))
+        # load graph and membership
+
+        try:
+            print("Loading filtered communities")
+            graph = pickle.load(open(run_name, "rb"))
+            membership = pickle.load(open(run_name+".membership", "rb"))
+        except Exception as e:
+            print("Constructing filtered graph")
+            # no filtered communities yet, try loading unfiltered membership
+            graph = pickle.load(open(base_graph_name, "rb"))
+
+            try:
+                membership = pickle.load(open(base_graph_name+".membership", "rb"))
+                modularity = graph.modularity(membership)
+                print("Modularity: {}\n".format(modularity), file=general_out_file)
+            except Exception as e:
+                print("Determining membership")
+                membership = Utils.determine_communities(graph, general_out_file, verbose=True)
+                pickle.dump(membership, open(base_graph_name+".membership", "wb"))
+
+            (graph, filtered_membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_membership)
+            print("Filtered communities: {}/{}. Graph now has {} vertices and {} edges".format(len(filtered_membership), len(membership), len(graph.vs), len(graph.es)), file=general_out_file)
+            membership = filtered_membership
+            pickle.dump(graph, open(run_name, "wb"))
+            pickle.dump(membership, open("{}.membership".format(run_name), "wb"))
+
+        print("Generating raw texts")
+        # Raw texts
+        Utils.generate_text_for_communities(graph, membership, tweet_objects, run_name, analysis_preprocessors)
+        general_out_file.close()
+
+        print("Generating tf-idf word clouds")
+        # tf-idf
+        WordCloudDriver.generate_tfidf_word_cloud_per_community(graph,
+                                  membership,
+                                  tweet_objects,
+                                  run_name,
+                                  analysis_preprocessors)
 
         # plot
         print("Plotting")
@@ -149,16 +174,11 @@ def run_threshold_cycle(threshold, min_membership, graph_to_load):
         print("Modelling topics")
         LDA_topic_modeller = LDATopicModeller()
         topic_models_file = open("{}-topic-models.txt".format(run_name), "w", encoding="utf-8")
-        community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, json_tweet_objects, preprocessors=brexit_topic_modelling_preprocessors)
+        community_topics_tuple_list = TopicModellerFacade.construct_topic_models_for_communities(LDA_topic_modeller, graph, membership, tweet_objects, preprocessors=analysis_preprocessors)
         for community, topics in community_topics_tuple_list:
             if topics is not None:
                 print("Community {}:\n{}\n".format(community, topics), file=topic_models_file)
         topic_models_file.close()
-
-        general_out_file.close()
-
-        # tf-idf
-
 
     except Exception as e:
         print(e)
@@ -171,6 +191,7 @@ brexit_topic_modelling_preprocessors = [SplitWordByWhitespace(),
                  ReplaceUsernameMention(),
                  RemoveRT(),
                  RemoveLetterRepetitions(),
+                 WordLengthFilter(3),
                  RemoveTerm("#brexit"),
                  RemoveTerm("<url>"),
                  RemoveTerm("<username>"),
@@ -183,76 +204,42 @@ brexit_hashtag_preprocessors = [SplitWordByWhitespace(),
                                 RemoveTerm("#brexit"),
                                 ConcatWordArray()]
 
-#TODO double check preprocessors used for SA training
-#need to remove universal hashtag(s) for sa as well
 brexit_sa_preprocessors = [] # not needed anymore as pre-processing is done inside the KerasClassifier
-
-json_tweet_objects=[]
-
-# base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
-# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
-# base_graph_name = "brexit_mention_hashtag_sa_graph"
-# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
 
 json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
 json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
+# json_tweet_objects=[]
+
+configurations = [(100, 0.04, "brexit_mention_hashtag_contextualsa_graph"),
+                  (100, 0.05, "brexit_mention_hashtag_contextualsa_graph"),
+                  (100, 0.05, "brexit_mention_hashtag_sa_graph")]
+
+for min_vertices, threshold, graph_name in configurations:
+    base_name = "{}-threshold-{}-{}.pickle".format(min_vertices, threshold, graph_name)
+    graph = pickle.load(open(base_name, "rb"))
+    membership = pickle.load(open("{}.membership".format(base_name), "rb"))
+
+    print("Generating tf-idf word clouds")
+    WordCloudDriver.generate_tfidf_word_cloud_per_community(graph, membership, json_tweet_objects, base_name, preprocessors=brexit_topic_modelling_preprocessors)
+    print("Generating texts")
+    Utils.generate_text_for_communities(graph, membership, json_tweet_objects, base_name, preprocessors=brexit_topic_modelling_preprocessors)
+
+run_threshold_cycle(0.05, 100, "brexit_mention_hashtag_sa_graph", json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
+
+# base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
+# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
+base_graph_name = "brexit_mention_hashtag_sa_graph"
+graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.04)
+# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.05)
+run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
 
 
-base_name = "100-threshold-0.04-brexit_mention_hashtag_contextualsa_graph.pickle"
-graph = pickle.load(open(base_name, "rb"))
-membership = pickle.load(open("{}.membership".format(base_name), "rb"))
 
-texts_per_community = get_texts_per_community(
-    graph,
-    membership,
-    json_tweet_objects,
-    preprocessors = brexit_topic_modelling_preprocessors
-    )
-
-for index, texts in enumerate(texts_per_community):
-    out_file = open("test_texts/{}-text-{}.txt".format(base_name, index), "w", encoding="utf8")
-    out_file.write("\n".join(texts))
-    out_file.close()
-
-generate_word_cloud_per_community(graph,
-                                  membership,
-                                  json_tweet_objects,
-                                  base_name,
-                                  preprocessors=brexit_topic_modelling_preprocessors)
-
-base_name = "100-threshold-0.05-brexit_mention_hashtag_contextualsa_graph.pickle"
-graph = pickle.load(open(base_name, "rb"))
-membership = pickle.load(open("{}.membership".format(base_name), "rb"))
-
-texts_per_community = get_texts_per_community(
-    graph,
-    membership,
-    json_tweet_objects,
-    preprocessors = brexit_topic_modelling_preprocessors
-    )
-
-for index, texts in enumerate(texts_per_community):
-    out_file = open("test_texts/{}-text-{}.txt".format(base_name, index), "w", encoding="utf8")
-    out_file.write("\n".join(texts))
-    out_file.close()
-
-generate_word_cloud_per_community(graph,
-                                  membership,
-                                  json_tweet_objects,
-                                  base_name,
-                                  preprocessors=brexit_topic_modelling_preprocessors)
-
-# configurations = [(0.04, 100, "brexit_mention_hashtag_contextualsa_graph"),
-#                   (0.04, 100, "brexit_mention_hashtag_sa_graph"),]
-# for (threshold, min_membership, graph_to_load) in configurations:
-#     run_threshold_cycle(threshold, min_membership, graph_to_load)
-#
-#
 # while(True):
 #     threshold = float(input("Threshold?"))
 #     min_membership = int(input("Min vertices in community?"))
 #     graph_to_load = input("Graph to load?")
-#     run_threshold_cycle(threshold, min_membership, graph_to_load)
+#     run_threshold_cycle(threshold, min_membership, graph_to_load, json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
 
 # pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
 #                  WordToLowercase(),
@@ -260,6 +247,7 @@ generate_word_cloud_per_community(graph,
 #                  RemovePunctuationFromWords(),
 #                  ReplaceUsernameMention(),
 #                  RemoveRT(),
+#                  WordLengthFilter(3),
 #                  RemoveLetterRepetitions(),
 #                  RemoveTerm("#pilipinasdebates2016"),
 #                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
@@ -271,7 +259,6 @@ generate_word_cloud_per_community(graph,
 #                                 RemoveTerm("#pilipinasdebates2016"),
 #                                 ConcatWordArray()]
 #
-# #TODO double check preprocessors used for SA training
 # #need to remove universal hashtag(s) for sa as well
 # pilipinasdebates_sa_preprocessors = pilipinasdebates_hashtag_preprocessors
 #

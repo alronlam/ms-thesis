@@ -1,28 +1,16 @@
 import numpy
 import path
 from PIL import Image
+from gensim import corpora, models
 from matplotlib import pyplot
+from nltk import RegexpTokenizer
 from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
 
+from analysis.tf_idf.TfIdfExtractor import generate_tfidf_corpus_dictionary
 from community_detection import Utils
 from community_detection.Utils import get_vertex_ids_in_each_community, get_user_ids_from_vertex_ids, \
-    get_tweet_texts_belonging_to_user_ids, get_vertex_ids_in_each_community_optimized
+    get_tweet_texts_belonging_to_user_ids, get_vertex_ids_in_each_community_optimized, get_texts_per_community
 from sentiment_analysis.preprocessing.PreProcessing import preprocess_strings
-
-
-def get_texts_per_community(graph, membership, tweet_objects, preprocessors=[]):
-
-    texts_per_community = []
-
-    vertex_ids_per_community = get_vertex_ids_in_each_community_optimized(graph, membership)
-
-    for community_num, vertex_ids in enumerate(vertex_ids_per_community):
-        user_ids_str = get_user_ids_from_vertex_ids(graph, vertex_ids)
-        tweet_texts = get_tweet_texts_belonging_to_user_ids(tweet_objects, user_ids_str)
-        tweet_texts = preprocess_strings(tweet_texts, preprocessors)
-        texts_per_community.append(tweet_texts)
-
-    return texts_per_community
 
 
 def generate_word_cloud_per_community(graph, membership, tweet_objects, base_file_name, preprocessors=[]):
@@ -46,3 +34,30 @@ def generate_word_cloud_per_community(graph, membership, tweet_objects, base_fil
             pyplot.axis("off")
             pyplot.figure()
             word_cloud.to_file("word_clouds/{}-community-{}.png".format(base_file_name, index))
+
+
+
+def generate_tfidf_word_cloud_per_community(graph, membership, tweet_objects, base_file_name, preprocessors=[]):
+    texts_per_community = get_texts_per_community(graph, membership, tweet_objects, preprocessors)
+    texts_per_community = [" ".join(texts) for texts in texts_per_community] # convert to list of strings
+    tokens_per_community = [text.split() for text in texts_per_community]
+    tfidf_model, corpus, dictionary = generate_tfidf_corpus_dictionary(tokens_per_community)
+
+    brexit_coloring = numpy.array(Image.open("C:/Users/user/PycharmProjects/ms-thesis/uk_flag.png"))
+
+
+    for index, text in enumerate(texts_per_community):
+        print("TF-IDF word cloud: {}/{}".format(index, len(texts_per_community)))
+
+        if text.strip():
+            top_words = numpy.sort(numpy.array(tfidf_model[corpus[index]],dtype = [('word',int), ('score',float)]),order='score')[::-1]
+            word_cloud = WordCloud(background_color="white", max_words=500, mask=brexit_coloring, max_font_size=40, random_state=42)
+            words_to_fit = [(dictionary[word], score) for (word, score) in top_words]
+            word_cloud = word_cloud.fit_words(dict(words_to_fit))
+            image_colors = ImageColorGenerator(brexit_coloring)
+
+            pyplot.imshow(word_cloud.recolor(color_func=image_colors), interpolation="bilinear")
+            pyplot.axis("off")
+            pyplot.figure()
+            word_cloud.to_file("word_clouds/{}-community-{}.png".format(base_file_name, index))
+            pyplot.close('all')

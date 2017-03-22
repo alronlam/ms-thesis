@@ -2,6 +2,7 @@ from community_detection.graph_construction import TweetGraphs
 from community_detection.graph_construction import MentionGraphs
 from community_detection.weight_modification.EdgeWeightModifier import *
 from sentiment_analysis.evaluation import TSVParser
+from sentiment_analysis.preprocessing.PreProcessing import preprocess_strings
 from twitter_data.SentiTweets import SentiTweetAdapter
 from twitter_data.database import DBManager
 from twitter_data.database import DBUtils
@@ -175,6 +176,35 @@ def extract_vertices_in_communities(graph, membership):
 
     return dict
 
+def generate_text_for_communities(graph, membership, tweet_objects, base_name, preprocessors=[]):
+    texts_per_community = get_texts_per_community(
+        graph,
+        membership,
+        tweet_objects,
+        preprocessors = preprocessors
+        )
+
+    for index, texts in enumerate(texts_per_community):
+        print("Raw texts: {}/{}".format(index, len(texts_per_community)))
+
+        out_file = open("texts/{}-text-{}.txt".format(base_name, index), "w", encoding="utf8")
+        out_file.write("\n".join(texts))
+        out_file.close()
+
+
+def get_texts_per_community(graph, membership, tweet_objects, preprocessors=[]):
+
+    texts_per_community = []
+
+    vertex_ids_per_community = get_vertex_ids_in_each_community_optimized(graph, membership)
+
+    for community_num, vertex_ids in enumerate(vertex_ids_per_community):
+        user_ids_str = get_user_ids_from_vertex_ids(graph, vertex_ids)
+        tweet_texts = get_tweet_texts_belonging_to_user_ids(tweet_objects, user_ids_str)
+        tweet_texts = preprocess_strings(tweet_texts, preprocessors)
+        texts_per_community.append(tweet_texts)
+
+    return texts_per_community
 
 def combine_text_for_each_community(community_dict):
     text_dict = {}
@@ -183,7 +213,6 @@ def combine_text_for_each_community(community_dict):
             text_dict[community_number] = combine_text_in_vertex_set(vertex_set)
 
     return text_dict
-
 
 def combine_text_in_vertex_set(vertex_set):
     return " ".join([vertex["display_str"] for vertex in vertex_set])
