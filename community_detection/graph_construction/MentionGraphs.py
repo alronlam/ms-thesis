@@ -270,6 +270,8 @@ def normalize(score_dict):
 
 
 def get_max_score(score_dict):
+    if len(score_dict.items()):
+        return 0
     return max([score for tuple, score in score_dict.items()])
 
 
