@@ -261,6 +261,10 @@ def consolidate(score_dict_list):
 
 def normalize(score_dict):
     max_score = get_max_score(score_dict)
+
+    if max_score == 0: # cannot normalize
+        return score_dict
+
     for tuple, score in score_dict.items():
         score_dict[tuple] = score / max_score
 
