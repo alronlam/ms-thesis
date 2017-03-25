@@ -36,6 +36,8 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         if verbose:
             print("Mention scores length: {}".format(len(mention_scores)))
 
+        pickle.dump(mention_scores, open("mention-scores-{}".format(pickle_file_name), "wb"))
+
         if verbose:
             print("Constructing hashtag scores")
 
@@ -45,12 +47,17 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
 
         mention_hashtag_scores = score_hashtags_optimized(preprocessed_tweets_for_hashtags, mention_scores,
                                                           unique_hashtags)
+        pickle.dump(mention_hashtag_scores, open("mention-hashtag-scores-{}".format(pickle_file_name), "wb"))
+
+
 
         if verbose:
             print("Constructing sa scores")
         preprocessed_tweets_for_sa = PreProcessing.preprocess_tweets(tweets, sa_preprocessors)
         mention_hashtag_sa_scores = score_sa_optimized(preprocessed_tweets_for_sa, classifier, mention_hashtag_scores,
                                                        unique_hashtags)
+        pickle.dump(mention_hashtag_scores, open("mention-hashtag-sa-scores-{}".format(pickle_file_name), "wb"))
+
 
         if verbose:
             print("Normalizing scores")
@@ -65,12 +72,12 @@ def construct_user_mention_hashtag_sa_graph(graph, tweets, classifier, pickle_fi
         print("Creating list of edges based on threshold score")
 
     new_edges = set()
-    count = 0
+    # count = 0
     for tuple, score in final_scores.items():
         if score >= THRESHOLD:
             new_edges.add(tuple)
 
-        count += 1
+        # count += 1
         # print("Adding edge: Processed {}/{} scores.".format(count, len(final_scores.items())))
 
     if verbose:
@@ -152,10 +159,13 @@ def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
             curr_user = tweet.user.id_str
             if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
 
-                conv_context = DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])
-                conv_context = [tweet.text for tweet in conv_context]
-                sentiment = classifier.classify_sentiment(tweet.text, {"conv_context":conv_context})
+                try:
+                    conv_context = DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])
+                    conv_context = [tweet.text for tweet in conv_context]
+                except Exception as e:
+                    conv_context = []
 
+                sentiment = classifier.classify_sentiment(tweet.text, {"conv_context":conv_context})
                 user_set = None
                 if sentiment == 'positive':
                     user_set = positive_user_set
@@ -251,6 +261,10 @@ def consolidate(score_dict_list):
 
 def normalize(score_dict):
     max_score = get_max_score(score_dict)
+
+    if max_score == 0: # cannot normalize
+        return score_dict
+
     for tuple, score in score_dict.items():
         score_dict[tuple] = score / max_score
 
@@ -260,6 +274,8 @@ def normalize(score_dict):
 
 
 def get_max_score(score_dict):
+    if len(score_dict.items()):
+        return 0
     return max([score for tuple, score in score_dict.items()])
 
 
