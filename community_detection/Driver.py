@@ -266,14 +266,14 @@ pilipinasdebates_sa_preprocessors = []
 
 #
 print("Retrieving senti tweet objects.")
-senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test', limit=500)
-base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
+senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test', limit=100000)
 # base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
 # graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
-base_graph_name = "pilipinasdebates_mention_hashtag_sa_graph"
+base_graph_name = "senti_pilipinasdebates_mention_hashtag_sa_graph"
 anew_classifier = ANEWLexiconClassifier()
 graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, anew_classifier, hashtag_preprocessors=pilipinasdebates_hashtag_preprocessors, sa_preprocessors=pilipinasdebates_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.05)
-run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", senti_tweet_objects, analysis_preprocessors=pilipinasdebates_hashtag_preprocessors)
+run_threshold_cycle(0.05, 100, "senti_pilipinasdebates_mention_hashtag_sa_graph", senti_tweet_objects, analysis_preprocessors=pilipinasdebates_hashtag_preprocessors)
+run_threshold_cycle(0.04, 100, "senti_pilipinasdebates_mention_hashtag_sa_graph", senti_tweet_objects, analysis_preprocessors=pilipinasdebates_hashtag_preprocessors)
 
 while(True):
     threshold = float(input("Threshold?"))

@@ -172,7 +172,7 @@ def load_tweet_objects_from_senti_csv_files(csv_folder_path, limit=None):
     csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
 
     if limit:
-        senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for index, csv_row in enumerate(csv_rows) if index <= limit]
+        senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for index, csv_row in enumerate(csv_rows) if index < limit]
     else:
         senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows]
     return senti_tweet_objects
