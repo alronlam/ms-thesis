@@ -1,9 +1,12 @@
+from tweepy import Status
+
 from community_detection.graph_construction import TweetGraphs
 from community_detection.graph_construction import MentionGraphs
 from community_detection.weight_modification.EdgeWeightModifier import *
 from sentiment_analysis.evaluation import TSVParser
 from sentiment_analysis.preprocessing.PreProcessing import preprocess_strings
 from twitter_data.SentiTweets import SentiTweetAdapter
+from twitter_data.api import TweepyHelper
 from twitter_data.database import DBManager
 from twitter_data.database import DBUtils
 from twitter_data.parsing.csv_parser import CSVParser
@@ -62,7 +65,7 @@ def modify_network_weights(G, file_name, tweet_objects, edge_weight_modifiers, v
     # Modify edge weights
     if verbose:
         print("Going to modify edge weights")
-    G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects}, verbose)
+    G = modify_edge_weights(G, edge_weight_modifiers, {"tweets":tweet_objects, "with_context":True}, verbose)
     return G
 
 ################################################
@@ -143,18 +146,35 @@ def load_tweet_ids_from_json_files(json_folder_path):
         try:
             tweet_ids.append(tweet["id"])
         except Exception as e:
+            print(e)
             pass
     return tweet_ids
 
+def load_tweet_objects_from_json_files(json_folder_path):
+    tweet_files = FolderIO.get_files(json_folder_path, False, '.json')
+    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
 
-def load_tweet_objects_from_senti_csv_files(csv_folder_path):
+    tweet_objects = []
+    for tweet_json in tweet_generator:
+        try:
+            tweet_objects.append(TweepyHelper.parse_from_json(tweet_json))
+        except Exception as e:
+            print(e)
+            pass
+    return tweet_objects
+
+def load_tweet_objects_from_senti_csv_files(csv_folder_path, limit=None):
 
     USER_CSV_COL_INDEX = 1
     TEXT_CSV_COL_INDEX = 2
 
     csv_files = FolderIO.get_files(csv_folder_path, False, '.csv')
     csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
-    senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows]
+
+    if limit:
+        senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for index, csv_row in enumerate(csv_rows) if index <= limit]
+    else:
+        senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows]
     return senti_tweet_objects
 
 
@@ -237,3 +257,4 @@ def load_function_words(path):
     with open(path, "r") as function_words_file:
         words = [word.strip() for word in function_words_file.readlines()]
     return words
+

@@ -159,10 +159,13 @@ def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
             curr_user = tweet.user.id_str
             if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:
 
-                conv_context = DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])
-                conv_context = [tweet.text for tweet in conv_context]
-                sentiment = classifier.classify_sentiment(tweet.text, {"conv_context":conv_context})
+                try:
+                    conv_context = DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])
+                    conv_context = [tweet.text for tweet in conv_context]
+                except Exception as e:
+                    conv_context = []
 
+                sentiment = classifier.classify_sentiment(tweet.text, {"conv_context":conv_context})
                 user_set = None
                 if sentiment == 'positive':
                     user_set = positive_user_set

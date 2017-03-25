@@ -96,3 +96,6 @@ def tweepy_function(func, *args):
         print("Tweep Error: {}".format(err))
     except Exception as e:
         print("Unexpected error: {}".format(e))
+
+def parse_from_json(json):
+    return Status.parse(api=api, json=json)

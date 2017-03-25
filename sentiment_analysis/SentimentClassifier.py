@@ -241,8 +241,12 @@ class ANEWLexiconClassifier(SentimentClassifier):
         # get all scores for the words in the text
         for tweet_word in tweet_text:
             sentiment_score = ANEWLexiconManager.get_sentiment_score((tweet_word))
-            if sentiment_score < 0:
-                sentiment_score *= 1.8
+            if sentiment_score < 0 :
+                sentiment_score = -1
+            elif sentiment_score > 0:
+                sentiment_score = 1
+            # if sentiment_score < 0:
+            #     sentiment_score *= 1.8
             tweet_word_sentiment_scores.append(sentiment_score)
 
         return sum(tweet_word_sentiment_scores)
@@ -250,9 +254,9 @@ class ANEWLexiconClassifier(SentimentClassifier):
     def classify_sentiment(self, tweet_text, contextual_info_dict):
         sentiment_score = self.get_overall_sentiment_score(tweet_text)
 
-        if sentiment_score > 0.5:
+        if sentiment_score > 0:
             return "positive"
-        elif sentiment_score < -0.5:
+        elif sentiment_score < 0:
             return "negative"
         else:
             return "neutral"

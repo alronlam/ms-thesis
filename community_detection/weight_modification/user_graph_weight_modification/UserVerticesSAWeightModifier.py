@@ -1,5 +1,5 @@
 from community_detection.weight_modification.EdgeWeightModifier import EdgeWeightModifierBase
-
+from twitter_data.database import DBUtils
 
 class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
     def __init__(self, sentiment_classifier):
@@ -8,14 +8,17 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
     def modify_edge_weights(self, graph, params, verbose):
         hashtag_sentiment_users_dict = {}
         tweets = params["tweets"]
-        contextual_info_dict = params.get("contextual_info")
+        with_context = params["with_context"]
 
         if verbose:
             print("Constructing (hashtag, sentiment) -> user dictionary.")
 
         for index, tweet in enumerate(tweets):
             user_id_str = tweet.user.id_str
-            sentiment = self.classifier.classify_sentiment(tweet.text, contextual_info_dict)
+            if with_context:
+                sentiment = self.classifier.classify_sentiment(tweet.text, {"conv_context":DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])})
+            else:
+                sentiment = self.classifier.classify_sentiment(tweet.text, [])
             hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
 
             for hashtag in hashtags:

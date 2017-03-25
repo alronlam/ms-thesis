@@ -18,6 +18,7 @@ from community_detection.weight_modification.user_graph_weight_modification.User
     UserVerticesMentionsWeightModifier
 from sentiment_analysis import SentimentClassifier
 from analysis.viz import CommunityViz
+from sentiment_analysis.SentimentClassifier import ANEWLexiconClassifier
 from sentiment_analysis.preprocessing import PreProcessing
 from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace, ReplaceURL, ConcatWordArray, \
     RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, RemoveTerm, RemoveExactTerms, \
@@ -31,17 +32,17 @@ from twitter_data.database import DBUtils
 #################
 ### Constants ###
 #################
-keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d_preprocessed.npz.pickle"
-keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_with_context.json"
-keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_with_context_weights.h5"
-keras_classifier_with_context = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path, with_context=True)
-
-keras_classifier_json_path_no_context = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
-keras_classifier_weights_path_no_context = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
-keras_classifier_no_context = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path_no_context, keras_classifier_weights_path_no_context, with_context=False)
-user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier_with_context)
-user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
-user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
+# keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d_preprocessed.npz.pickle"
+# keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_with_context.json"
+# keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_with_context_weights.h5"
+# keras_classifier_with_context = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path, with_context=True)
+#
+# keras_classifier_json_path_no_context = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
+# keras_classifier_weights_path_no_context = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
+# keras_classifier_no_context = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path_no_context, keras_classifier_weights_path_no_context, with_context=False)
+# user_keras_sa_weight_modifier = UserVerticesSAWeightModifier(keras_classifier_with_context)
+# user_hashtag_weight_modifier = UserVerticesHashtagWeightModifier()
+# user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
 # tweet_keras_sa_weight_modifier = TweetVerticesSAWeightModifier(keras_classifier)
 
 ###################
@@ -73,6 +74,9 @@ user_mention_weight_modifier = UserVerticesMentionsWeightModifier()
 ### User Network (Mentions) Experiments ###
 ###########################################
 def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers, topic_modelling_preprocessors=[], min_membership=100):
+
+    run_name = "{}-{}".format(min_membership, run_name)
+
     print("Running: "+run_name)
 
     # Create Output Folder
@@ -99,7 +103,21 @@ def run_one_cycle(run_name, graph, tweet_objects, edge_weight_modifiers, topic_m
     (graph, filtered_membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_membership)
     print("Filtered communities: {}/{}. Graph now has {} vertices and {} edges".format(len(filtered_membership), len(membership), len(graph.vs), len(graph.es)), file=general_out_file)
     membership = filtered_membership
+    graph.save(dir_name +"/" + run_name + "_modified_filtered.pickle")
+    pickle.dump(membership, open(dir_name +"/" + run_name + "_filtered.membership", "wb"))
     general_out_file.flush()
+
+    # Raw texts
+    Utils.generate_text_for_communities(graph, membership, tweet_objects, run_name, [])
+
+    print("Generating tf-idf word clouds")
+    # tf-idf
+    WordCloudDriver.generate_tfidf_word_cloud_per_community(graph,
+                              membership,
+                              tweet_objects,
+                              run_name,
+                              topic_modelling_preprocessors)
+
 
     # Topic Modelling
     print("Modelling topics")
@@ -155,7 +173,7 @@ def run_threshold_cycle(threshold, min_membership, graph_to_load, tweet_objects,
 
         print("Generating raw texts")
         # Raw texts
-        Utils.generate_text_for_communities(graph, membership, tweet_objects, run_name, analysis_preprocessors)
+        Utils.generate_text_for_communities(graph, membership, tweet_objects, run_name, [])
         general_out_file.close()
 
         print("Generating tf-idf word clouds")
@@ -191,7 +209,7 @@ brexit_topic_modelling_preprocessors = [SplitWordByWhitespace(),
                  ReplaceUsernameMention(),
                  RemoveRT(),
                  RemoveLetterRepetitions(),
-                 WordLengthFilter(3),
+                 #WordLengthFilter(3),
                  RemoveTerm("#brexit"),
                  RemoveTerm("<url>"),
                  RemoveTerm("<username>"),
@@ -206,34 +224,17 @@ brexit_hashtag_preprocessors = [SplitWordByWhitespace(),
 
 brexit_sa_preprocessors = [] # not needed anymore as pre-processing is done inside the KerasClassifier
 
-json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
-json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
-# json_tweet_objects=[]
+# json_tweet_ids = Utils.load_tweet_ids_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# json_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(json_tweet_ids, verbose=True)
 
-configurations = [(100, 0.04, "brexit_mention_hashtag_contextualsa_graph"),
-                  (100, 0.05, "brexit_mention_hashtag_contextualsa_graph"),
-                  (100, 0.05, "brexit_mention_hashtag_sa_graph")]
-
-for min_vertices, threshold, graph_name in configurations:
-    base_name = "{}-threshold-{}-{}.pickle".format(min_vertices, threshold, graph_name)
-    graph = pickle.load(open(base_name, "rb"))
-    membership = pickle.load(open("{}.membership".format(base_name), "rb"))
-
-    print("Generating tf-idf word clouds")
-    WordCloudDriver.generate_tfidf_word_cloud_per_community(graph, membership, json_tweet_objects, base_name, preprocessors=brexit_topic_modelling_preprocessors)
-    print("Generating texts")
-    Utils.generate_text_for_communities(graph, membership, json_tweet_objects, base_name, preprocessors=brexit_topic_modelling_preprocessors)
-
-run_threshold_cycle(0.05, 100, "brexit_mention_hashtag_sa_graph", json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
-
-# base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
-# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
-base_graph_name = "brexit_mention_hashtag_sa_graph"
-graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.04)
-# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.05)
-run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
-
-
+# run_threshold_cycle(0.05, 100, "brexit_mention_hashtag_sa_graph", json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
+#
+# # base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
+# # graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
+# base_graph_name = "brexit_mention_hashtag_sa_graph"
+# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.04)
+# # graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_no_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.05)
+# run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
 
 # while(True):
 #     threshold = float(input("Threshold?"))
@@ -241,29 +242,46 @@ run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", json_tweet_obj
 #     graph_to_load = input("Graph to load?")
 #     run_threshold_cycle(threshold, min_membership, graph_to_load, json_tweet_objects, analysis_preprocessors=brexit_topic_modelling_preprocessors)
 
-# pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
-#                  WordToLowercase(),
-#                  ReplaceURL(),
-#                  RemovePunctuationFromWords(),
-#                  ReplaceUsernameMention(),
-#                  RemoveRT(),
-#                  WordLengthFilter(3),
-#                  RemoveLetterRepetitions(),
-#                  RemoveTerm("#pilipinasdebates2016"),
-#                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
-#                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt")),
-#                  ConcatWordArray()]
+pilipinasdebates_topic_modelling_preprocessors = [SplitWordByWhitespace(),
+                 WordToLowercase(),
+                 ReplaceURL(),
+                 RemovePunctuationFromWords(),
+                 ReplaceUsernameMention(),
+                 RemoveRT(),
+                 WordLengthFilter(3),
+                 RemoveLetterRepetitions(),
+                 RemoveTerm("#pilipinasdebates2016"),
+                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
+                 RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt")),
+                 ConcatWordArray()]
+
+pilipinasdebates_hashtag_preprocessors = [SplitWordByWhitespace(),
+                                WordToLowercase(),
+                                RemoveTerm("#pilipinasdebates2016"),
+                                ConcatWordArray()]
+
+
+pilipinasdebates_sa_preprocessors = []
+
+
 #
-# pilipinasdebates_hashtag_preprocessors = [SplitWordByWhitespace(),
-#                                 WordToLowercase(),
-#                                 RemoveTerm("#pilipinasdebates2016"),
-#                                 ConcatWordArray()]
-#
-# #need to remove universal hashtag(s) for sa as well
-# pilipinasdebates_sa_preprocessors = pilipinasdebates_hashtag_preprocessors
-#
-# senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test')
-# base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
+print("Retrieving senti tweet objects.")
+senti_tweet_objects = Utils.load_tweet_objects_from_senti_csv_files('D:/DLSU/Masters/MS Thesis/data-2016/test', limit=500)
+base_graph_name = "senti_pilipinas_debates_mention_hashtag_sa_graph"
+# base_graph_name = "brexit_mention_hashtag_contextualsa_graph"
+# graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, json_tweet_objects, keras_classifier_with_context, hashtag_preprocessors=brexit_hashtag_preprocessors, sa_preprocessors=brexit_sa_preprocessors, verbose=True, load_mode=True, THRESHOLD = 0.04)
+base_graph_name = "pilipinasdebates_mention_hashtag_sa_graph"
+anew_classifier = ANEWLexiconClassifier()
+graph = Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, anew_classifier, hashtag_preprocessors=pilipinasdebates_hashtag_preprocessors, sa_preprocessors=pilipinasdebates_sa_preprocessors, verbose=True, load_mode=False, THRESHOLD = 0.05)
+run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", senti_tweet_objects, analysis_preprocessors=pilipinasdebates_hashtag_preprocessors)
+
+while(True):
+    threshold = float(input("Threshold?"))
+    min_membership = int(input("Min vertices in community?"))
+    graph_to_load = input("Graph to load?")
+    run_threshold_cycle(threshold, min_membership, graph_to_load, senti_tweet_objects, analysis_preprocessors=pilipinasdebates_hashtag_preprocessors)
+
+
 # Utils.generate_user_mention_hashtag_sa_network(base_graph_name, senti_tweet_objects, keras_classifier, hashtag_preprocessors=pilipinasdebates_hashtag_preprocessors, sa_preprocessors=pilipinasdebates_sa_preprocessors, verbose=True)
 # graph = pickle.load(open(base_graph_name+".pickle", "rb"))
 # run_one_cycle(base_graph_name, graph, senti_tweet_objects, [], topic_modelling_preprocessors=pilipinasdebates_topic_modelling_preprocessors) # mentions only
@@ -280,7 +298,7 @@ run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", json_tweet_obj
 # graph = pickle.load(open(base_graph_name+".pickle", "rb"))
 # run_one_cycle(base_graph_name, graph, json_tweet_objects, []) # mentions only
 # run_one_cycle(base_graph_name+"_with_hashtags", graph, json_tweet_objects, [user_hashtag_weight_modifier])
-# run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, json_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier])
+# run_one_cycle(base_graph_name+"_with_hashtags_sa", graph, json_tweet_objects, [user_hashtag_weight_modifier, user_keras_sa_weight_modifier], min_membership=300)
 
 # vanzo_tweet_ids = Utils.load_tweet_ids_from_vanzo_dataset()
 # vanzo_tweet_objects = DBUtils.retrieve_all_tweet_objects_from_db(vanzo_tweet_ids, verbose=True)
@@ -334,8 +352,7 @@ run_threshold_cycle(0.04, 100, "brexit_mention_hashtag_sa_graph", json_tweet_obj
 ###################################
 ### Topic Modelling Experiments ###
 ###################################
-# LDA_topic_modeller = LDATopicModeller()
-
+LDA_topic_modeller = LDATopicModeller()
 def load_and_construct_topic_models(graph_pickle_file, out_file, tweet_objects, min_vertices_per_community=20):
     graph = pickle.load(open(graph_pickle_file, "rb"))
     membership = Utils.determine_communities(graph, None, verbose=True)
