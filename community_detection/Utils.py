@@ -1,3 +1,5 @@
+import re
+
 from tweepy import Status
 
 from community_detection.graph_construction import TweetGraphs
@@ -150,14 +152,36 @@ def load_tweet_ids_from_json_files(json_folder_path):
             pass
     return list(set(tweet_ids))
 
-def load_tweet_objects_from_json_files(json_folder_path):
+def load_non_rt_tweet_ids_from_json_files(json_folder_path):
+    tweet_files = FolderIO.get_files(json_folder_path, False, '.json')
+    tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
+
+    tweet_ids = []
+    for tweet in tweet_generator:
+        try:
+            if not re.match("rt\s@\S+:", tweet["text"].lower()):
+                tweet_ids.append(tweet["id"])
+        except Exception as e:
+            print(e)
+            pass
+    return list(set(tweet_ids))
+
+def load_tweet_objects_from_json_files(json_folder_path, limit=None):
     tweet_files = FolderIO.get_files(json_folder_path, False, '.json')
     tweet_generator = JSONParser.parse_files_into_json_generator(tweet_files)
 
     tweet_objects = []
+    index = 0
     for tweet_json in tweet_generator:
+        if limit:
+            if index >= limit:
+                break
+            index += 1
         try:
-            tweet_objects.append(TweepyHelper.parse_from_json(tweet_json))
+            status = TweepyHelper.parse_from_json(tweet_json)
+            #check if valid status; having limit in json means it was a rate limit response
+            if "limit" not in status._json:
+                tweet_objects.append(status)
         except Exception as e:
             print(e)
             pass
@@ -178,9 +202,39 @@ def load_tweet_objects_from_senti_csv_files(csv_folder_path, limit=None):
     return senti_tweet_objects
 
 
+def load_non_rt_tweet_objects_from_senti_csv_files(csv_folder_path, limit=None):
+
+    USER_CSV_COL_INDEX = 1
+    TEXT_CSV_COL_INDEX = 2
+
+    csv_files = FolderIO.get_files(csv_folder_path, False, '.csv')
+    csv_rows = CSVParser.parse_files_into_csv_row_generator(csv_files, True)
+
+    if limit:
+        senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for index, csv_row in enumerate(csv_rows) if index < limit and not re.match("rt\s@\S+:", csv_row[TEXT_CSV_COL_INDEX].lower())]
+    else:
+        senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows if not re.match("rt\s@\S+:", csv_row[TEXT_CSV_COL_INDEX].lower())]
+    return senti_tweet_objects
+
 #########################
 ### Utility Functions ###
 #########################
+
+def generate_stats_per_community(graph, vertex_ids_per_community, tweet_objects):
+    stats = []
+    dataset_users = [tweet.user.id_str for tweet in tweet_objects]
+    for community_num, vertex_ids in enumerate(vertex_ids_per_community):
+
+        user_ids = get_user_ids_from_vertex_ids(graph, vertex_ids)
+        present_user_ids = [user_id for user_id in user_ids if user_id in dataset_users]
+
+        tweet_texts = get_tweet_texts_belonging_to_user_ids(tweet_objects, user_ids)
+
+        stats_string = "# of Users: {}\n# of Users who exist in the dataset: {}\n# of Tweets:{}"\
+            .format(len(user_ids), len(present_user_ids), len(tweet_texts))
+
+        stats.append(stats_string)
+    return stats
 
 def extract_vertices_in_communities(graph, membership):
     dict = {}
