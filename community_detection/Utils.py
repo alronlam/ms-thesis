@@ -148,7 +148,7 @@ def load_tweet_ids_from_json_files(json_folder_path):
         except Exception as e:
             print(e)
             pass
-    return tweet_ids
+    return list(set(tweet_ids))
 
 def load_tweet_objects_from_json_files(json_folder_path):
     tweet_files = FolderIO.get_files(json_folder_path, False, '.json')
