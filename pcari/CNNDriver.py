@@ -7,7 +7,7 @@ from keras.engine import Input, Model
 from keras.layers import Embedding, Conv1D, Lambda, Flatten, Dense, MaxPooling1D
 from sklearn.cross_validation import StratifiedKFold
 
-YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/yolanda_nov2013_feb2014_dataset_relevant_irrelevant_removed_terms2.npz"
+YOLANDA_NOV2013_FEB2014_NPZ_PATH = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/relevant_irrelevant.npz"
 NUM_CATEGORIES = 2
 
 def load_dataset(dataset_path):
@@ -83,6 +83,8 @@ def train_and_display_metrics(model, x_train_arr, y_train, x_test_arr, y_test, r
     print(np.array_str(metrics.confusion_matrix(actual_arr, predicted_arr)), file=results_file) # ordering is alphabetical order of label names
     print("", file=results_file, flush=True)
 
+    return model
+
 def display_dataset_statistics(train_labels, test_labels, results_file):
     print("Train Data Composition({}):".format(len(train_labels)), file=results_file)
     counter = Counter(train_labels)
@@ -112,7 +114,13 @@ def main_driver(n_folds, data_dir, category, output_folder=""):
             display_dataset_statistics(numeric_labels[train], numeric_labels[test], results_file)
             model = None # Clearing the NN.
             model = create_model(embedding_matrix)
-            train_and_display_metrics(model, data[train], labels[train], data[test], labels[test], results_file)
+            model = train_and_display_metrics(model, data[train], labels[train], data[test], labels[test], results_file)
+
+            with open("relevant_irrelevant_model_fold_{}.json".format(i), "w") as json_file:
+                json_file.write(model.to_json())
+                json_file.close()
+            model.save_weights("relevant_irrelevant_weights_fold_{}.h5".format(i))
+
 
 # input_root_folder = "data/binary/npz/"
 # output_root_folder="results/{}/".format(datetime.now().strftime("%Y-%m-%d-%H-%M-%S"))
@@ -122,4 +130,4 @@ def main_driver(n_folds, data_dir, category, output_folder=""):
 #     main_driver(5, input_root_folder+category+".npz", category, "")
 
 
-main_driver(5, YOLANDA_NOV2013_FEB2014_NPZ_PATH, "relevant_irrelevant_removed_terms2")
+main_driver(3, YOLANDA_NOV2013_FEB2014_NPZ_PATH, "relevant_irrelevant")
