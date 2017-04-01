@@ -10,7 +10,7 @@ from sentiment_analysis.preprocessing.PreProcessing import SplitWordByWhitespace
     ConcatWordArray, RemovePunctuationFromWords, ReplaceUsernameMention, RemoveRT, RemoveLetterRepetitions, \
     preprocess_tweets
 
-YOLANDA_NOV2013_FEB2014_CSV_FILE = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/relevant_irrelevant.csv"
+YOLANDA_NOV2013_FEB2014_CSV_FILE = "C:/Users/user/PycharmProjects/ms-thesis/pcari/data/5_categories.csv"
 
 ##### UTILITY FUNCTIONS #####
 def create_label_encoder(labels):
@@ -86,7 +86,7 @@ def generate_npz_word_index_sequence(data_dir, npz_file_name, MAX_NB_WORDS=20000
                 embedding_matrix=embedding_matrix)
 
 
-generate_npz_word_index_sequence(YOLANDA_NOV2013_FEB2014_CSV_FILE, 'relevant_irrelevant.npz')
+generate_npz_word_index_sequence(YOLANDA_NOV2013_FEB2014_CSV_FILE, '5_categories.npz')
 
 
 # input_root_folder = "data/binary/csv/"

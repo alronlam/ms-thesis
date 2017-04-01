@@ -116,10 +116,10 @@ def main_driver(n_folds, data_dir, category, output_folder=""):
             model = create_model(embedding_matrix)
             model = train_and_display_metrics(model, data[train], labels[train], data[test], labels[test], results_file)
 
-            with open("relevant_irrelevant_model_fold_{}.json".format(i), "w") as json_file:
+            with open("{}_model_fold_{}.json".format(category, i), "w") as json_file:
                 json_file.write(model.to_json())
                 json_file.close()
-            model.save_weights("relevant_irrelevant_weights_fold_{}.h5".format(i))
+            model.save_weights("{}_weights_fold_{}.h5".format(category, i))
 
 
 # input_root_folder = "data/binary/npz/"

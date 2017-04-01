@@ -10,8 +10,8 @@ from twitter_data.parsing.folders import FolderIO
 categories = ["victim_identification_assistance", "raising_funds", "accounting_damage", "expressing_appreciation", "celebrification"]
 
 # for category in categories:
-category = "relevant_irrelevant"
-data_source_dir ="C:/Users/user/PycharmProjects/ms-thesis/pcari/data/relevant_irrelevant"
+category = "5_categories"
+data_source_dir ="C:/Users/user/PycharmProjects/ms-thesis/pcari/data/orig_data"
 
 preprocessors = [SplitWordByWhitespace(),
                  WordToLowercase(),
@@ -33,10 +33,10 @@ dataset_arr = []
 
 for txt_file in txt_files:
     label = os.path.splitext(txt_file.name)[0]
-    if label == "irrelevant":
-        label="irrelevant"
-    else:
-        label="relevant"
+    # if label == "irrelevant":
+    #     label="irrelevant"
+    # else:
+    #     label="relevant"
     # if category not in label:
     #     label = "others"
     # else:
