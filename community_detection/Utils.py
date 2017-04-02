@@ -181,6 +181,7 @@ def load_tweet_objects_from_json_files(json_folder_path, limit=None):
             status = TweepyHelper.parse_from_json(tweet_json)
             #check if valid status; having limit in json means it was a rate limit response
             if "limit" not in status._json:
+                #check if tweet_objects already contains status
                 tweet_objects.append(status)
         except Exception as e:
             print(e)
@@ -199,8 +200,8 @@ def load_tweet_objects_from_senti_csv_files(csv_folder_path, limit=None):
         senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for index, csv_row in enumerate(csv_rows) if index < limit]
     else:
         senti_tweet_objects = [SentiTweetAdapter(csv_row[TEXT_CSV_COL_INDEX], csv_row[USER_CSV_COL_INDEX]) for csv_row in csv_rows]
-    return senti_tweet_objects
 
+    return senti_tweet_objects
 
 def load_non_rt_tweet_objects_from_senti_csv_files(csv_folder_path, limit=None):
 

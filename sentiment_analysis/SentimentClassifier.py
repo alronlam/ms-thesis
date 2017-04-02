@@ -228,7 +228,6 @@ class WiebeLexiconClassifier(SentimentClassifier):
     def get_name(self):
         return "Lexicon_Wiebe"
 
-
 class ANEWLexiconClassifier(SentimentClassifier):
     def __init__(self):
         self.preprocessors = [PreProcessing.SplitWordByWhitespace(), PreProcessing.WordToLowercase(),
@@ -264,6 +263,22 @@ class ANEWLexiconClassifier(SentimentClassifier):
     def get_name(self):
         return "Lexicon_ANEW"
 
+class ContextualANEWLexiconClassifier(ANEWLexiconClassifier):
+
+     def classify_sentiment(self, tweet_text, contextual_info_dict):
+        conv_context = contextual_info_dict["conv_context"]
+        consolidated_text = " ".join(conv_context) + " " + tweet_text
+        sentiment_score = self.get_overall_sentiment_score(consolidated_text)
+
+        if sentiment_score > 0:
+            return "positive"
+        elif sentiment_score < 0:
+            return "negative"
+        else:
+            return "neutral"
+
+     def get_name(self):
+         return "Lexicon_ANEW_Contextual"
 
 class AFINNLexiconClassifier(SentimentClassifier):
     def __init__(self):

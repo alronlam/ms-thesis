@@ -150,11 +150,13 @@ def score_hashtags(tweets, unique_hashtags=None):
 
 
 def score_sa_optimized(tweets, classifier, score_dict, unique_hashtags):
-    for hashtag in unique_hashtags:
+    for hashtag_index, hashtag in enumerate(unique_hashtags):
         positive_user_set = set()
         negative_user_set = set()
 
         for index, tweet in enumerate(tweets):
+            if index % 100 == 0 or index == len(tweets)-1:
+                print("SA score - hashtag {}/{} tweet {}/{}".format(hashtag_index, len(unique_hashtags), index, len(tweets)))
 
             curr_user = tweet.user.id_str
             if hashtag in [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]:

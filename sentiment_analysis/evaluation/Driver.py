@@ -1,7 +1,9 @@
+import itertools
+
 from sentiment_analysis.evaluation import TSVParser
 from sentiment_analysis import SentimentClassifier
 from twitter_data.parsing.folders import FolderIO
-from twitter_data.database import DBManager
+from twitter_data.database import DBManager, DBUtils
 from sentiment_analysis.subjectivity.SubjectivityClassifier import MLSubjectivityClassifier
 import pickle
 from datetime import datetime
@@ -29,10 +31,16 @@ def count_vanzo_eng_dataset():
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
     print([x for x in conversations].__len__())
 
-def test_vanzo_eng_dataset(classifier, subjectivity_classifier):
+def test_vanzo_eng_dataset(classifier, subjectivity_classifier, whole_dataset=False):
 
     tsv_files = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_test', True, '.tsv')
     conversations = TSVParser.parse_files_into_conversation_generator(tsv_files)
+
+    if whole_dataset:
+        tsv_files_train = FolderIO.get_files('D:/DLSU/Masters/MS Thesis/data-2016/Context-Based_Tweets/conv_train', True, '.tsv')
+        conversations_train = TSVParser.parse_files_into_conversation_generator(tsv_files_train)
+        conversations = itertools.chain(conversations_train, conversations)
+
 
     metrics_file_name = 'metrics-vanzo-eng-{}-{}-{}.txt'.format(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), classifier.get_name(), "w_subj" if subjectivity_classifier else "" )
 
@@ -50,7 +58,9 @@ def test_vanzo_eng_dataset(classifier, subjectivity_classifier):
             if subjectivity_classifier and subjectivity_classifier.classify_subjectivity(tweet_object.text) == 'objective':
                 predicted_class = 'neutral'
             else:
-                predicted_class = classifier.classify_sentiment(tweet_object.text, {'conversation': conversation})
+                conv_context = DBUtils.retrieve_full_conversation(tweet_object.in_reply_to_status_id, [])
+                conv_context = [tweet.text for tweet in conv_context]
+                predicted_class = classifier.classify_sentiment(tweet_object.text, {'conv_context': conv_context})
 
             actual_class = target_tweet["class"]
 
@@ -66,16 +76,18 @@ def test_vanzo_eng_dataset(classifier, subjectivity_classifier):
     pickle.dump((actual_arr, predicted_arr), open( "{}.pickle".format(metrics_file_name), "wb" ) )
     write_metrics_file(actual_arr, predicted_arr, metrics_file_name)
 
-wiebe_lexicon_classifier = SentimentClassifier.WiebeLexiconClassifier()
-anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
-afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
-globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
-subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor_vanzo_conv_train.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier_vanzo_conv_train.pickle' )
-nb_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_nb_unigram_feature_extractor_vanzo_conv_train.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_nb_classifier_vanzo_conv_train.pickle")
-svm_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_svm_unigram_feature_extractor_vanzo_conv_train.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_svm_classifier_vanzo_conv_train.pickle")
+# wiebe_lexicon_classifier = SentimentClassifier.WiebeLexiconClassifier()
+# anew_lexicon_classifier = SentimentClassifier.ANEWLexiconClassifier()
+anew_lexicon_contextual_classifier = SentimentClassifier.ContextualANEWLexiconClassifier()
+# afinn_classifier = SentimentClassifier.AFINNLexiconClassifier()
+# globe_ml_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/unigram_feature_extractor.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/nb_classifier.pickle.pickle")
+# subjectivity_classifier = MLSubjectivityClassifier('C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_unigram_feature_extractor_vanzo_conv_train.pickle', 'C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/subjectivity/subj_nb_classifier_vanzo_conv_train.pickle' )
+# nb_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_nb_unigram_feature_extractor_vanzo_conv_train.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_nb_classifier_vanzo_conv_train.pickle")
+# svm_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_svm_unigram_feature_extractor_vanzo_conv_train.pickle", "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/sa_svm_classifier_vanzo_conv_train.pickle")
 
 # test_vanzo_eng_dataset(afinn_classifier, None)
-# test_vanzo_eng_dataset(anew_lexicon_classifier, None)
+test_vanzo_eng_dataset(anew_lexicon_contextual_classifier, None, whole_dataset=True)
+
 # test_vanzo_eng_dataset(wiebe_lexicon_classifier, None)
 # test_vanzo_eng_dataset(globe_ml_classifier, None)
 # test_vanzo_eng_dataset(nb_unigram_classifier, None)
@@ -99,16 +111,16 @@ svm_unigram_classifier = SentimentClassifier.MLClassifier("C:/Users/user/Pycharm
 # print("Finished loading classifier")
 # test_vanzo_eng_dataset(conversational_context_clasifier, subjectivity_classifier)
 
-keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
-keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
-keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
-keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
+# keras_tokenizer_pickle_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/feature_extraction/word_embeddings/tokenizer-vanzo_word_sequence_concat_glove_200d.npz.pickle"
+# keras_classifier_json_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context.json"
+# keras_classifier_weights_path = "C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/machine_learning/neural_nets/keras_model_no_context_weights.h5"
+# keras_classifier = SentimentClassifier.KerasClassifier(keras_tokenizer_pickle_path, keras_classifier_json_path, keras_classifier_weights_path)
 
 
-def test_classify(classifier):
-    while True:
-        print("Enter text:")
-        text = input()
-        print(classifier.classify_sentiment(text, {}))
-
-test_classify(keras_classifier)
+# def test_classify(classifier):
+#     while True:
+#         print("Enter text:")
+#         text = input()
+#         print(classifier.classify_sentiment(text, {}))
+#
+# test_classify(keras_classifier)

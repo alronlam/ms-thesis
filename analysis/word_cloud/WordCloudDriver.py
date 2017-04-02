@@ -43,7 +43,9 @@ def generate_tfidf_word_cloud_per_community(graph, membership, tweet_objects, ba
     tokens_per_community = [text.split() for text in texts_per_community]
     tfidf_model, corpus, dictionary = generate_tfidf_corpus_dictionary(tokens_per_community)
 
-    brexit_coloring = numpy.array(Image.open("C:/Users/user/PycharmProjects/ms-thesis/uk_flag.png"))
+    # brexit_coloring = numpy.array(Image.open("C:/Users/user/PycharmProjects/ms-thesis/uk_flag.png"))
+    pdebates_coloring = numpy.array(Image.open("C:/Users/user/PycharmProjects/ms-thesis/ph_flag.png"))
+
 
 
     for index, text in enumerate(texts_per_community):
@@ -51,10 +53,10 @@ def generate_tfidf_word_cloud_per_community(graph, membership, tweet_objects, ba
 
         if text.strip():
             top_words = numpy.sort(numpy.array(tfidf_model[corpus[index]],dtype = [('word',int), ('score',float)]),order='score')[::-1]
-            word_cloud = WordCloud(background_color="white", max_words=500, mask=brexit_coloring, max_font_size=40, random_state=42)
+            word_cloud = WordCloud(background_color="white", max_words=100, mask=pdebates_coloring, max_font_size=40, random_state=42)
             words_to_fit = [(dictionary[word], score) for (word, score) in top_words]
             word_cloud = word_cloud.fit_words(dict(words_to_fit))
-            image_colors = ImageColorGenerator(brexit_coloring)
+            image_colors = ImageColorGenerator(pdebates_coloring)
 
             pyplot.imshow(word_cloud.recolor(color_func=image_colors), interpolation="bilinear")
             pyplot.axis("off")
