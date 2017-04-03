@@ -16,7 +16,7 @@ class UserVerticesSAWeightModifier(EdgeWeightModifierBase):
         for index, tweet in enumerate(tweets):
             user_id_str = tweet.user.id_str
             if with_context:
-                sentiment = self.classifier.classify_sentiment(tweet.text, {"conv_context":DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])})
+                sentiment = self.classifier.classify_sentiment(tweet.text, {"conv_context":[x.text for x in DBUtils.retrieve_full_conversation(tweet.in_reply_to_status_id, [])]})
             else:
                 sentiment = self.classifier.classify_sentiment(tweet.text, [])
             hashtags = [hashtag_dict["text"].lower() for hashtag_dict in tweet.entities.get('hashtags')]
