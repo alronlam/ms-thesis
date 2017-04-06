@@ -1,3 +1,4 @@
+import csv
 import re
 
 from tweepy import Status
@@ -251,7 +252,7 @@ def extract_vertices_in_communities(graph, membership):
 
     return dict
 
-def generate_text_for_communities(graph, membership, tweet_objects, base_name, preprocessors=[]):
+def generate_text_for_communities(graph, membership, tweet_objects, base_name, preprocessors=[], output_dir="texts"):
     texts_per_community = get_texts_per_community(
         graph,
         membership,
@@ -262,8 +263,9 @@ def generate_text_for_communities(graph, membership, tweet_objects, base_name, p
     for index, texts in enumerate(texts_per_community):
         print("Raw texts: {}/{}".format(index, len(texts_per_community)))
 
-        out_file = open("texts/{}-text-{}.txt".format(base_name, index), "w", encoding="utf8")
-        out_file.write("\n".join(texts))
+        out_file = open("{}/{}-text-{}.csv".format(output_dir, base_name, index), "w", encoding="utf8", newline='')
+        csv_writer = csv.writer(out_file, delimiter="\n", quoting=csv.QUOTE_ALL)
+        csv_writer.writerow(texts)
         out_file.close()
 
 

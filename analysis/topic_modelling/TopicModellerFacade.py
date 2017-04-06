@@ -13,6 +13,6 @@ def construct_topic_models_for_communities(topic_modeller, graph, membership, tw
         user_ids_str = get_user_ids_from_vertex_ids(graph, vertex_ids)
         tweet_texts = get_tweet_texts_belonging_to_user_ids(tweet_objects, user_ids_str)
         tweet_texts = PreProcessing.preprocess_strings(tweet_texts, preprocessors)
-        community_topics_tuple_list.append((community_num, topic_modeller.model_topics(tweet_texts)))
+        community_topics_tuple_list.append((community_num, topic_modeller.generate_topic_model_string(tweet_texts)))
 
     return community_topics_tuple_list

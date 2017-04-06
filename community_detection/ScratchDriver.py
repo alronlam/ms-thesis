@@ -37,19 +37,43 @@ import json
 #     return tweet_jsons
 #
 #
+# import pickle
+#
+# from community_detection import Utils
 #
 #
-# # filtered_file = open("D:/DLSU/Masters/MS Thesis/data-2016/03/tweets-2016-03-20 12-56-08-pilipinasdebates_filtered.json", "w", encoding="utf8")
-#
-# pilipinasdebates_tweet_jsons = construct_filtered_json('D:/DLSU/Masters/MS Thesis/data-2016/03')
-# print(len(pilipinasdebates_tweet_jsons))
-# # filtered_file.writelines([json.dumps(tweet) +"\n" for tweet in pilipinasdebates_tweet_jsons])
-# # filtered_file.close()
+
+import pickle
+
 from community_detection import Utils
-from twitter_data.database import DBUtils
 
-tweets = Utils.load_tweet_objects_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/03")
-print("Unfiltered length: {}".format(len(tweets)))
+root_folder = "C:/Users/user/PycharmProjects/ms-thesis/analysis/topic_modelling/graphs"
+configs = [
+    ("brexit_mention_graph_modified_weights", 300),
+    ("brexit_mention_graph_with_hashtags_modified_weights", 300),
+    ("brexit_mention_graph_with_hashtags_sa_modified_weights", 300),
+    ("brexit_mention_graph_with_hashtags_contextualsa_modified_weights", 300),
+    ("threshold-0.05-brexit_mention_hashtag_contextualsa_graph", 100)
+]
 
-tweets = Utils.load_tweet_objects_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/03/filtered")
-print("Filtered length: {}".format(len(tweets)))
+for graph_name, min_membership in configs:
+    graph = pickle.load(open("{}/{}.pickle".format(root_folder, graph_name),"rb"))
+    membership = pickle.load(open("{}/{}.membership".format(root_folder, graph_name), "rb"))
+    print(graph_name)
+    print("{} vertices {} ({}) edges - {}".format(len(graph.vs), len(graph.es), sum(graph.es["weight"]), graph_name))
+    print("Modularity: {}".format(graph.modularity(membership)))
+    print()
+
+    # membership = Utils.determine_communities(graph, None, verbose=True)
+    # pickle.dump(membership, open(root_folder+"/"+graph_name+".membership", "wb"))
+    #
+    # (graph, membership) = Utils.construct_graph_with_filtered_communities(graph, membership, min_membership)
+    # pickle.dump(graph, open("{}/{}-{}.pickle".format(root_folder, min_membership, graph_name) , "wb"))
+    # pickle.dump(membership, open("{}/{}-{}.membership".format(root_folder, min_membership, graph_name), "wb"))
+
+# tweet_objects = Utils.load_tweet_objects_from_json_files("D:/DLSU/Masters/MS Thesis/data-2016/test")
+# for graph_name, min_membership in configs:
+#     graph = pickle.load(open("{}/{}-{}.pickle".format(root_folder, min_membership, graph_name), "rb"))
+#     membership = pickle.load(open("{}/{}-{}.membership".format(root_folder, min_membership, graph_name), "rb"))
+#     Utils.generate_text_for_communities(graph, membership, tweet_objects, "{}-{}".format(min_membership, graph_name), output_dir=root_folder)
+
