@@ -25,7 +25,7 @@ npmi_collection = db['npmi_collection']
 UNAVAILABLE_KEY = 'unavailable'
 
 # NPMI word-similarity related
-def get_or_add_npmi(word1, word2, coherence_type="npmi"):
+def get_or_add_coherence_score(word1, word2, coherence_type="npmi"):
 
     word1 = word1.lower()
     word2 = word2.lower()
