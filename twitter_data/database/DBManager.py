@@ -7,6 +7,7 @@ from palmettopy.palmetto import Palmetto
 from pymongo import MongoClient
 from tweepy import *
 
+from analysis.topic_modelling import PalmettoHelper
 from twitter_data.api import TweepyHelper
 
 client = MongoClient('localhost', 27017)
@@ -20,7 +21,7 @@ lexicon_so_collection = db['lexicon_so_collection']
 anew_lexicon_collection = db['anew_lexicon_collection']
 
 npmi_collection = db['npmi_collection']
-palmetto = Palmetto()
+
 UNAVAILABLE_KEY = 'unavailable'
 
 # NPMI word-similarity related
@@ -34,12 +35,12 @@ def get_or_add_npmi(word1, word2, coherence_type="npmi"):
         word1 = word2
         word2 = temp
 
-    from_db = npmi_collection.find_one({"word1": word1, "word2":word2})
+    from_db = npmi_collection.find_one({"word1": word1, "word2":word2, "coherence_type":coherence_type})
     if from_db:
         score = from_db["score"]
     else:
-        score = palmetto.get_coherence([word1, word2], coherence_type=coherence_type)
-        npmi_collection.insert_one({"word1":word1,"word2":word2,"score":score}, True)
+        score = PalmettoHelper.get_similarity_score([word1, word2], coherence_type)
+        npmi_collection.insert_one({"word1":word1,"word2":word2,"coherence_type":coherence_type, "score":score}, True)
 
     return score
 
