@@ -2,6 +2,8 @@ import csv
 
 import pickle
 
+import requests
+
 from analysis.topic_modelling.LDATopicModeller import LDATopicModeller
 from community_detection import Utils
 from sentiment_analysis.preprocessing import PreProcessing
@@ -47,11 +49,19 @@ def generate_topic_model(docs):
     lda = LDATopicModeller()
     return lda.generate_topic_models(docs)
 
+def calculate_similarity_score(words):
+    url = "http://palmetto.aksw.org/palmetto-webapp/service/npmi"
+    params = {"words":" ".join(words)}
+    return float(requests.get(url, params).text)
+
 def generate_topic_similarities(topic_models):
+
     pass
 
 def save_topic_similarities(topic_similarities):
     pass
+
+print(calculate_similarity_score(["apple","banana"]))
 
 
 root_folder="graphs"
@@ -63,14 +73,18 @@ dirs = [
         "scoring"
         ]
 
-for dir in dirs:
-    print("Loading files")
-    community_docs = load_community_docs(root_folder+"/"+dir)
-    print("Preprocessing")
-    community_docs = [preprocess_docs(community_doc) for community_doc in community_docs]
-    print("Generating topic models")
-    community_topic_models = [generate_topic_model(community_doc) for community_doc in community_docs]
-    print(community_topic_models[0])
-    pickle.dump(community_topic_models, open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "wb"))
-    topic_similarities = generate_topic_similarities(community_topic_models)
-    save_topic_similarities(topic_similarities)
+# #generate topic models
+# for dir in dirs:
+#     print("Loading files")
+#     community_docs = load_community_docs(root_folder+"/"+dir)
+#     print("Preprocessing")
+#     community_docs = [preprocess_docs(community_doc) for community_doc in community_docs]
+#     print("Generating topic models")
+#     community_topic_models = [generate_topic_model(community_doc) for community_doc in community_docs]
+#     pickle.dump(community_topic_models, open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "wb"))
+
+# generate topic similarity scores
+# for dir in dirs:
+#     community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
+#     topic_similarities = generate_topic_similarities(community_topic_models)
+#     save_topic_similarities(topic_similarities)
