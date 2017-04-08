@@ -111,6 +111,8 @@ def get_vertex_ids_in_each_community(graph, membership):
     return community_vertices
 
 def get_vertex_ids_in_each_community_optimized(graph, membership, verbose=False):
+    if len(membership) == 0:
+        return []
     communities = range(max(membership)+1)
     community_vertices = [[] for x in communities]
     for vertex_id, community_num in enumerate(membership):
@@ -267,6 +269,8 @@ def generate_text_for_communities(graph, membership, tweet_objects, base_name, p
         csv_writer = csv.writer(out_file, delimiter="\n", quoting=csv.QUOTE_ALL)
         csv_writer.writerow(texts)
         out_file.close()
+
+    return texts_per_community
 
 
 def get_texts_per_community(graph, membership, tweet_objects, preprocessors=[]):
