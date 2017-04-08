@@ -95,8 +95,11 @@ class RemoveTerm(PreProcessor):
         new_array = []
         for word in text_words:
             if self.ignore_case:
-                word = word.lower()
-            if self.term not in word:
+                to_compare = word.lower()
+            else:
+                to_compare = word
+
+            if self.term not in to_compare:
                 new_array.append(word)
         return new_array
 
