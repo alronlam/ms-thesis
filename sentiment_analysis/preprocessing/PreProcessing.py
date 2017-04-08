@@ -20,7 +20,7 @@ class WordLengthFilter(PreProcessor):
 
     # expects list of words in tweet
     def preprocess_text(self, tweet_words):
-         return [word for word in tweet_words if len(word) >= self.min_word_length]
+         return [word.strip() for word in tweet_words if len(word.strip()) >= self.min_word_length]
 
 class WordToLowercase(PreProcessor):
 
@@ -41,7 +41,11 @@ class RemovePunctuationFromWords(PreProcessor):
         self.translator = str.maketrans({key: " " for key in string.punctuation if key != "#" and key != "@" and key !="<" and key != ">"})
 
     def preprocess_text(self, tweet_words):
-        return [word.translate(self.translator) for word in tweet_words ]
+        removed_punctuations = [word.translate(self.translator) for word in tweet_words ]
+        new_arr = []
+        for word in removed_punctuations:
+            new_arr.extend(word.split())
+        return new_arr
 
 class ReplaceUsernameMention(PreProcessor):
 
