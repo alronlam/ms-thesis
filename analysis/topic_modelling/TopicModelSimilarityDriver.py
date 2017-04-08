@@ -1,4 +1,5 @@
 import csv
+import os
 
 import pickle
 
@@ -6,10 +7,11 @@ from analysis.topic_modelling.LDATopicModeller import LDATopicModeller
 from community_detection import Utils
 from sentiment_analysis.preprocessing import PreProcessing
 from sentiment_analysis.preprocessing.PreProcessing import *
+from twitter_data.database import DBManager
 from twitter_data.database.DBManager import get_or_add_coherence_score
 from twitter_data.parsing.folders import FolderIO
 
-COHERENCE_TYPE = "uci"
+COHERENCE_TYPE = "npmi"
 
 def load_community_docs(dir):
     csv_files = FolderIO.get_files(dir, False, '.csv')
@@ -36,7 +38,7 @@ def preprocess_docs(docs):
                  RemoveRT(),
                  RemoveLetterRepetitions(),
                  WordLengthFilter(3),
-                 RemoveTerm("#brexit"),
+                 RemoveTerm("#"),
                  RemoveTerm("<url>"),
                  RemoveTerm("<username>"),
                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
@@ -141,38 +143,47 @@ def generate_topic_similarities(community_topic_models, output_dir):
 
 
 def save_topic_similarities(topic_similarity_matrices, output_dir, graph_scheme):
-    pickle.dump(topic_similarities, open("{}/{}_similarity_matrices.pickle".format(output_dir, graph_scheme), "wb"))
-    for community_num1, community_num2, topic_similarity_matrix in topic_similarity_matrices:
-        with open("{}/{}-{}_similarity_matrix.csv".format(output_dir, community_num1, community_num2), "w", newline='', encoding="utf-8") as f:
-            csv_writer = csv.writer(f)
-            csv_writer.writerows(topic_similarity_matrix)
+    pickle.dump(topic_similarity_matrices, open("{}/{}_similarity_matrices.pickle".format(output_dir, graph_scheme), "wb"))
+    # for community_num1, community_num2, topic_similarity_matrix in topic_similarity_matrices:
+    #     with open("{}/{}-{}_similarity_matrix.csv".format(output_dir, community_num1, community_num2), "w", newline='', encoding="utf-8") as f:
+    #         csv_writer = csv.writer(f)
+    #         csv_writer.writerows(topic_similarity_matrix)
 
 
 # print(calculate_similarity_score(["apple","banana"]))
 
-
 root_folder="graphs"
 dirs = [
         "mentions",
-        "hashtags",
-        "sa",
         "contextualsa",
+        "sa",
+        "hashtags",
         "scoring"
         ]
 
 # #generate topic models
-# for dir in dirs:
-#     print("Loading files")
-#     community_docs = load_community_docs(root_folder+"/"+dir)
-#     print("Preprocessing")
-#     community_docs = [preprocess_docs(community_doc) for community_doc in community_docs]
-#     print("Generating topic models")
-#     community_topic_models = [generate_topic_model(community_doc) for community_doc in community_docs]
-#     pickle.dump(community_topic_models, open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "wb"))
-
-# generate topic similarity scores
 for dir in dirs:
-    community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
-    # print(community_topic_models[0])
+    print("Loading files")
+    community_docs = load_community_docs(root_folder+"/"+dir)
+    print("Preprocessing")
+    community_docs = [preprocess_docs(community_doc) for community_doc in community_docs]
+
+    #check first if it exists already
+    try:
+        print("Loading topic models")
+        community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
+    except Exception as e:
+        print("Generating topic models")
+        community_topic_models = [generate_topic_model(community_doc) for community_doc in community_docs]
+        pickle.dump(community_topic_models, open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "wb"))
+
+    print("Generating topic similarities")
     topic_similarities = generate_topic_similarities(community_topic_models, root_folder+"/"+dir)
     save_topic_similarities(topic_similarities, root_folder+"/"+dir, dir)
+
+# generate topic similarity scores
+# for dir in dirs:
+#     community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
+#     # print(community_topic_models[0])
+#     topic_similarities = generate_topic_similarities(community_topic_models, root_folder+"/"+dir)
+#     save_topic_similarities(topic_similarities, root_folder+"/"+dir, dir)
