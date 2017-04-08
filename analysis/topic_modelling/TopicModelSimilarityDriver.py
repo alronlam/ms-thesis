@@ -41,6 +41,7 @@ def preprocess_docs(docs):
                  RemoveTerm("#"),
                  RemoveTerm("<url>"),
                  RemoveTerm("<username>"),
+                 RemoveExactTerms(["amp"]),
                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/eng-function-words.txt")),
                  RemoveExactTerms(Utils.load_function_words("C:/Users/user/PycharmProjects/ms-thesis/sentiment_analysis/preprocessing/fil-function-words.txt")),
                  ConcatWordArray()]
