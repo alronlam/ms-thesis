@@ -3,6 +3,8 @@ import os
 
 import pickle
 
+from functools import reduce
+
 from analysis.topic_modelling.LDATopicModeller import LDATopicModeller
 from community_detection import Utils
 from sentiment_analysis.preprocessing import PreProcessing
@@ -263,55 +265,55 @@ def flatten_to_1d(similarity_matrix):
 root_folder="graphs"
 dirs = [
         "mentions",
-        "contextualsa",
-        "sa",
         "hashtags",
-        "scoring-sa",
+        "sa",
+        "contextualsa",
+        # "scoring-sa",
         "scoring-contextualsa"
         ]
 
 # #generate topic models
+# for dir in dirs:
+#     print("Loading files")
+#     community_docs = load_community_docs(root_folder+"/"+dir)
+#     print("Preprocessing")
+#     community_docs = [preprocess_docs(community_doc) for community_doc in community_docs]
+#
+#     #check first if it exists already
+#     try:
+#         print("Loading topic models")
+#         community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
+#     except Exception as e:
+#         print("Generating topic models")
+#         community_topic_models = [generate_topic_model(community_doc) for community_doc in community_docs]
+#         pickle.dump(community_topic_models, open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "wb"))
+#
+#     save_topic_models_to_readable_format_if_not_exists(community_topic_models,"{}/{}/{}-topic-models-cleaned.txt".format(root_folder, dir, dir) )
+#     print("Generating topic similarities")
+#     topic_similarities = generate_topic_similarities(community_topic_models, root_folder+"/"+dir)
+#     save_topic_similarities(topic_similarities, root_folder+"/"+dir, dir)
+#
+#
+# # Driver code to insert missing header in saved similarity matrices
+# for dir in dirs:
+#     print("Loading files")
+#     similarity_matrices = pickle.load(open("{}/{}/{}_similarity_matrices.pickle".format(root_folder, dir, dir), "rb"))
+#     print("Loading topic models")
+#     community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
+#
+#     topic_model_words = [[""]+[get_words_from_topic(topic) for topic_num, topic in topic_model] for topic_model in community_topic_models]
+#     topic_model_words = [word_list for word_list in topic_model_words if len(word_list) > 1]
+#     indices = [0,1,2,3,1,2,3,2,3,3]
+#     print(topic_model_words)
+#     for matrix_index, (index1, index2, similarity_matrix) in enumerate(similarity_matrices):
+#         similarity_matrix.insert(0, topic_model_words[indices[matrix_index]])
+#         # print(topic_model_words[indices[matrix_index]])
+#     pickle.dump(similarity_matrices, open("{}/{}/{}_similarity_matrices_new.pickle".format(root_folder, dir, dir), "wb"))
+#
+#
+# # generate summary matrices
 for dir in dirs:
-    print("Loading files")
-    community_docs = load_community_docs(root_folder+"/"+dir)
-    print("Preprocessing")
-    community_docs = [preprocess_docs(community_doc) for community_doc in community_docs]
-
-    #check first if it exists already
-    try:
-        print("Loading topic models")
-        community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
-    except Exception as e:
-        print("Generating topic models")
-        community_topic_models = [generate_topic_model(community_doc) for community_doc in community_docs]
-        pickle.dump(community_topic_models, open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "wb"))
-
-    save_topic_models_to_readable_format_if_not_exists(community_topic_models,"{}/{}/{}-topic-models-cleaned.txt".format(root_folder, dir, dir) )
-    print("Generating topic similarities")
-    topic_similarities = generate_topic_similarities(community_topic_models, root_folder+"/"+dir)
-    save_topic_similarities(topic_similarities, root_folder+"/"+dir, dir)
-
-
-# Driver code to insert missing header in saved similarity matrices
-for dir in dirs:
-    print("Loading files")
-    similarity_matrices = pickle.load(open("{}/{}/{}_similarity_matrices.pickle".format(root_folder, dir, dir), "rb"))
-    print("Loading topic models")
-    community_topic_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
-
-    topic_model_words = [[""]+[get_words_from_topic(topic) for topic_num, topic in topic_model] for topic_model in community_topic_models]
-    topic_model_words = [word_list for word_list in topic_model_words if len(word_list) > 1]
-    indices = [0,1,2,3,1,2,3,2,3,3]
-    print(topic_model_words)
-    for matrix_index, (index1, index2, similarity_matrix) in enumerate(similarity_matrices):
-        similarity_matrix.insert(0, topic_model_words[indices[matrix_index]])
-        # print(topic_model_words[indices[matrix_index]])
-    pickle.dump(similarity_matrices, open("{}/{}/{}_similarity_matrices_new.pickle".format(root_folder, dir, dir), "wb"))
-
-
-# generate summary matrices
-for dir in dirs:
-    similarity_matrices = pickle.load(open("{}/{}/{}_similarity_matrices_new.pickle".format(root_folder, dir, dir), "rb"))
+    similarity_matrices = pickle.load(open("{}/{}/Raw Word Overlap/{}_similarity_matrices_new.pickle".format(root_folder, dir, dir), "rb"))
     # summary_matrix = generate_summary_matrix(similarity_matrices)
     # pickle.dump(summary_matrix, open("{}/{}/{}_summary_matrix.pickle".format(root_folder, dir, dir), "wb"))
     # with open("{}/{}/{}_summary_matrix.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
@@ -319,20 +321,122 @@ for dir in dirs:
     #     csv_writer.writerows(summary_matrix)
 
     flattened_similarity_matrices = [flatten_to_1d(similarity_matrix) for index1, index2, similarity_matrix in similarity_matrices]
-    with open("{}/{}/{}_flattened_similarity_matrices_npmi2.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
+    with open("{}/{}/Raw Word Overlap/{}_flattened_similarity_matrices_word_count.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
         csv_writer.writerows(flattened_similarity_matrices)
+#
+#     # word_matrix, count_matrix = generate_summary_common_word_matrix(similarity_matrices)
+#     # pickle.dump(word_matrix, open("{}/{}/{}_word_matrix.pickle".format(root_folder, dir, dir), "wb"))
+#     # with open("{}/{}/{}_word_matrix.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
+#     #     csv_writer = csv.writer(csv_file)
+#     #     csv_writer.writerows(word_matrix)
+#     #
+#     # pickle.dump(count_matrix, open("{}/{}/{}_count_matrix.pickle".format(root_folder, dir, dir), "wb"))
+#     # with open("{}/{}/{}_count_matrix.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
+#     #     csv_writer = csv.writer(csv_file)
+#     #     csv_writer.writerows(count_matrix)
 
-    # word_matrix, count_matrix = generate_summary_common_word_matrix(similarity_matrices)
-    # pickle.dump(word_matrix, open("{}/{}/{}_word_matrix.pickle".format(root_folder, dir, dir), "wb"))
-    # with open("{}/{}/{}_word_matrix.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
-    #     csv_writer = csv.writer(csv_file)
-    #     csv_writer.writerows(word_matrix)
-    #
-    # pickle.dump(count_matrix, open("{}/{}/{}_count_matrix.pickle".format(root_folder, dir, dir), "wb"))
-    # with open("{}/{}/{}_count_matrix.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as csv_file:
-    #     csv_writer = csv.writer(csv_file)
-    #     csv_writer.writerows(count_matrix)
 
 
+def retain_only_words_in_community_model(community_model):
+    for topic_model in community_model:
+        for (topic_num, word_weight_tuples) in topic_model:
+            topic_model[topic_num] = [word for word, weight in word_weight_tuples]
 
+    return community_model
+
+def get_unique_words(word_sets):
+    final_list = []
+    for i, word_set in enumerate(word_sets):
+        other_words = set()
+
+        for j in range(len(word_sets)):
+            if i!=j:
+                other_words = other_words.union(word_sets[j])
+
+        unique = word_set - other_words
+        final_list.append(unique)
+    return final_list
+
+def join_lists_into_one(lists):
+    new_list = []
+    for list in lists:
+        new_list.extend(list)
+    return new_list
+
+def process_community_models():
+    for dir in dirs:
+        community_models = pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb"))
+        community_models = [x for x in community_models if len(x) > 0]
+        community_models = retain_only_words_in_community_model(community_models)
+        community_models_set = [join_lists_into_one(x) for x in community_models]
+        community_models_set = [set(x) for x in community_models_set]
+        unique_word_sets = get_unique_words(community_models_set)
+
+        for community_index, community_model in enumerate(community_models):
+
+            for index, topic_words in enumerate(community_model):
+                community_model[index] = [word.upper()  if (word in unique_word_sets[community_index]) else word for word in topic_words]
+
+        for index, topic_model in enumerate(community_models):
+            with open("{}/{}_unique_words_{}.txt".format(root_folder, dir, index), "w", encoding="utf-8", newline='') as f:
+                words = "\n".join([" ".join(word_list) for word_list in topic_model])
+                f.write(words)
+
+        with open("{}/{}/{}_unique_words.csv".format(root_folder, dir, dir), "w", encoding="utf-8", newline='') as f:
+            csv_writer = csv.writer(f)
+            community_models = [[" ".join(word_list) for word_list in topic_model] for topic_model in community_models]
+            csv_writer.writerows(list(map(list, zip(*community_models))))
+
+process_community_models()
+
+def convert_community_model_to_word_set(community_model):
+    words = set()
+    for topic_model in community_model:
+        for topic_num, word_weight_tuples in topic_model:
+            words = words.union(set([word for word, weight in word_weight_tuples]))
+    return words
+
+
+def process_community_models_as_a_whole():
+    schemes = []
+    for dir in dirs:
+        schemes.append(pickle.load(open(root_folder+"/"+dir+"/"+dir+"-topic_models.pickle", "rb")))
+
+    scheme_word_sets = [convert_community_model_to_word_set(x) for x in schemes]
+    unique_word_sets = get_unique_words(scheme_word_sets)
+
+    for scheme_index, scheme_word_set in enumerate(scheme_word_sets):
+        new_word_set = set()
+        unique_count = 0
+        for word in scheme_word_set:
+            new_word_set.add(word.upper() if word in unique_word_sets[scheme_index] else word)
+            if word in unique_word_sets[scheme_index]:
+                unique_count +=  1
+        print("Scheme {} - Unique {}".format(dirs[scheme_index],unique_count ))
+        scheme_word_sets[scheme_index] = new_word_set
+
+    for index, scheme in enumerate(scheme_word_sets):
+        with open("{}/{}_unique_words.txt".format(root_folder, dirs[index]), "w", encoding="utf-8", newline='') as f:
+            # csv_writer = csv.writer(f)
+            scheme_words = " ".join(list(scheme))
+            # csv_writer.writerow(scheme_words)
+            f.write(scheme_words)
+    with open("{}/schemes_unique_words.csv".format(root_folder), "w", encoding="utf-8", newline='') as f:
+        csv_writer = csv.writer(f)
+        scheme_words = [" ".join(list(x)) for x in scheme_word_sets]
+        csv_writer.writerow(scheme_words)
+        # csv_writer.writerow(list(map(list, zip(*scheme_words))))
+
+# process_community_models_as_a_whole()
+
+def input_unique_words():
+
+    num_sets = int(input("Num sets: "))
+    word_sets = [set(input("Enter word set {}: ".format(i)).split()) for i in range(num_sets)]
+    print()
+    final_list = get_unique_words(word_sets)
+    for unique_set in final_list:
+        print(" ".join(list(unique_set)))
+
+# input_unique_words()
