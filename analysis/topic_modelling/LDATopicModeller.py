@@ -11,16 +11,16 @@ from analysis.topic_modelling.TopicModeller import TopicModeller
 
 class LDATopicModeller(TopicModeller):
 
-    def __init__(self, num_topics=5, num_words=20):
+    def __init__(self, num_topics=5, num_words=10):
         self.num_topics = num_topics
         self.num_words = num_words
 
-        self.stop_words = set(stopwords.words('english'))
+        self.stop_words = set(stopwords.words('english')).union(stopwords.words('french')).union(stopwords.words('spanish'))
         self.excluded_chars = set(string.punctuation)
         self.lemma = WordNetLemmatizer()
         self.LDA = LdaModel
 
-    def model_topics(self, document_list):
+    def generate_topic_model_string(self, document_list):
         try:
             document_list_cleaned = [self.preprocess_document(document) for document in document_list]
             dictionary = corpora.Dictionary(document_list_cleaned)
@@ -38,6 +38,16 @@ class LDATopicModeller(TopicModeller):
         except Exception as e:
             return None
 
+    def generate_topic_models(self, document_list):
+        try:
+            document_list_cleaned = [self.preprocess_document(document) for document in document_list]
+            dictionary = corpora.Dictionary(document_list_cleaned)
+            doc_term_matrix = [dictionary.doc2bow(document) for document in document_list_cleaned]
+            LDA_model = self.LDA(doc_term_matrix, num_topics=self.num_topics, id2word = dictionary, passes=50)
+            word_weight_tuples =  LDA_model.show_topics(num_topics=self.num_topics, num_words=self.num_words, log=False, formatted=False)
+            return word_weight_tuples
+        except Exception as e:
+            return None
 
     def preprocess_document(self, document):
         stop_free = " ".join([i for i in document.lower().split() if i not in self.stop_words])
