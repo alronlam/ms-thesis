@@ -47,6 +47,14 @@ class RemovePunctuationFromWords(PreProcessor):
             new_arr.extend(word.split())
         return new_arr
 
+class RemoveHashtagSymbol(PreProcessor):
+
+    def preprocess_text(self, tweet_words):
+        new_arr = []
+        for word in tweet_words:
+            new_arr.append(word.replace("#", ""))
+        return new_arr
+
 class ReplaceUsernameMention(PreProcessor):
 
     def __init__(self, replacement_token="<USERNAME>"):
