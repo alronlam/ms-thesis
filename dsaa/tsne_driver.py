@@ -8,7 +8,7 @@ from bokeh.models import HoverTool
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.manifold import TSNE
 
-from scratch import load_community_docs
+from dsaa.text_loader import load_community_docs
 from sentiment_analysis.preprocessing import PreProcessing
 from sentiment_analysis.preprocessing.PreProcessing import *
 
