@@ -1,4 +1,5 @@
 import os
+from collections import Counter
 
 from dsaa import text_loader
 from sentiment_analysis.preprocessing import PreProcessing
@@ -20,6 +21,13 @@ def get_hashtags_list(text_list):
 def get_unique_hashtags(text_list):
     return set(get_hashtags_list(text_list))
 
+
+def get_top_n_hashtags(text_list, n=5):
+    hashtags = get_hashtags_list(text_list)
+    counter = Counter(hashtags)
+    return counter.most_common(n)
+
+
 if __name__ == "__main__":
 
     # Read CSV for each community
@@ -35,12 +43,22 @@ if __name__ == "__main__":
             preprocessors = [PreProcessing.SplitWordByWhitespace(),
                              PreProcessing.WordToLowercase(),
                              PreProcessing.RemovePunctuationFromWords(),
+                             PreProcessing.RemoveTerm('…', ignore_case=True),
+                             PreProcessing.RemoveTerm('brexit', ignore_case=True),
+                             PreProcessing.RemoveExactTerms(['#brexit'], ignore_case=True),
                              PreProcessing.ConcatWordArray()]
 
             docs = PreProcessing.preprocess_strings(docs, preprocessors)
 
-            unique_hashtags = sorted(list(get_unique_hashtags(docs)))
+            print("*** Community {}".format(community_num))
 
-            print("*** Community {} - {} unique hashtags ***".format(community_num, len(unique_hashtags)))
-            print("\n".join(list(unique_hashtags)))
+            unique_hashtags = sorted(list(get_unique_hashtags(docs)))
+            print("{} unique hashtags".format(len(unique_hashtags)))
+            # print("\n".join(list(unique_hashtags)))
+
+            top_hashtags = get_top_n_hashtags(docs)
+            for (hashtag, count) in top_hashtags:
+                print("{} - {}".format(hashtag, count))
+
             print()
+
