@@ -5,13 +5,11 @@ from PIL import Image
 
 import settings
 from analysis.word_cloud import word_cloud_generator
-from dsaa import text_loader
+from dsaa import text_loader, utils
 ### Some Constants ###
 from sentiment_analysis.preprocessing import PreProcessing
 
-OUTPUT_DIR = '{}/dsaa_results/word_clouds/per_community'.format(settings.PROJECT_ROOT)
-if not os.path.exists(OUTPUT_DIR):
-    os.mkdir(OUTPUT_DIR)
+OUTPUT_DIR = '{}/dsaa_results/word_clouds/'.format(settings.PROJECT_ROOT)
 brexit_coloring = numpy.array(Image.open("{}/uk_flag.png".format(settings.PROJECT_ROOT)))
 
 preprocessors = [PreProcessing.SplitWordByWhitespace(),
@@ -27,6 +25,8 @@ preprocessors = [PreProcessing.SplitWordByWhitespace(),
                  PreProcessing.ConcatWordArray()]
 
 if __name__ == "__main__":
+
+    utils.create_path_if_not_exists(OUTPUT_DIR)
 
     # Read CSV for each community
 
@@ -52,7 +52,10 @@ if __name__ == "__main__":
         for community_num, docs in enumerate(community_docs):
             print("Community {}".format(community_num))
 
-            output_file = "{}/{}-community-{}.png".format(OUTPUT_DIR, config, community_num)
+            dir = "{}/{}".format(OUTPUT_DIR, config)
+            utils.create_path_if_not_exists(dir)
+
+            output_file = "{}/{}-community-{}.png".format(dir, config, community_num)
 
             word_cloud_generator.generate_word_cloud(docs,
                                                      output_file,
