@@ -50,7 +50,7 @@ if __name__ == "__main__":
             for docs in community_docs:
                 scheme_docs.extend(docs)
 
-            lda = LDATopicModeller(num_topics=5)
+            lda = LDATopicModeller(num_topics=8)
             lda.generate_topic_models(scheme_docs)
             lda_models[config] = lda
 

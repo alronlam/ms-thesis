@@ -45,7 +45,7 @@ class LDATopicModeller(TopicModeller):
         document_list_cleaned = [self.preprocess_document(document) for document in document_list]
         dictionary = corpora.Dictionary(document_list_cleaned)
         doc_term_matrix = [dictionary.doc2bow(document) for document in document_list_cleaned]
-        lda_model = self.LDA(doc_term_matrix, num_topics=self.num_topics, id2word=dictionary, passes=50)
+        lda_model = self.LDA(doc_term_matrix, num_topics=self.num_topics, id2word=dictionary, passes=100)
         word_weight_tuples = lda_model.show_topics(num_topics=self.num_topics, num_words=self.num_words, log=False,
                                                    formatted=False)
 
