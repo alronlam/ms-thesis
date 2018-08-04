@@ -48,7 +48,9 @@ class RemovePunctuationFromWords(PreProcessor):
     def __init__(self):
         # Do not remove the special tokens (# - hashtag, @ - username, <> - URL/Username replacement)
         self.translator = str.maketrans(
-            {key: " " for key in string.punctuation if key != "#" and key != "@" and key != "<" and key != ">"})
+            {key: " "
+             for key in string.punctuation + "…"
+             if key != "#" and key != "@" and key != "<" and key != ">"})
 
     def preprocess_text(self, tweet_words):
         removed_punctuations = [word.translate(self.translator) for word in tweet_words]
